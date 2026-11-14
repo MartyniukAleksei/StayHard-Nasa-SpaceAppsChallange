@@ -20,6 +20,7 @@ cd frontend && npm install && npm run dev                         # :5173, /api 
 У Claude Code: `.claude/launch.json` має конфіги `backend` і `frontend`.
 
 ## Перевірки перед PR
+Те саме запускає CI (`.github/workflows/ci.yml`); у `main` — лише через PR із зеленим CI.
 ```bash
 cd backend && uv run ruff check . && uv run ruff format --check . && uv run pytest
 cd frontend && npm run build

@@ -9,6 +9,11 @@
 
 Налаштування сервісів зберігаються в самому Railway (задані через CLI / GraphQL API). `railway.json` (Config as Code) Railway вже вважає застарілим — якщо захочемо конфіг у репо, мігруємо на Infrastructure as Code (`.railway/railway.ts`, `railway config`).
 
+## CI/CD
+- **CI** — GitHub Actions `.github/workflows/ci.yml` на кожен PR і push у `main`: `backend` (ruff check/format, pytest), `frontend` (`npm run build` = tsc + vite), `docker` (збірка обох образів).
+- **Гілка `main` захищена**: мердж лише через PR із зеленими `backend`, `frontend`, `docker (backend)`, `docker (frontend)`; пряме пушення заборонене.
+- **CD** — Railway слідкує за `main` і для кожного сервісу чекає на успішний CI (*Wait for CI*), лише потім деплоїть. Зміни лише в одній частині (watch patterns) не перезбирають іншу.
+
 ## backend
 - **Volume** `backend-volume` змонтовано в `/data`. Вміст: `/data/flex/…` (знімок FLEX) і `/data/build/flame.duckdb`.
 - Змінні: `PORT=8000`, `DATA_DIR=/data`, `DATA_ARCHIVE_URL=https://github.com/MartyniukAleksei/nasa-2026/releases/download/data-flex-v1/flex-v1.zip`, `ENV=production`, `CORS_ORIGINS=["https://frontend-production-6436668c.up.railway.app"]`; далі — ключі LLM, коли з'явиться агент.
