@@ -11,6 +11,8 @@ uv run python -m flame.ingest.psi_flex --verify   # N/N OK
 uv run python -m flame.ingest.build_db            # → data/build/flame.duckdb
 ```
 
+Після `git pull` зі змінами в `flame/ingest/build_db.py` або `flame/rag/` перезберіть БД: `uv run python -m flame.ingest.bootstrap` (перезбирає лише коли версія коду змінилась).
+
 ## Запуск
 ```bash
 cd backend && uv sync && uv run uvicorn flame.main:app --reload   # :8000, Swagger на /docs
