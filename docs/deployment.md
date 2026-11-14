@@ -11,18 +11,13 @@
 
 ## backend
 - **Volume** `backend-volume` змонтовано в `/data`. Вміст: `/data/flex/…` (знімок FLEX) і `/data/build/flame.duckdb`.
-- Змінні: `PORT=8000`, `DATA_DIR=/data`, `ENV=production`, `CORS_ORIGINS=["https://frontend-production-6436668c.up.railway.app"]`; далі — ключі LLM, коли з'явиться агент.
+- Змінні: `PORT=8000`, `DATA_DIR=/data`, `DATA_ARCHIVE_URL=https://github.com/MartyniukAleksei/nasa-2026/releases/download/data-flex-v1/flex-v1.zip`, `ENV=production`, `CORS_ORIGINS=["https://frontend-production-6436668c.up.railway.app"]`; далі — ключі LLM, коли з'явиться агент.
 - Healthcheck: `/api/health` (поля `db` і `flex_data` показують, чи Volume заповнений).
 
-### Як заповнити Volume (один раз; дані статичні)
-Знімок лежить у GitHub Release [`data-flex-v1`](https://github.com/MartyniukAleksei/nasa-2026/releases/tag/data-flex-v1). Завантажити його всередині контейнера:
-```bash
-railway ssh --service backend
-# в образі немає curl/unzip — використовуємо Python
-python -c "import urllib.request as u, zipfile; u.urlretrieve('https://github.com/MartyniukAleksei/nasa-2026/releases/download/data-flex-v1/flex-v1.zip', '/data/flex.zip'); zipfile.ZipFile('/data/flex.zip').extractall('/data')" && rm /data/flex.zip
-python -m flame.ingest.psi_flex --verify && python -m flame.ingest.build_db
-```
-Після оновлення знімка (`flex-v2`) — повторити. Код при цьому не передеплоюється.
+### Як заповнюється Volume (автоматично)
+Контейнер стартує з `python -m flame.ingest.bootstrap && uvicorn …`. Якщо на Volume немає `flex/manifest.json`, bootstrap качає `DATA_ARCHIVE_URL` (GitHub Release [`data-flex-v1`](https://github.com/MartyniukAleksei/nasa-2026/releases/tag/data-flex-v1)), розпаковує в `/data` і збирає `build/flame.duckdb`. На заповненому Volume нічого не робить. Перший старт довший (~265 МБ), тому `healthcheckTimeout` = 600 с.
+
+Оновити дані (`flex-v2`): опублікувати новий реліз, змінити `DATA_ARCHIVE_URL`, очистити Volume (видалити `/data/flex` і `/data/build`) і перезапустити сервіс.
 
 ## frontend
 - Змінні: `PORT=8080`, `VITE_API_URL=https://backend-production-9169dad7.up.railway.app` (вшивається в бандл на етапі build; після зміни — redeploy).

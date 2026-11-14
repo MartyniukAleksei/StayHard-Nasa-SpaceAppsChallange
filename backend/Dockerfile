@@ -12,5 +12,5 @@ COPY README.md ./
 RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
-# Railway задає PORT; DATA_DIR=/data — точка монтування Volume
-CMD ["sh", "-c", "uvicorn flame.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Railway задає PORT; DATA_DIR=/data — Volume. bootstrap заповнює його при першому старті
+CMD ["sh", "-c", "python -m flame.ingest.bootstrap && uvicorn flame.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
