@@ -6,6 +6,7 @@
 |---|---|
 | Будь-яка (загальна картина) | [architecture.md](architecture.md) |
 | Запустити локально, тести, конвенції коду | [development.md](development.md) |
+| Як працювати командою: гілки, PR, зміни даних і БД | [workflow.md](workflow.md) |
 | Деплой, Railway, змінні середовища | [deployment.md](deployment.md) |
 | Що будуємо і для кого, демо-сценарій, правила агента | [product/mission.md](product/mission.md), [product/jtbd.md](product/jtbd.md) |
 | UX-флоу студента (FLEX) | [product/student_flow_flex.md](product/student_flow_flex.md) |
