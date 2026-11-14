@@ -6,6 +6,16 @@ Flame in Freefall (NASA Space Apps 2026): an agentic web tool over NASA PSI micr
 
 Documentation for agents lives in `docs/`. Start at `docs/README.md`, which says what to read for each kind of task. Docs are in Ukrainian; code, identifiers and UI text are in English. When you change architecture, API contracts, the DB schema or commands, update the matching doc in the same change, and record significant decisions as an ADR in `docs/decisions/`. Where `docs/product/mission.md` disagrees with `docs/architecture.md`, `architecture.md` wins.
 
+## Guardrails for agents
+
+Several people and their agents work in this repo in parallel. Team process: `docs/workflow.md`.
+- Work on a feature branch and open a PR into `main`. `main` is protected (required CI checks, no direct or force push); do not try to bypass it.
+- Do not touch infrastructure: no Railway changes (variables, volumes, services, deploys) and no creating, editing or deleting GitHub Releases. CD is automatic from `main`. Infra changes are the repo owner's call; propose them in the PR or the docs instead.
+- Never hand-edit `data/flex` or `flame.duckdb`, and never write to the DB from the API. Every data change is code in `build_db` (see Architecture), and every new raw snapshot is a new release made by the data owner.
+- Stay inside the module your task belongs to. Change shared code (`core/config.py`, `api/router.py`, `frontend/src/shared`, DB schema in `build_db`) in a separate small PR.
+- Secrets live only in Railway variables and a local `.env`. Add new variable names to `.env.example` without values.
+- Before a PR, run the same checks CI runs: backend `ruff check`, `ruff format --check` and `pytest`; frontend `npm run build`.
+
 ## Commands
 
 Backend (run from `backend/`, Python 3.13 via uv):
