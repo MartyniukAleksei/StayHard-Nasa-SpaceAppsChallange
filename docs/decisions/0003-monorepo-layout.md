@@ -5,7 +5,7 @@
 ## Рішення
 - `backend/` — Python-пакет `flame` у src-layout (`backend/src/flame`), менеджер uv, модулі за доменами (`studies/flex`, `rag`, `agent`, `media`, `ingest`) з шарами schemas → repository → service → router.
 - `frontend/` — React + Vite + TS, feature-модулі (`src/features/*`), спільне в `src/shared`.
-- Кожна частина має свій `Dockerfile` і `railway.json`; на Railway — окремі сервіси з Root Directory.
+- Кожна частина має свій `Dockerfile`; на Railway — окремі сервіси з Root Directory (налаштування сервісів — у Railway, див. deployment.md).
 - Офлайн-пайплайн даних живе в тому ж пакеті (`flame.ingest`), щоб ділити конфіг і схему БД з API.
 
 ## Наслідки

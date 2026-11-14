@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Flame in Freefall (NASA Space Apps 2026): an agentic web tool over NASA PSI microgravity-combustion data, focused on FLEX (PSI-69, 274 droplet-burning tests from the ISS). Monorepo: `frontend/` (React + Vite + TS) and `backend/` (FastAPI, Python package `flame`), each with its own Dockerfile and `railway.json`, deployed to Railway as two separate services.
+Flame in Freefall (NASA Space Apps 2026): an agentic web tool over NASA PSI microgravity-combustion data, focused on FLEX (PSI-69, 274 droplet-burning tests from the ISS). Monorepo: `frontend/` (React + Vite + TS) and `backend/` (FastAPI, Python package `flame`), each with its own Dockerfile, deployed to Railway as two separate services.
 
 Documentation for agents lives in `docs/`. Start at `docs/README.md`, which says what to read for each kind of task. Docs are in Ukrainian; code, identifiers and UI text are in English. When you change architecture, API contracts, the DB schema or commands, update the matching doc in the same change, and record significant decisions as an ADR in `docs/decisions/`. Where `docs/product/mission.md` disagrees with `docs/architecture.md`, `architecture.md` wins.
 
