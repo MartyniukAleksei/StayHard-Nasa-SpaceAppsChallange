@@ -1,0 +1,23 @@
+# Локальна перевірка прод-образів: docker compose up --build
+# backend → http://localhost:8000, frontend → http://localhost:8080
+services:
+  backend:
+    build: ./backend
+    environment:
+      ENV: docker
+      DATA_DIR: /data
+      CORS_ORIGINS: '["http://localhost:8080"]'
+    volumes:
+      - ./data:/data:ro   # як Railway Volume
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
