@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     data_dir: Path = _REPO_DATA
     db_path: Path | None = None  # за замовчуванням <data_dir>/build/flame.duckdb
     cors_origins: list[str] = ["http://localhost:5173"]
+    # zip зі знімком FLEX (містить flex/…); якщо задано і data_dir порожній — качається при старті
+    data_archive_url: str | None = None
 
     @cached_property
     def flex_dir(self) -> Path:
