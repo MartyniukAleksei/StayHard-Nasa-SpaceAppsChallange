@@ -16,7 +16,8 @@ uv run pytest                                   # all tests
 uv run pytest tests/test_health.py::test_health # single test
 uv run ruff check . && uv run ruff format --check .
 uv run python -m flame.ingest.psi_flex --verify # check data/flex against manifest.json
-uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb
+uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb (force rebuild)
+uv run python -m flame.ingest.bootstrap         # rebuild only if build version changed
 ```
 
 Frontend (run from `frontend/`):
@@ -34,6 +35,7 @@ Data flow: PSI API → `flame.ingest.psi_flex` (offline) → `data/flex/` (snaps
 
 - **The data is static and there is no server database.** The API opens a single DuckDB file `read_only` (`flame/db/duckdb.py`, dependency `get_cursor`). RAG chunks and their embeddings will go into the same file (a `chunks` table, searched with `array_cosine_similarity` or `vss`), and they are built offline, never at runtime. Chat history is not stored. Rationale: `docs/decisions/0001-*`.
 - **`data/` is gitignored.** It holds `flex/` (~540 MB: CSV tables, time series, raw txt/pdf, mp4) and `build/`. In production it lives on a Railway Volume mounted at `/data` (`DATA_DIR`). Never edit `data/flex` by hand; derived data is produced only by `flame/ingest` scripts. Data schema and quirks: `docs/data/flex.md`.
+- **The DB is never edited, only rebuilt.** Data processing lives in `flame/ingest/build_db.py` (plus modules listed in its `BUILD_SOURCES`, currently `flame/rag/`). `BUILD_VERSION` is a hash of that code, stored in the DB's `meta` table. `flame.ingest.bootstrap` runs before uvicorn in the container and rebuilds the DB when the version or `DATA_ARCHIVE_URL` changes, so merged processing changes reach production automatically. If you add a module that affects DB contents, add it to `BUILD_SOURCES`. The raw snapshot changes only through a new `data-flex-vN` GitHub Release.
 - **All data paths come from `flame.core.config.settings`** (`data_dir`, `flex_dir`, `duckdb_path`; env vars via pydantic-settings, listed in `.env.example`). The local default is `<repo>/data`.
 - **Backend modules** follow the layering `router → service → repository → db`, with SQL only in `repository.py` and parameterized. Domain packages are `studies/flex`, `media` (serves files from the Volume), `rag` and `agent`. The agent calls domain services and `rag`, never SQL directly. Every router is mounted under `/api` in `flame/api/router.py`. `flame.ingest` is offline-only and is never imported by the API. Most modules are still skeletons whose planned contents are described in their `__init__.py`.
 - **Frontend layout:** `src/app` holds the router (react-router) and providers (TanStack Query, `staleTime: Infinity` because the data is static). Pages in `src/pages` stay thin. Feature modules in `src/features/<name>/` expose only `index.ts` to other modules. `src/shared` holds the `api/client.ts` fetch wrapper, which builds `${VITE_API_URL}/api…`. Use the `@/` alias. `VITE_API_URL` is baked in at build time; in dev, Vite proxies `/api` instead.

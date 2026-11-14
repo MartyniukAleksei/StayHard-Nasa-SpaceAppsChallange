@@ -51,6 +51,8 @@ docker-compose.yml  локальний запуск прод-образів
 
 ## Дані — `flame.duckdb`
 Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)). План: таблиця `chunks(id, source, test_no, page, text, embedding FLOAT[N])` для RAG, пошук `array_cosine_similarity` (або індекс розширення `vss`).
+**БД не редагується — перезбирається.** Будь-яка обробка даних = код у `build_db` (або модулі з `BUILD_SOURCES`). Версія збірки (хеш цього коду) пишеться в таблицю `meta`; `flame.ingest.bootstrap` перезбирає БД локально й на проді, коли версія змінилась (деталі — [deployment.md](deployment.md)). Сирий знімок змінюється лише новим релізом `data-flex-vN`.
+
 Правило: числа в UI і відповідях агента — тільки з цієї БД; все, що рахуємо самі (fit K тощо), позначаємо як оцінку.
 
 ## Frontend — `frontend/src/`
