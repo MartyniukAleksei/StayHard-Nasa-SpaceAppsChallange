@@ -1,0 +1,21 @@
+# data (джерело + зібрана БД; роздаються окремо, див. docs/data/flex.md)
+data/
+*.duckdb
+*.part
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# env / os
+.env
+.env.*
+!.env.example
+.DS_Store
