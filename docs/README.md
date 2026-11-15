@@ -16,6 +16,7 @@
 | Дані FLEX: схема таблиць, якість, як отримати | [data/flex.md](data/flex.md) |
 | Дані CFI (PSI-39): схема знімка, якість, як зібрати | [data/cfi.md](data/cfi.md) |
 | Дані CFI, ACME CFI-G, BASS-II, SAME-R, Saffire-II у БД: схеми, реєстр `studies`, приклади SQL, особливості | [data/psi-studies.md](data/psi-studies.md) |
+| ACME CFI-G (PSI-159): сторінка `/studies/cfig`, кадри тесту 21291C1 (звідки, як закодовані, що про них відомо) | [data/cfig-cool-flame-frames/README.md](data/cfig-cool-flame-frames/README.md), `frontend/src/features/cfig-cool` |
 | Агент: інструменти, SSE-контракт, ліміти, eval, UI-дії | [agent/README.md](agent/README.md), [agent/ui-actions.md](agent/ui-actions.md) |
 | RAG: навіщо, технічні рішення, план і статус | [rag/mission.md](rag/mission.md), [rag/techstack.md](rag/techstack.md), [rag/plan.md](rag/plan.md) |
 | PSI API (звідки качаємо) | [data/psi_api.md](data/psi_api.md) |

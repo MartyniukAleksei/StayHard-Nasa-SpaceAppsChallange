@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { CfigPage } from "@/pages/CfigPage";
 import { ComparePage } from "@/pages/ComparePage";
 import { LandingPage } from "@/pages/LandingPage";
 import { LibraryPage } from "@/pages/LibraryPage";
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "/", element: <LandingPage /> },
+      { path: "/studies/cfig", element: <CfigPage /> },
       { path: "/studies/flex", element: <StudyOverviewPage /> },
       { path: "/studies/flex/tests", element: <TestsPage /> },
       { path: "/studies/flex/tests/:id", element: <TestPage /> },
