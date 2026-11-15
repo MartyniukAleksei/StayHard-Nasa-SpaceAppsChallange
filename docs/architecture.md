@@ -34,6 +34,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `api/router.py` | префікс `/api`, збирає роутери модулів; `api/routes/` — службові (health) |
 | `core/citations.py` | контракт джерел: `Source(url, title, text)`, побудова URL, `to_search_result` для Claude API ([ADR 0006](decisions/0006-citation-contract.md)) |
 | `studies/` | `catalog.py` + `catalog.json` (паспорти досліджень PSI, генерує `flame.ingest.psi_catalog`), `router.py` — `/api/studies` |
+| `studies/cfig/` | ACME CFI-G (PSI-159): `repository` (SQL до схеми `cfig`), `service`, `schemas`, `router` — `/api/studies/cfig/regime` |
 | `studies/flex/` | домен FLEX: `fields` (whitelist полів і сигналів) → `schemas` → `repository` (SQL) → `service` (логіка, `sources` у кожному результаті) → `router` (HTTP) — агентне API з фільтрами; `pages/` — відповіді під сторінки UI (огляд, дослідник, звіт тесту, replay, CSV, бібліотека) |
 | `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела; там же переліки файлів тесту, відео й NASA-документів для UI; `timing.py`: час кадру від запалювання (з логу тест-пойнта) для агента |
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
@@ -66,6 +67,7 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/studies/flex/explorer` | ✅ UI: усі 274 рядки Дослідника (фільтрація — на фронтенді, стан у URL). `has_series` = є ряди краплі **і** UV-полум'я; `has_3d` = є ряд краплі (досить для 3D replay); `has_video` = є локальний mp4; `cool_flame` — *derived* |
 | GET | `/api/studies/flex/tests/{n}/report` | ✅ UI, сторінка тесту 3A: паспорт + `neighbors` (5 схожих: те саме паливо, розбавник і клас нитки, найближчі за O₂, тиском і d₀; *derived*) + `files` + `videos` + `has_3d` |
 | GET | `/api/studies/flex/tests/{n}/replay` | ✅ UI: `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок |
+| GET | `/api/studies/cfig/regime` | ✅ UI, карта режимів ACME CFI-G: `{about, facts, tests[]}` — паспорт (DOI, ліцензія з `study_about`), лічильники з `cfig.tests` і всі 333 тести (normal + inverse) зі значеннями таблиці PSI; `cool_flame` — *derived* з колонки «Cool flame?» (`null` = колонки для тесту нема); `end_mode` `null` = не загорілось / не вказано. 503, якщо знімка `cfig` нема в БД |
 | GET | `/api/studies/flex/tests/{n}/series.csv` | ✅ усі точки рядів (`signal,t_s,value`), у першому рядку — цитата з DOI |
 | GET | `/api/studies/flex/videos` | ✅ UI: усі mp4 камер NASA (PSI FLEX) з умовами тесту (`test_no, fuel, diluent, x_o2, p_atm, end_type, name, path`) — галерея на Огляді |
 | GET | `/api/studies/flex/library` | ✅ UI: цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
