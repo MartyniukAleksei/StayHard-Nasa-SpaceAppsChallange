@@ -1,6 +1,5 @@
 import { EndMark, END_TYPES } from "@/shared/ui/EndMark";
 import { Link } from "react-router";
-import { Placeholder } from "@/shared/ui/Placeholder";
 import { VideoGallery } from "./VideoGallery";
 import { END_DEFINITIONS, FINDINGS, HOW_IT_WORKED, TRAPS } from "../content";
 
@@ -58,27 +57,25 @@ export function HowItWorked() {
 
 /** D: what was found — curated by the team, each finding cites a test and a publication. */
 export function Findings() {
+  if (FINDINGS.length === 0) return null;
   return (
     <section className="band" aria-labelledby="found-title">
       <div className="wrap ov-narrow">
         <h2 id="found-title" className="h-section">What was found</h2>
-        {FINDINGS.length === 0 ? (
-          <Placeholder>add 3 findings — each with a test № and a publication DOI.</Placeholder>
-        ) : (
-          <ul className="ov-findings">
-            {FINDINGS.map((f) => (
-              <li key={f.text}>
-                {f.text}{" "}
-                <span className="muted small mono">
-                  test #{f.test} ·{" "}
-                  <a href={`https://doi.org/${f.doi}`} target="_blank" rel="noreferrer">
-                    doi:{f.doi}
-                  </a>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ol className="ov-findings">
+          {FINDINGS.map((f) => (
+            <li key={f.text}>
+              <p>{f.text}</p>
+              <p className="small mono">
+                <Link to={`/studies/flex/tests/${f.test}`}>see test #{f.test}</Link>
+                <span className="muted"> · </span>
+                <a className="muted" href={`https://doi.org/${f.doi}`} target="_blank" rel="noreferrer">
+                  doi:{f.doi}
+                </a>
+              </p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );

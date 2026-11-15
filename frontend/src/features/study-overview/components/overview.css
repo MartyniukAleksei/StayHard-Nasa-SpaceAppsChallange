@@ -13,7 +13,10 @@
 .ov-video { margin: 0; display: grid; gap: 8px; }
 .ov-video video { width: 100%; max-height: 70vh; background: #000; border: var(--rule); display: block; }
 .ov-video figcaption { display: grid; gap: 2px; }
-.ov-video-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
+.ov-video-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; }
+.ov-open-test { border: 1px solid var(--ink); padding: 0 14px; }
+.ov-open-test::before, .ov-open-test::after { content: none; }
+.ov-open-test:hover { background: var(--ink); color: var(--void); }
 .ov-video-cap .end-mark { font-family: var(--mono); font-size: 14px; }
 .ov-video-list p { margin: 0 0 6px; }
 .ov-video-list ul { list-style: none; margin: 0; padding: 0; display: grid; border-top: var(--rule); max-height: 60vh; overflow-y: auto; }
@@ -62,7 +65,10 @@
 .ov-steps li::marker { font-family: var(--mono); color: var(--ash); }
 .ov-ends-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; color: var(--ash); font-size: 14px; }
 .ov-ends-list .end-mark { font-family: var(--mono); }
-.ov-findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.ov-findings { margin: 0; padding-left: 22px; display: grid; gap: 18px; }
+.ov-findings li::marker { font-family: var(--mono); color: var(--ash); }
+.ov-findings p { margin: 0; }
+.ov-findings p + p { margin-top: 4px; }
 .ov-traps { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ov-traps p { margin: 0; color: var(--ash); font-size: 15px; }
 .ov-quote {
