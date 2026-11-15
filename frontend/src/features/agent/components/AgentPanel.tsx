@@ -74,35 +74,41 @@ export function AgentPanel() {
   };
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) send(e);
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      if (busy) stop();
+      else close();
+    }
   };
 
   return (
     <aside
-      className={`ag-panel${cited ? " with-src" : ""}${full ? " full" : ""}`}
-      aria-label="FLEX assistant"
+      id="ag-panel"
+      className={`ag-panel ag-term${cited ? " with-src" : ""}${full ? " full" : ""}`}
+      aria-label="FLEX agent terminal"
       onKeyDown={(e) => e.key === "Escape" && close()}
     >
       {!full && <ResizeHandle width={width} onChange={(w) => setWidth(clampWidth(w))} />}
       <header className="ag-head">
-        <span className="h-section ag-title">Assistant</span>
+        <p className="ag-context" title="What the agent sees: the page and the section you are looking at">
+          <span className="ag-prompt-sign" aria-hidden="true">●</span> agent <span className="muted">·</span>{" "}
+          <span className="sr-only">Context: </span>
+          {describeContext(context)}
+        </p>
         <span className="ag-head-actions">
-          <button type="button" className="btn ghost" onClick={() => setFull((f) => !f)} aria-pressed={full}>
-            {full ? "Collapse" : "Expand"}
+          <button type="button" className="ag-tbtn" onClick={() => setFull((f) => !f)} aria-pressed={full}>
+            {full ? "collapse" : "expand"}
           </button>
-          <button type="button" className="btn ghost" onClick={reset} disabled={!items.length}>
-            New chat
+          <button type="button" className="ag-tbtn" onClick={reset} disabled={!items.length}>
+            clear
           </button>
-          <button type="button" className="btn ghost" onClick={() => setOpen(false)}>
-            Close
+          <button type="button" className="ag-tbtn" onClick={() => setOpen(false)} aria-label="Close the agent">
+            ×
           </button>
         </span>
-        <p className="ag-context mono small" title="What the assistant sees: the page and the section you are looking at">
-          <span className="muted">Context:</span> {describeContext(context)}
-        </p>
       </header>
       <div className="ag-log" aria-live="polite">
-        {items.length === 0 && <Intro />}
+        <Welcome context={context} onPick={(q) => ask(q)} empty={items.length === 0} busy={busy} />
         {items.map((it) =>
           it.role === "user" ? <UserMsg key={it.id} text={it.text} context={it.context} /> : <Reply key={it.id} it={it} onCite={onCite} />,
         )}
@@ -110,43 +116,92 @@ export function AgentPanel() {
       </div>
       {cited && <SourceCard src={cited} onClose={() => setCited(null)} />}
       <form className="ag-form" onSubmit={send}>
-        <label className="sr-only" htmlFor="ag-input">Your question</label>
-        <textarea
-          id="ag-input"
-          ref={input}
-          rows={2}
-          maxLength={2000}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="Ask a follow-up…"
-        />
-        {busy ? (
-          <button type="button" className="btn" onClick={stop}>Stop</button>
-        ) : (
-          <button type="submit" className="btn" disabled={!text.trim()}>Ask</button>
-        )}
+        <div className="ag-inputbox">
+          <span className="ag-caret" aria-hidden="true">&gt;</span>
+          <label className="sr-only" htmlFor="ag-input">Your question</label>
+          <textarea
+            id="ag-input"
+            ref={input}
+            rows={1}
+            maxLength={2000}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={onKey}
+            placeholder={busy ? "answering…" : items.length ? "ask a follow-up" : "ask about FLEX tests"}
+          />
+        </div>
+        <p className="ag-hints">
+          {busy ? (
+            <button type="button" className="ag-tbtn" onClick={stop}>
+              esc · stop
+            </button>
+          ) : (
+            <span>enter to send · shift+enter new line · esc to close</span>
+          )}
+          <span>{text.length > 1800 ? `${2000 - text.length} left` : ""}</span>
+        </p>
       </form>
     </aside>
   );
 }
 
-function Intro() {
+/** Example questions for the welcome block, tuned to the page the user is on. */
+function suggestions(ctx: PageContext): string[] {
+  if (ctx.test_no) {
+    return [`why did test #${ctx.test_no} end the way it did?`, `find tests similar to #${ctx.test_no}`, `plot d² over time for #${ctx.test_no}`];
+  }
+  if (ctx.ids?.length) return [`how do tests ${ctx.ids.map((n) => `#${n}`).join(" and ")} differ?`];
+  return [
+    "does the flame go out by itself in ISS air?",
+    "CO₂ or He: which extinguishes better?",
+    "what are cool flames?",
+  ];
+}
+
+/** Like Claude Code on start: the mascot, who the agent is, where it is looking, how to begin. */
+function Welcome({ context, onPick, empty, busy }: { context: PageContext; onPick: (q: string) => void; empty: boolean; busy: boolean }) {
   return (
-    <div className="ag-intro">
-      <p className="muted small">
-        Answers come only from NASA's FLEX data and documents. Every number links to its source; text without a source is
-        marked. The assistant can suggest pages to open — nothing changes until you click.
-      </p>
-    </div>
+    <section className="ag-welcome" aria-label="About the agent">
+      <div className="ag-welcome-box">
+        <iframe
+          className="ag-mascot"
+          src="/mascot-cat.html?embed"
+          title="StayHard ASCII cat"
+          aria-hidden="true"
+          tabIndex={-1}
+          loading="lazy"
+        />
+        <div className="ag-welcome-text">
+          <p className="ag-welcome-title">
+            <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>Flame in Freefall</b> agent
+          </p>
+          <p className="muted">Answers only from NASA FLEX data (PSI-69); every number links to its source.</p>
+          <p className="muted">
+            looking at: <span className="ag-ink">{describeContext(context)}</span>
+          </p>
+        </div>
+      </div>
+      {empty && (
+        <div className="ag-tips">
+          <p className="muted">Try:</p>
+          {suggestions(context).map((q) => (
+            <button key={q} type="button" className="ag-tip" onClick={() => onPick(q)} disabled={busy}>
+              <span aria-hidden="true">&gt;</span> {q}
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
 function UserMsg({ text, context }: { text: string; context?: PageContext }) {
   return (
     <div className="ag-user-wrap">
-      <p className="ag-user">{text}</p>
-      {context && <span className="ag-user-ctx mono">asked on {describeContext(context)}</span>}
+      <p className="ag-user">
+        <span className="ag-caret" aria-hidden="true">&gt;</span> {text}
+      </p>
+      {context && <span className="ag-user-ctx">on {describeContext(context)}</span>}
     </div>
   );
 }

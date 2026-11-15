@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
-import { AgentPanel, AgentProvider, AgentSearch } from "@/features/agent";
+import { AgentLauncher, AgentPanel, AgentProvider } from "@/features/agent";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
 import "./shell.css";
@@ -48,10 +48,12 @@ function Header() {
             ))}
           </nav>
         )}
-        <AgentSearch />
-        <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
-          Cart · 0
-        </button>
+        <span className="top-actions">
+          <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
+            Cart · 0
+          </button>
+          <AgentLauncher />
+        </span>
       </div>
     </header>
   );
