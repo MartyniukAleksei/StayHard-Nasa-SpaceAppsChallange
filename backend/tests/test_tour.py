@@ -47,9 +47,10 @@ def cur(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             "3.0::DOUBLE AS standoff, 0.0::DOUBLE AS droplet_x_mm, 0.0::DOUBLE AS droplet_z_mm "
             "FROM range(31) r(i)"
         )
-        con.execute(
+        con.execute(  # видиме (кольорове) полум'я теж найбільше на 1.0 с: 12 мм
             "CREATE TABLE ts_flame_color AS SELECT 1::BIGINT AS test_no, "
-            "round(i * 0.1, 1)::DOUBLE AS t_s, 12.0::DOUBLE AS flame_d_mm, 3.0::DOUBLE AS standoff "
+            "round(i * 0.1, 1)::DOUBLE AS t_s, (12 - abs(i - 10) * 0.2)::DOUBLE AS flame_d_mm, "
+            "3.0::DOUBLE AS standoff "
             "FROM range(2, 27) r(i)"
         )
     flex_dir = tmp_path / "flex"
@@ -88,7 +89,7 @@ def test_moments_resolve_to_seconds_from_ignition(cur) -> None:
     d = data(cur)
     assert tour.resolve_moment(d, "ignition") == (0.0, "data", "log")
     assert tour.resolve_moment(d, "needles_retract")[0] == pytest.approx(-1.42)
-    assert tour.resolve_moment(d, "flame_max") == (1.0, "derived", "flame_uv")
+    assert tour.resolve_moment(d, "flame_max") == (1.0, "derived", "flame_color")
     assert tour.resolve_moment(d, "extinction") == (3.0, "derived", "flame_uv")
     assert tour.resolve_moment(d, "end_of_data")[0] == 20.0
     assert tour.resolve_moment(d, "t", 15)[0] == 15.0
@@ -100,6 +101,16 @@ def test_moments_resolve_to_seconds_from_ignition(cur) -> None:
     d.flame_uv, d.flame_color = [], []
     with pytest.raises(tour.TourError, match="no measured flame series"):
         tour.resolve_moment(d, "extinction")
+
+
+def test_flame_max_ignores_a_single_outlier_sample() -> None:
+    # як FLEX-155 (UV): останній відлік — хибний 43.3 мм серед ~22 мм; справжній пік — 2.4 с
+    uv = [(0.5, 20.1), (1.0, 21.4), (1.5, 21.9), (2.0, 22.6), (2.4, 22.7), (2.6, 22.1)]
+    uv.append((2.87, 43.3))
+    assert tour.peak_time(uv) == 2.4
+    spike_inside = [(0.0, 5.0), (0.1, 6.0), (0.2, 40.0), (0.3, 7.0), (0.4, 8.0), (0.5, 7.5)]
+    assert tour.peak_time(spike_inside) == 0.4
+    assert tour.peak_time([(0.0, 1.0), (0.1, 3.0)]) == 0.1  # коротший за вікно ряд — сирий максимум
 
 
 def test_values_come_from_the_nearest_sample_within_tolerance(cur) -> None:
