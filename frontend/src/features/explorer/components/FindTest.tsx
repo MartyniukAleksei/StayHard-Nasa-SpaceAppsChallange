@@ -26,9 +26,13 @@ export function FindTest({ tests }: { tests: TestSummary[] }) {
   return (
     <form className="ex-find" role="search" onSubmit={submit}>
       <label className="ex-find-label mono" htmlFor={`${errId}-n`}>
-        Find test #
+        Go to a test
       </label>
-      <input
+      <div className="ex-find-row">
+        <span className="ex-find-hash mono" aria-hidden="true">
+          #
+        </span>
+        <input
         id={`${errId}-n`}
         type="text"
         inputMode="numeric"
@@ -42,9 +46,10 @@ export function FindTest({ tests }: { tests: TestSummary[] }) {
           setError(null);
         }}
       />
-      <button type="submit" className="btn-solid">
-        Open test →
-      </button>
+        <button type="submit" className="btn-solid">
+          Open →
+        </button>
+      </div>
       {error && (
         <p id={errId} className="ex-find-error small" role="alert">
           {error}
