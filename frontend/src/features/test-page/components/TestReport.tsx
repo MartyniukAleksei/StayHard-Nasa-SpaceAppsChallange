@@ -136,26 +136,27 @@ function NoSeries() {
 }
 
 function Params({ t }: { t: TestDetail }) {
-  const rows: [string, string][] = [
-    ["CIR identifier", t.cir_id ?? "—"],
-    ["Date, GMT", `${t.test_date ?? "—"} ${t.test_gmt ?? ""}`],
-    ["Fuel", t.fuel],
-    ["Pressure", num(t.p_atm, 3, "atm")],
-    ["O₂ / N₂ / CO₂ / He", [t.x_o2, t.x_n2, t.x_co2, t.x_he].map(pct).join(" / ")],
-    ["Initial diameter d₀", num(t.d0_mm, 2, "mm")],
-    ["Extinction diameter d_ext", num(t.dext_mm, 2, "mm")],
-    ["Burning-rate constant K", num(t.k_mm2_s, 2, "mm²/s")],
-    ["Burn time", num(t.burn_time_s, 1, "s")],
-    ["Ambient temperature", num(t.temperature_k, 1, "K")],
-    ["Droplet", fiberLabel(t.fiber)],
-    ["End", t.end_type],
+  // третій елемент — ключі полів API (data-field): за ними агент підсвічує значення
+  const rows: [string, string, string][] = [
+    ["CIR identifier", t.cir_id ?? "—", "cir_id"],
+    ["Date, GMT", `${t.test_date ?? "—"} ${t.test_gmt ?? ""}`, "test_date"],
+    ["Fuel", t.fuel, "fuel"],
+    ["Pressure", num(t.p_atm, 3, "atm"), "p_atm"],
+    ["O₂ / N₂ / CO₂ / He", [t.x_o2, t.x_n2, t.x_co2, t.x_he].map(pct).join(" / "), "x_o2 x_n2 x_co2 x_he diluent"],
+    ["Initial diameter d₀", num(t.d0_mm, 2, "mm"), "d0_mm"],
+    ["Extinction diameter d_ext", num(t.dext_mm, 2, "mm"), "dext_mm"],
+    ["Burning-rate constant K", num(t.k_mm2_s, 2, "mm²/s"), "k_mm2_s"],
+    ["Burn time", num(t.burn_time_s, 1, "s"), "burn_time_s"],
+    ["Ambient temperature", num(t.temperature_k, 1, "K"), "ts_temperature_k"],
+    ["Droplet", fiberLabel(t.fiber), "ts_fiber"],
+    ["End", t.end_type, "end_type"],
   ];
   return (
     <section className="tp-sec" aria-labelledby="tp-params">
       <h2 id="tp-params" className="h-section">Parameters</h2>
-      <dl className="kv tp-kv">
-        {rows.map(([k, v]) => (
-          <div key={k} className="tp-kv-row">
+      <dl className="kv tp-kv" data-test={t.test_no}>
+        {rows.map(([k, v, field]) => (
+          <div key={k} className="tp-kv-row" data-field={field}>
             <dt>{k}</dt>
             <dd>{v}</dd>
           </div>

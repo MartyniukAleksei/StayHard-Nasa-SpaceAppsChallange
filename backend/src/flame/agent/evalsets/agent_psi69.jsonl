@@ -1,0 +1,20 @@
+{"id": "filter-heptane-lunar", "q": "Which heptane tests ran at about 0.7 atm with at least 30% oxygen, and how did they end?", "expect_tests": [19, 23, 24, 27, 28], "min_test_hits": 3, "mention_any": ["Disruption"]}
+{"id": "count-methanol", "q": "How many methanol tests are in FLEX?", "mention_any": ["157"]}
+{"id": "compare-two", "q": "Compare FLEX-019 and FLEX-027.", "expect_tests": [19, 27], "min_test_hits": 2}
+{"id": "why-lluv", "q": "Why is the LLUV flame data unreliable in FLEX-002?", "expect_tests": [2], "min_test_hits": 1}
+{"id": "explain-d2", "q": "What is the d-squared law and why does it matter for these experiments?", "mention_any": ["d²", "d-squared", "D²", "squared"]}
+{"id": "trap-disruption", "q": "Did the flame in FLEX-019 keep burning forever?", "expect_tests": [19], "min_test_hits": 1, "mention_any": ["not observed", "self-extinction"]}
+{"id": "trap-no-data", "q": "What happened to methanol droplets burning in 35% oxygen with CO2 dilution?", "mention_any": ["no data", "no tests", "did not test", "not tested", "no FLEX test", "doesn't contain", "does not contain", "no matching"]}
+{"id": "trap-fiber-conflict", "q": "Is the droplet in FLEX-080 fiber-supported or free-floating?", "expect_tests": [80], "min_test_hits": 1, "mention_any": ["conflict", "ambiguous", "unclear", "contradict"]}
+{"id": "similar", "q": "Which tests had conditions most similar to FLEX-002?", "expect_tests": [2], "min_test_hits": 1, "mention_any": ["estimate"]}
+{"id": "timeseries", "q": "How many droplet diameter samples were recorded for FLEX-002 and what range does the diameter cover?", "expect_tests": [2], "min_test_hits": 1, "mention_any": ["660"]}
+{"id": "docs-iss-suppressant", "q": "What fire suppressant is used in the US modules of the space station?", "expect_url_any": ["EIRD"], "mention_any": ["carbon dioxide", "CO2", "CO₂"]}
+{"id": "docs-loi", "q": "How did FLEX determine the limiting oxygen index?", "expect_url_any": ["Test_Plan", "doi.org", "EIRD"]}
+{"id": "mixed-helium", "q": "Which helium-diluted methanol tests ended in extinction, and what did the researchers observe in one of them?", "min_sources": 2}
+{"id": "page-context", "q": "Compare these two tests.", "page_context": {"route": "/studies/flex/compare", "ids": [2, 45]}, "expect_tests": [2, 45], "min_test_hits": 2}
+{"id": "off-topic", "q": "What's the best pizza place in New York?", "off_topic": true}
+{"id": "ui-open-tests", "q": "Show me the heptane tests that ran at about 0.7 atm with 30% oxygen or more.", "expect_proposal": "open_tests", "mention_any": ["Disruption"]}
+{"id": "ui-open-compare", "q": "Let me compare FLEX-019 and FLEX-027 side by side.", "expect_proposal": "open_compare", "expect_tests": [19, 27], "min_test_hits": 2}
+{"id": "ui-highlight", "q": "What was the oxygen level and burning-rate constant in this test?", "page_context": {"route": "/studies/flex/tests/19", "test_no": 19}, "expect_highlight": true, "expect_tests": [19], "min_test_hits": 1}
+{"id": "chart-d2", "q": "Plot how the droplet diameter squared shrinks over time for FLEX-027 and FLEX-028.", "expect_chart": "line", "expect_tests": [27, 28], "min_test_hits": 2}
+{"id": "chart-scatter", "q": "Chart the burning-rate constant against oxygen fraction for all heptane tests.", "expect_chart": "scatter"}
