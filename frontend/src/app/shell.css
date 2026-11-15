@@ -17,19 +17,22 @@
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-height: var(--hit); }
 .top-nav { display: flex; gap: 2px; flex-wrap: wrap; }
-.top-nav a, .top-nav .soon {
+.top-nav a {
   color: var(--ash);
   text-decoration: none;
-  font-size: 14px;
-  padding: 0 10px;
+  font: 14px var(--mono);
+  padding: 0 8px;
   min-height: var(--hit);
   display: inline-flex;
   align-items: center;
 }
 .top-nav a:hover { color: var(--ink); }
-.top-nav a.active { color: var(--ink); }
-.top-nav .soon { opacity: 0.45; cursor: not-allowed; text-decoration: underline dashed; text-underline-offset: 4px; }
-.search { flex: 1 1 260px; display: block; }
+.top-nav a::before { content: "["; margin-right: 5px; color: transparent; }
+.top-nav a::after { content: "]"; margin-left: 5px; color: transparent; }
+.top-nav a[aria-current] { color: var(--ink); }
+.top-nav a[aria-current]::before, .top-nav a[aria-current]::after { color: var(--ink); }
+.top .tag { text-decoration: none; }
+.search { flex: 1 1 200px; display: block; }
 .search input {
   width: 100%;
   min-height: var(--hit);
@@ -54,4 +57,13 @@
   gap: 8px 24px;
   color: var(--ash);
   font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  /* brand · chip · cart on one line, then the nav, then the search */
+  .top-row > .btn { display: none; } /* cart is a stub; no room next to the brand */
+  .top-nav { order: 4; width: 100%; flex-wrap: nowrap; margin-left: -8px; }
+  .top-nav a { font-size: 13px; padding: 0 6px; }
+  .top-nav a:not([aria-current])::before, .top-nav a:not([aria-current])::after { display: none; }
+  .search { order: 5; flex-basis: 100%; }
 }

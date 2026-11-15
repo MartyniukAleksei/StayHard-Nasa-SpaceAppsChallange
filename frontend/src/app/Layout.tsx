@@ -1,9 +1,14 @@
-import { NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
 import "./shell.css";
 
-const SOON = ["Tests", "Compare", "Library"];
+const FLEX_NAV = [
+  { to: "/studies/flex", label: "Overview", end: true },
+  { to: "/studies/flex/tests", label: "Tests", end: false },
+  { to: "/studies/flex/compare", label: "Compare", end: true },
+  { to: "/studies/flex/library", label: "Library", end: true },
+];
 
 export function Layout() {
   return (
@@ -19,10 +24,11 @@ export function Layout() {
 }
 
 function Header() {
+  const inFlex = useLocation().pathname.startsWith("/studies/flex");
   return (
     <header className="top">
       <div className="top-row">
-        <NavLink to="/studies/flex" className="brand">
+        <Link to="/" className="brand">
           <svg width="24" height="24" viewBox="0 0 4 4" aria-hidden="true" fill="currentColor">
             <rect x="0" y="0" width="2" height="2" />
             <rect x="2" y="2" width="1" height="1" />
@@ -30,26 +36,28 @@ function Header() {
             <rect x="1" y="3" width="1" height="1" />
           </svg>
           <span className="h-brand">Flame in Freefall</span>
-        </NavLink>
-        <span className="tag on">FLEX</span>
-        <nav aria-label="Study sections" className="top-nav">
-          <NavLink to="/studies/flex" end>
-            Overview
-          </NavLink>
-          {SOON.map((s) => (
-            <span key={s} className="soon" aria-disabled="true" title="Coming soon">
-              {s}
-            </span>
-          ))}
-        </nav>
+        </Link>
+        {inFlex && (
+          <>
+            <Link to="/" className="tag on" title="Choose another study">
+              FLEX
+            </Link>
+            <nav aria-label="FLEX sections" className="top-nav">
+              {FLEX_NAV.map((n) => (
+                <NavLink key={n.to} to={n.to} end={n.end}>
+                  {n.label}
+                </NavLink>
+              ))}
+            </nav>
+          </>
+        )}
         <label className="search">
           <span className="sr-only">Ask the agent</span>
-          <input
-            type="search"
-            disabled
-            placeholder="Ask the agent — coming soon"
-          />
+          <input type="search" disabled placeholder="Ask the agent — coming soon" />
         </label>
+        <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
+          Cart · 0
+        </button>
       </div>
     </header>
   );
