@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { AgentLauncher, AgentPanel, AgentProvider } from "@/features/agent";
+import { useSaffireDashboard } from "@/features/saffire2";
 import { useSameROverview } from "@/features/same-r";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
@@ -24,6 +25,16 @@ const STUDIES = [
       { to: "/studies/same-r/tests", label: "Tests", end: false },
       { to: "/studies/same-r/compare", label: "Compare", end: true },
       { to: "/studies/same-r/library", label: "Library", end: true },
+    ],
+  },
+  {
+    prefix: "/studies/saffire2",
+    tag: "SAFFIRE-II",
+    nav: [
+      { to: "/studies/saffire2", label: "Overview", end: true },
+      { to: "/studies/saffire2/samples", label: "Samples", end: false },
+      { to: "/studies/saffire2/compare", label: "Compare", end: true },
+      { to: "/studies/saffire2/library", label: "Library", end: true },
     ],
   },
 ];
@@ -77,17 +88,20 @@ function Header() {
 }
 
 function Footer() {
-  const sameR = useLocation().pathname.startsWith("/studies/same-r");
+  const path = useLocation().pathname;
+  const sameR = path.startsWith("/studies/same-r");
+  const saffire = path.startsWith("/studies/saffire2");
   const overview = useOverview();
   const sameROverview = useSameROverview(sameR);
+  const saffireDash = useSaffireDashboard(saffire);
   const health = useHealth();
-  const doi = sameR ? sameROverview.data?.doi : overview.data?.about.doi;
+  const doi = sameR ? sameROverview.data?.doi : saffire ? saffireDash.data?.about.doi : overview.data?.about.doi;
   const api = health.isError ? "API unreachable" : health.data ? `API ${health.data.status}` : "API …";
   return (
     <footer className="foot">
       <div className="foot-row">
       <span>
-        Data: NASA Physical Sciences Informatics, {sameR ? "SAME-R (PSI-101)" : "FLEX (PSI-69)"}, CC0
+        Data: NASA Physical Sciences Informatics, {sameR ? "SAME-R (PSI-101)" : saffire ? "Saffire-II (PSI-99)" : "FLEX (PSI-69)"}, CC0
         {doi && (
           <>
             {" · "}
