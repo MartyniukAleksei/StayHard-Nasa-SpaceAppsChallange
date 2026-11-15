@@ -19,6 +19,8 @@
 | `open_video` | `test_nos` (1) | `/studies/flex/tests/{n}?view=video#tp-media` (лише тести з локальним mp4) |
 | `open_replay` | `test_nos` (1), `t_s` | `/studies/flex/tests/{n}?view=3d&t=<t_s>#tp-media` — 3D-replay на паузі в цей момент |
 
+З `params.study = "samer"` кнопки ведуть на сторінки SAME-R: `open_test` → `/studies/same-r/tests/{n}`, `open_compare` → `/studies/same-r/compare?ids=…`, `open_tests` → `/studies/same-r/tests`; `test_nos` — номери прогонів SAME-R. Решта дій для SAME-R недоступна.
+
 Кадри камер агент не відкриває окремою сторінкою: `find_frame` / `look_at_frames` показують їх прямо в чаті (подія `frame`).
 
 Бекенд-інструмент `propose_action` перевіряє параметри (тести існують, ≤ 3 для compare) і відповідає моделі «shown to user». Кнопка під відповіддю: «Opened comparison of FLEX-019, 023» після кліку + «Back».

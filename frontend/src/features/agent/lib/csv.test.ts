@@ -22,3 +22,10 @@ describe("chartCsv", () => {
     assert.equal(csvName(chart), "d_FLEX-019_FLEX-027.csv");
   });
 });
+
+describe("chartCsv for SAME-R", () => {
+  test("header names SAME-R and its DOI", () => {
+    const samer = { ...chart, title: "P-Trak — SAME-R #73", derived: false, test_nos: [], study: "samer", test_ids: [73] };
+    assert.equal(chartCsv(samer, "10.60555/2np7-jv14").split("\n")[0], "# P-Trak — SAME-R #73. Data: NASA PSI SAME-R (PSI-101), doi:10.60555/2np7-jv14");
+  });
+});

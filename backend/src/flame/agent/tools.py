@@ -36,6 +36,8 @@ from flame.studies.flex.schemas import Filter
 from flame.studies.psi import repository as psi_repository
 from flame.studies.psi import service as psi_service
 from flame.studies.psi.schemas import Filter as StudyFilter
+from flame.studies.same_r import repository as same_r_repository
+from flame.studies.same_r import service as same_r_service
 
 STUDY = "PSI-69"
 OPS = ["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "not_null"]
@@ -204,11 +206,15 @@ UI_TOOLS: list[dict[str, Any]] = [
             "include fiber tests). open_video: the onboard video of one test (only some tests "
             "have one; you get an error otherwise). open_replay: the 3D replay of one test "
             "starting at t_s seconds after ignition. t_s is ignored by other actions (send 0). "
-            "label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'."
+            "label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'. study: flex for "
+            "all of the above; samer opens the SAME-R pages instead (open_test, open_compare and "
+            "open_tests only; test_nos are then SAME-R run numbers, e.g. 73 for test 73 / 73a; "
+            "explorer is ignored)."
         ),
         "input_schema": _obj(
             {
                 "action": {"type": "string", "enum": ACTIONS},
+                "study": {"type": "string", "enum": ["flex", "samer"]},
                 "label": {"type": "string"},
                 "test_nos": {"type": "array", "items": TEST_NO},
                 "t_s": {"type": "number"},
@@ -257,6 +263,24 @@ CHART_TOOL: dict[str, Any] = {
             "filters": TOOLS[0]["input_schema"]["properties"]["filters"],
             "x_field": {"type": "string", "enum": ["", *charts.NUMERIC_FIELDS]},
             "y_field": {"type": "string", "enum": ["", *charts.NUMERIC_FIELDS]},
+        }
+    ),
+}
+
+STUDY_CHART_TOOL = {
+    "name": "make_study_chart",
+    "description": (
+        "Draw a SAME-R sensor over time in the chat for 1-3 SAME-R tests on shared axes, e.g. how "
+        "the P-Trak count, smoke mass or a smoke detector reacted. t = 0 is when the heater "
+        "turned on; instrument status codes are left out. test_nos are SAME-R run numbers (73 for "
+        "test 73 / 73a). study must be samer. Describe what the chart shows using the returned "
+        "summaries; they give the range and when the reading peaked."
+    ),
+    "input_schema": _obj(
+        {
+            "study": {"type": "string", "enum": ["samer"]},
+            "column": {"type": "string", "enum": list(same_r_service.CHART_COLUMNS)},
+            "test_nos": {"type": "array", "items": {"type": "integer"}},
         }
     ),
 }
@@ -386,6 +410,7 @@ STUDY_TOOLS: list[dict[str, Any]] = [
 TOOLS.extend(STUDY_TOOLS)
 TOOLS.extend(UI_TOOLS)
 TOOLS.append(CHART_TOOL)
+TOOLS.append(STUDY_CHART_TOOL)
 TOOLS.extend(FRAME_TOOLS)
 
 # strict: true — лише малі схеми: API компілює строгі схеми в граматику з обмеженням розміру,
@@ -538,11 +563,28 @@ def _existing(cur: duckdb.DuckDBPyConnection, nos: list[int]) -> list[int]:
     return nos
 
 
+def _same_r_action(cur: duckdb.DuckDBPyConnection, action: Any, nos: list[int]) -> dict[str, Any]:
+    """Кнопка на сторінки SAME-R: ті самі правила кількості тестів, що й для FLEX."""
+    need = {"open_test": (1, 1), "open_compare": (2, 3), "open_tests": (0, 0)}.get(str(action))
+    if need is None:
+        raise ToolError(
+            f"{action} is not available for SAME-R; use open_test, open_compare or open_tests"
+        )
+    if not need[0] <= len(nos) <= need[1]:
+        raise ToolError(f"{action} for SAME-R needs {need[0]}-{need[1]} tests in test_nos")
+    missing = [n for n in nos if not same_r_repository.tests(cur, n)]
+    if missing:
+        raise ToolError(f"no such SAME-R tests: {', '.join(map(str, missing))}")
+    return {"study": "samer", "test_nos": nos}
+
+
 def propose_action(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
     action = args.get("action")
     nos = list(dict.fromkeys(int(n) for n in args.get("test_nos") or []))
     params: dict[str, Any] = {}
-    if action == "open_test":
+    if args.get("study") == "samer":
+        params = _same_r_action(cur, action, nos)
+    elif action == "open_test":
         if len(nos) != 1:
             raise ToolError("open_test needs exactly one test in test_nos")
         params["test_nos"] = _existing(cur, nos)
@@ -606,6 +648,21 @@ def make_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutp
             nos = [int(n) for n in args.get("test_nos") or []]
             out = charts.line(cur, args.get("quantity", ""), nos)
     except charts.ChartError as e:
+        raise ToolError(str(e)) from e
+    notes = out["chart"]["notes"]
+    return ToolOutput(
+        sources=out["sources"],
+        notes=[f"Chart shown to the user. {'; '.join(notes)}"] if notes else [],
+        note_url=out["sources"][0].url,
+        events=[{"event": "chart", "data": out["chart"]}],
+    )
+
+
+def make_study_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    try:
+        nos = [int(n) for n in args.get("test_nos") or []]
+        out = same_r_service.chart(cur, str(args.get("column") or ""), nos)
+    except same_r_service.NotFound as e:
         raise ToolError(str(e)) from e
     notes = out["chart"]["notes"]
     return ToolOutput(
@@ -804,6 +861,7 @@ HANDLERS: dict[str, Handler] = {
     "propose_action": propose_action,
     "highlight_params": highlight_params,
     "make_chart": make_chart,
+    "make_study_chart": make_study_chart,
     "find_frame": find_frame,
     "look_at_frames": look_at_frames,
 }
