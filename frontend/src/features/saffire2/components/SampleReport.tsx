@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link } from "react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation } from "react-router";
 import { num } from "@/shared/lib/format";
 import { useSaffireDashboard, useSaffireSampleFiles } from "../api";
 import { glyphOf, VERDICT_LABEL } from "../content";
@@ -16,6 +16,12 @@ export type WatchSlot = (id: string, onT: (t: number | null) => void) => ReactNo
 export function SampleReport({ id, watch }: { id: string; watch?: WatchSlot }) {
   const { data, isPending, isError, error } = useSaffireDashboard();
   const [t, setT] = useState<number | null>(null);
+  const { hash } = useLocation();
+  // the sections exist only after the data loads: jump to #sfr-watch (or any #section) then
+  const ready = !!data;
+  useEffect(() => {
+    if (ready && hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: "start" });
+  }, [ready, hash, id]);
   if (isPending) return <Loading />;
   if (isError) return <Failed message={error.message} />;
   const s = data.samples.find((x) => x.test_id === id);
