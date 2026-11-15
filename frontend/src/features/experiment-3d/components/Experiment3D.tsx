@@ -25,7 +25,8 @@ function hasWebGL(): boolean {
 }
 
 /** 3D replay of one FLEX test, drawn from its measured series, next to the real onboard frames. */
-export function Experiment3D({ testNo }: { testNo: number }) {
+/** startAt: open paused at this moment (s after ignition), e.g. from ?t= in the URL. */
+export function Experiment3D({ testNo, startAt }: { testNo: number; startAt?: number }) {
   const state = useExperiment(testNo);
   const webgl = useMemo(hasWebGL, []);
 
@@ -35,7 +36,7 @@ export function Experiment3D({ testNo }: { testNo: number }) {
   if (state.status === "empty") return <div className="x3d-empty">No droplet series for test #{testNo}.</div>;
   return (
     <SceneBoundary fallback={<Fallback testNo={testNo} reason="The 3D scene failed to start on this device." />}>
-      <Replay experiment={state.experiment} />
+      <Replay experiment={state.experiment} startAt={startAt} />
     </SceneBoundary>
   );
 }
@@ -59,12 +60,15 @@ class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-function Replay({ experiment }: { experiment: Experiment }) {
+function Replay({ experiment, startAt }: { experiment: Experiment; startAt?: number }) {
   const reduced = useMemo(prefersReducedMotion, []);
   // with reduced motion: paused on a frame that already shows the flame
   const playback = useMemo(
-    () => new Playback(experiment.tMin, experiment.tMax, !reduced, reduced ? Math.min(2, experiment.tMax) : undefined),
-    [experiment, reduced],
+    () =>
+      startAt != null
+        ? new Playback(experiment.tMin, experiment.tMax, false, startAt) // a chosen moment: paused on it
+        : new Playback(experiment.tMin, experiment.tMax, !reduced, reduced ? Math.min(2, experiment.tMax) : undefined),
+    [experiment, reduced, startAt],
   );
   const [layers, setLayers] = useState<Layers>({ uv: true, visible: true });
   const [active, setActive] = useState(true);

@@ -30,7 +30,7 @@ def _ev(name: str, **data: Any) -> Event:
 
 
 def tool_definitions() -> list[dict[str, Any]]:
-    defs = [{**t, "strict": True} for t in tools.TOOLS]
+    defs = [{**t, "strict": True} if t["name"] in tools.STRICT else dict(t) for t in tools.TOOLS]
     defs[-1] = {**defs[-1], "cache_control": {"type": "ephemeral"}}  # кеш: system + tools
     return defs
 
@@ -71,6 +71,20 @@ def _run_tool(cur: duckdb.DuckDBPyConnection, block: Any) -> tuple[dict[str, Any
     return {**result, "content": out.content()}, out.events
 
 
+def _answer_content(messages: list[dict[str, Any]], start: int) -> list[Any]:
+    """Текстові блоки всіх відповідей асистента з `start`: модель може написати основну
+    відповідь до виклику інструмента (напр. propose_action) і лише коротку фразу після нього."""
+    out: list[Any] = []
+    for m in messages[start:]:
+        if m["role"] != "assistant" or isinstance(m["content"], str):
+            continue
+        texts = [b for b in m["content"] if getattr(b, "type", None) == "text"]
+        if texts and out:
+            out.append({"type": "text", "text": "\n\n"})
+        out.extend(texts)
+    return out
+
+
 def run_turn(
     client: anthropic.Anthropic,
     cur: duckdb.DuckDBPyConnection,
@@ -79,9 +93,11 @@ def run_turn(
 ) -> Iterator[Event]:
     started = time.time()
     messages = build_messages(history)
+    answer_from = len(messages)  # звідки збирати текст відповіді (після перезапиту — новий)
     usage_total = {"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0}
     cost = 0.0
     rewritten = False
+    had_sources = False  # чи повертали інструменти цитовані джерела за цей хід
     answer: Answer | None = None
     stop_note: str | None = None
 
@@ -142,17 +158,24 @@ def run_turn(
                 yield _ev("status", tool=block.name, text=tools.status_text(block.name, args))
                 result, ui_events = _run_tool(cur, block)
                 results.append(result)
+                content = result.get("content")
+                if isinstance(content, list) and any(
+                    b.get("type") == "search_result" for b in content
+                ):
+                    had_sources = True
                 for i, ev in enumerate(ui_events):
                     yield {**ev, "data": {**ev["data"], "id": f"{block.id}-{i}"}}
             messages.append({"role": "user", "content": results})
             continue
 
-        answer = build_answer(final.content, history[-1].text)
+        answer = build_answer(_answer_content(messages, answer_from), history[-1].text)
         steps_left = settings.agent_max_steps - step - 1
-        if answer.uncited_texts() and not rewritten and steps_left > 0 and stop_note is None:
+        missing = answer.uncited_texts() or (had_sources and not answer.sources)
+        if missing and not rewritten and steps_left > 0 and stop_note is None:
             rewritten = True
             yield _ev("rewrite", reason="uncited statements")
             messages.append({"role": "user", "content": rewrite_request(answer)})
+            answer_from = len(messages)
             continue
         if last_step and settings.agent_max_steps > 1:
             stop_note = "max_steps"  # відповідь зібрана примусово, без нових інструментів
@@ -168,9 +191,7 @@ def run_turn(
             ),
         )
     if answer is None:
-        last = messages[-1]
-        content = last["content"] if last["role"] == "assistant" else []
-        answer = build_answer(content, history[-1].text)
+        answer = build_answer(_answer_content(messages, answer_from), history[-1].text)
     yield _ev(
         "done",
         answer=answer.model_dump(),

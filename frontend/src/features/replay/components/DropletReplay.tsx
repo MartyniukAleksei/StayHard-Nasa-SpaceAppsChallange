@@ -22,23 +22,24 @@ function fmt(v: number | null, unit: string): string {
   return v == null ? "—" : `${v.toFixed(2)} ${unit}`;
 }
 
-export function DropletReplay({ testNo }: { testNo: number }) {
+/** startAt: open paused at this moment (s after ignition). */
+export function DropletReplay({ testNo, startAt }: { testNo: number; startAt?: number }) {
   const { data, isPending, isError } = useReplay(testNo);
   if (isPending) return <div className="replay replay-empty">Loading measured series…</div>;
   if (isError || !data) return <div className="replay replay-empty">Replay unavailable.</div>;
   if (data.droplet.length === 0) {
     return <div className="replay replay-empty">No droplet series for test #{testNo}.</div>;
   }
-  return <ReplayView replay={data} />;
+  return <ReplayView replay={data} startAt={startAt} />;
 }
 
-function ReplayView({ replay }: { replay: Replay }) {
+function ReplayView({ replay, startAt }: { replay: Replay; startAt?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = useMemo(prefersReducedMotion, []);
   const tMax = useMemo(() => duration(replay), [replay]);
   const scale = useMemo(() => FILL / maxDiameter(replay), [replay]);
-  const [t, setT] = useState(() => Math.min(START_T, tMax));
-  const [playing, setPlaying] = useState(!reduced);
+  const [t, setT] = useState(() => Math.min(Math.max(0, startAt ?? START_T), tMax));
+  const [playing, setPlaying] = useState(!reduced && startAt == null);
   const [visible, setVisible] = useState(true);
   const frame = frameAt(replay, t);
 

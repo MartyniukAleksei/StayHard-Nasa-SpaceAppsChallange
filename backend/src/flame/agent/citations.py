@@ -135,6 +135,15 @@ REWRITE_INSTRUCTION = (
 )
 
 
+NO_CITATIONS_INSTRUCTION = (
+    "Your final message has no citations, although the tools returned sources. Write your "
+    "complete answer again in one final message, citing the tool results for every FLEX fact "
+    "and number. Do not call tools you already called."
+)
+
+
 def rewrite_request(answer: Answer) -> str:
+    if not answer.uncited_texts():
+        return NO_CITATIONS_INSTRUCTION
     items = "\n".join(f"- {t[:200]}" for t in answer.uncited_texts())
     return REWRITE_INSTRUCTION.format(items=items)
