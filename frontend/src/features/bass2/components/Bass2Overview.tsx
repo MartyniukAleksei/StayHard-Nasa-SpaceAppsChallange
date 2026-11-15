@@ -45,8 +45,8 @@ export function Bass2Overview() {
           <h2 id="b2-3d-title" className="h-section">Inside the flow duct</h2>
           <p className="lede">
             <span className="tag">simulation, not a measurement</span> A schematic of the BASS-II wind tunnel: pick a
-            sample, move the flow and oxygen, and see which way the flame goes. Shapes are schematic; the limits come from
-            the report. Data:{" "}
+            sample, move the flow and oxygen, and see which way the flame goes; or replay a real test, with the flow and the
+            flame read from its NASA video (estimate). Shapes are schematic; the limits come from the report. Data:{" "}
             <a href={`https://doi.org/${d.doi}`} target="_blank" rel="noreferrer">
               doi:{d.doi}
             </a>

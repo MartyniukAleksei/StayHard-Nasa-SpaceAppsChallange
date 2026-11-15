@@ -41,7 +41,8 @@ function DuctWalls({ x0, x1, color }: { x0: number; x1: number; color: string })
   const materials = useMemo(
     () => [
       new THREE.MeshBasicMaterial({ visible: false }), // end caps: the duct is open at both ends
-      new THREE.MeshStandardMaterial({ color, metalness: 0.35, roughness: 0.7, side: THREE.BackSide }),
+      // black anodized aluminium: dark, slightly metallic, with a faint sheen
+      new THREE.MeshPhysicalMaterial({ color, metalness: 0.55, roughness: 0.52, clearcoat: 0.25, clearcoatRoughness: 0.4, side: THREE.BackSide }),
     ],
     [color],
   );
@@ -53,6 +54,18 @@ function DuctWalls({ x0, x1, color }: { x0: number; x1: number; color: string })
     [geometry, materials],
   );
   return <mesh geometry={geometry} material={materials} />;
+}
+
+/** Window pane: a thin reflective sheet in the wall plane. Frame sizes are schematic. */
+function Pane({ axis, at, x0, x1, half }: { axis: "y" | "z"; at: number; x0: number; x1: number; half: number }) {
+  const w = x1 - x0;
+  const h = 2 * half;
+  return (
+    <mesh position={axis === "y" ? [(x0 + x1) / 2, at, 0] : [(x0 + x1) / 2, 0, at]} rotation={axis === "y" ? [-Math.PI / 2, 0, 0] : [0, 0, 0]}>
+      <planeGeometry args={[w, h]} />
+      <meshPhysicalMaterial color="#c8d6f0" metalness={0} roughness={0.04} transparent opacity={0.12} envMapIntensity={1.6} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
+  );
 }
 
 /** Closed outline through the given points. */
@@ -122,7 +135,8 @@ function Mesh2D({ x, kind, repeat, color, metalness }: { x: number; kind: "holes
       <meshStandardMaterial
         color={color}
         metalness={metalness}
-        roughness={0.38}
+        roughness={0.3}
+        envMapIntensity={1.3}
         alphaMap={alphaMap}
         alphaTest={0.5}
         side={THREE.DoubleSide}
@@ -166,7 +180,7 @@ function Honeycomb({ x }: { x: number }) {
 function Fan({ x, sim }: { x: number; sim: Sim }) {
   const rotor = useRef<THREE.Group>(null);
   useFrame((_, dt) => {
-    if (rotor.current && sim.active) rotor.current.rotation.x += Math.min(dt, 0.1) * (1.5 + sim.tracerCmS * 0.55);
+    if (rotor.current && sim.active && !sim.reducedMotion) rotor.current.rotation.x += Math.min(dt, 0.1) * (1.5 + sim.tracerCmS * 0.55);
   });
   const blades = useMemo(() => Array.from({ length: 7 }, (_, i) => (i / 7) * Math.PI * 2), []);
   return (
@@ -227,9 +241,12 @@ export function Apparatus({ sim }: { sim: Sim }) {
       <Mesh2D x={HALF_L + 2} kind="holes" repeat={19} color="#c77b4a" metalness={0.9} />
       <Mesh2D x={HALF_L + 8} kind="wires" repeat={30} color="#c8a94e" metalness={0.9} />
 
-      {/* outlines: both ends of the test section, the top window and the front window (p.4, Fig. 7.1a) */}
+      {/* top window and front window (p.4, Fig. 7.1a): frame outline plus a glass pane */}
       <Outline points={rect("y", HALF_W, -HALF_L + 22, HALF_L - 22, 27)} />
+      <Pane axis="y" at={HALF_W - 0.3} x0={-HALF_L + 22} x1={HALF_L - 22} half={27} />
       <Outline points={rect("z", HALF_W, -HALF_L + 12, HALF_L - 12, 30)} />
+      <Pane axis="z" at={HALF_W - 0.3} x0={-HALF_L + 12} x1={HALF_L - 12} half={30} />
+      {/* edges of the duct: both ends of the test section */}
       <Outline points={rect("y", -HALF_W, -HALF_L, HALF_L, HALF_W)} color="#565e6e" />
       <Outline points={rect("y", HALF_W, -HALF_L, HALF_L, HALF_W)} color="#565e6e" />
 
