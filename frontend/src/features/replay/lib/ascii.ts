@@ -47,9 +47,11 @@ export function renderAscii(
   const H = cv.clientHeight;
   if (!W || !H) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  if (cv.width !== Math.round(W * dpr)) {
-    cv.width = Math.round(W * dpr);
-    cv.height = Math.round(H * dpr);
+  const bw = Math.round(W * dpr);
+  const bh = Math.round(H * dpr);
+  if (cv.width !== bw || cv.height !== bh) {
+    cv.width = bw;
+    cv.height = bh;
   }
   const g = cv.getContext("2d");
   if (!g) return;
