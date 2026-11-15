@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { FindTest } from "./FindTest";
+import { FindTest } from "@/shared/ui/FindTest";
 import { Link, useSearchParams } from "react-router";
-import { compareHref, MAX_COMPARE, parseIds, useTests } from "@/features/flex-tests";
+import { compareHref, MAX_COMPARE, parseIds, testHref, useTests } from "@/features/flex-tests";
 import { applyFilters, fromParams, toParams, type Filters } from "../lib/filter";
 import { AnswerCard } from "./AnswerCard";
 import { Facets } from "./Facets";
@@ -53,7 +53,7 @@ export function Explorer() {
             from the data.
           </p>
         </div>
-        <FindTest tests={tests} />
+        <FindTest nos={tests.map((t) => t.test_no)} href={testHref} study="FLEX" />
       </header>
       <div className="ex-grid">
         <Facets tests={tests} filters={filters} onChange={setFilters} />
