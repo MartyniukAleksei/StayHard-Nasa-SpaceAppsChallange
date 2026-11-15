@@ -1,6 +1,6 @@
 # 0001 · Головна сторінка: Огляд FLEX за макетом 1B «Хаб»
 
-**Статус:** до роботи · **Макет:** [layouts_flex.html → «1 · Огляд», варіант 1B](../design/layouts_flex.html#p1) · **Стиль:** [stayhard-ds.html](../design/stayhard-ds.html), дайджест у [design/README.md](../design/README.md) · **Зміст блоків:** [student_flow_flex.md → [1] Огляд](../product/student_flow_flex.md)
+**Статус:** зроблено як 1B; у [0002](0002-pages-1a-2b-3a-4a-5b.md) Огляд перероблено на **1A**, `/` тепер лендінг · **Макет:** [layouts_flex.html → «1 · Огляд», варіант 1B](../design/layouts_flex.html#p1) · **Стиль:** [stayhard-ds.html](../design/stayhard-ds.html), дайджест у [design/README.md](../design/README.md) · **Зміст блоків:** [student_flow_flex.md → [1] Огляд](../product/student_flow_flex.md)
 
 ## Мета
 

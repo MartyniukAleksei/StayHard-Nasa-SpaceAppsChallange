@@ -32,7 +32,8 @@ docker-compose.yml  локальний запуск прод-образів
 | `db/duckdb.py` | read-only підключення; FastAPI-dependency `get_cursor` |
 | `api/router.py` | префікс `/api`, збирає роутери модулів; `api/routes/` — службові (health) |
 | `studies/flex/` | домен FLEX: `schemas` → `repository` (SQL) → `service` (логіка) → `router` (HTTP) |
-| `media/` | віддача файлів тесту з Volume |
+| `studies/` | `catalog.py` + `catalog.json` (паспорти досліджень PSI, генерує `flame.ingest.psi_catalog`), `router.py` — `/api/studies` |
+| `media/` | віддача файлів (PDF, txt, mp4) з Volume: `/api/media/flex/{path}` |
 | `rag/` | чанкінг, ембеддинги, векторний пошук по таблиці `chunks` |
 | `agent/` | LLM-агент та інструменти (`query_tests`, `compare_tests`, `search_docs`, `get_timeseries`, `open_view`) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
@@ -40,15 +41,20 @@ docker-compose.yml  локальний запуск прод-образів
 Залежності між шарами: `router → service → repository → db`. `agent` викликає `service`-и доменів і `rag`, а не SQL напряму.
 
 ### API (поточний і плановий)
+
+Усі `/api/studies/flex/*` повертають 503, якщо БД не зібрана.
+
 | Метод | Шлях | Стан |
 |---|---|---|
 | GET | `/api/health` | ✅ `{status, env, db, flex_data}` |
 | GET | `/api/studies/flex/overview` | ✅ `{about, facts, presets[]}` — паспорт (з `study_about`), факти, пресети-питання з розкладом за фіналами (лише вільні краплі + скільки виключено через нитку). 503, якщо БД не зібрана |
 | GET | `/api/studies/flex/tests/{id}/replay` | ✅ `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок. 404 для невідомого тесту |
-| GET | `/api/studies/flex/tests?filters` | план |
-| GET | `/api/studies/flex/tests/{id}` (+ `/timeseries/{signal}`, `/neighbors`) | план |
-| GET | `/api/studies/flex/compare?ids=` | план |
-| GET | `/api/media/flex/{test_no}/{path}` | план |
+| GET | `/api/studies` | ✅ картки досліджень для лендінгу: паспорт з `studies/catalog.json` (PSI-69 FLEX, PSI-39 CFI, PSI-25 BASS-II, PSI-99 SAFFIRE-II, PSI-107 SPICE, PSI-102 SAME) + `status` (`active`/`coming_soon`), `route`, `facts` (лише для активних, з БД) |
+| GET | `/api/studies/flex/tests` | ✅ усі 274 `TestSummary` (фільтрація — на фронтенді, стан у URL). `has_series` = є ряди краплі **і** UV-полум'я; `has_video` = є локальний mp4 |
+| GET | `/api/studies/flex/tests/{id}` | ✅ `TestDetail`: повний паспорт + `neighbors` (5 схожих: те саме паливо, розбавник і клас нитки, найближчі за O₂, тиском і d₀; *derived*) + `files` + `videos`. 404 для невідомого тесту |
+| GET | `/api/studies/flex/tests/{id}/series.csv` | ✅ усі точки рядів (`signal,t_s,value`), у першому рядку — цитата з DOI |
+| GET | `/api/studies/flex/library` | ✅ цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
+| GET | `/api/media/flex/{path}` | ✅ файли з Volume, лише з `raw/`, `media/`, `docs/`; traversal → 404 (`resolve()` + `is_relative_to`); mp4 з Range (206) |
 | POST | `/api/agent` (stream) | план |
 
 ## Дані — `flame.duckdb`
@@ -63,7 +69,20 @@ docker-compose.yml  локальний запуск прод-образів
 | `app/` | `App`, `router.tsx` (react-router), `providers.tsx` (TanStack Query) |
 | `pages/` | тонкі сторінки, лише компонують фічі |
 | `features/<name>/` | модуль фічі: `api.ts`, `types.ts`, `components/`, `index.ts` (публічний експорт) |
-| `shared/` | `api/client.ts` (fetch до `/api`), `ui/`, `lib/`, `styles/` |
+| `shared/` | `api/client.ts` (fetch до `/api`), `ui/` (`CopyButton`, `Placeholder`, `EndMark`, `chart/TimeChart`), `lib/` (`format`, `useWidth`), `styles/` (токени StayHard) |
+
+Маршрути і фічі:
+
+| Маршрут | Сторінка (макет) | Фіча |
+|---|---|---|
+| `/` | лендінг, вибір дослідження | `features/landing` (ASCII-небо, `StudyCards` з `/api/studies`) |
+| `/studies/flex` | Огляд 1A | `features/study-overview` (+ `replay`) |
+| `/studies/flex/tests` | Дослідник 2B | `features/explorer` (фасети, стан у URL; пресети Огляду ведуть сюди через `presetHref`) |
+| `/studies/flex/tests/:id` | Тест 3A | `features/test-page` |
+| `/studies/flex/compare?ids=` | Порівняння 4A | `features/compare` (≤ 3 тести) |
+| `/studies/flex/library` | Бібліотека 5B | `features/library` |
+
+Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`. Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
 Імпорти через alias `@/`. Фічі не імпортують одна одну всередину — тільки через `index.ts`.
 
 ## Деплой

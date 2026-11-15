@@ -1,6 +1,6 @@
 # 0002 · Лендінг з вибором досліджень + сторінки FLEX 1A · 2B · 3A · 4A · 5B
 
-**Статус:** у роботі (зупинено 2026-11-15, гілка `feat/home-overview`) · **Макети:** [layouts_flex.html](../design/layouts_flex.html), [flex-landing.html](../design/flex-landing.html) · **Стиль:** [design/README.md](../design/README.md) · **Попереднє:** [0001](0001-home-overview-1b.md) (Огляд зроблено як 1B; за цим завданням його переробляємо на 1A)
+**Статус:** зроблено 2026-11-15 (гілка `feat/home-overview`); лишились тексти команди, див. «Перед демо» · **Макети:** [layouts_flex.html](../design/layouts_flex.html), [flex-landing.html](../design/flex-landing.html) · **Стиль:** [design/README.md](../design/README.md) · **Попереднє:** [0001](0001-home-overview-1b.md) (Огляд зроблено як 1B; за цим завданням його переробляємо на 1A)
 
 ## Що вирішила команда
 
@@ -39,54 +39,28 @@
 - [x] `GET /api/studies/flex/tests/{id}/series.csv` — усі точки з БД, у шапці цитата з DOI.
 - [x] `GET /api/studies/flex/library` — цитата, 51 публікація, NASA-документи за категоріями, `limitations`. Обмеження: нитка 54 / вільні 212 / невідомо 8, Disruption 61, без d₀ 12, без K 16, без рядів 20, з відео 12.
 - [x] `GET /api/media/flex/{path}` — лише `raw/`, `media/`, `docs/`, перевірка `resolve()` + `is_relative_to` (traversal → 404). mp4 з Range (206), це вміє Starlette 1.10.
-- [ ] Оновити `docs/architecture.md`: нові ендпоінти, `media`, каталог.
+- [x] Оновити `docs/architecture.md`: нові ендпоінти, `media`, каталог.
 
-### Фронтенд — ⏳ приблизно половина; `tsc` проходить, у браузері нові сторінки ще **не перевірені**
+### Фронтенд — ✅ готово; `npm run build` і `npm test` (25 тестів) проходять, усі маршрути перевірені в браузері
 
-Зроблено (файли є, але ще не підключені до маршрутів):
-- [x] `shared/lib/format.ts` (`num`, `pct`, `chem`, `bytes`, `fiberLabel`), `shared/lib/useWidth.ts`.
-- [x] `shared/ui/Placeholder.tsx` (TODO-нагадування), `shared/ui/chart/TimeChart.tsx` + `chart.css` (SVG: растрові крапки, лінії, маркер «flame out», курсор).
-- [x] `features/flex-tests`: типи, хуки `useTests` / `useTest` / `useTestsDetail` / `useLibrary`, `mediaUrl`, `seriesCsvUrl`, `compare.ts` (`parseIds`, `compareHref`, `MAX_COMPARE = 3`).
-- [x] `features/explorer` (2B):
-  - `lib/filter.ts`: фасети, межі смуг збігаються з SQL пресетів, за замовчуванням лише вільні краплі; стан у URL; `presetHref`;
-  - `Facets`, `AnswerCard`, `TestMap` (O₂ × розбавник/тиск), `TestTable` (сортування, галочки compare), `Preview`, `Explorer`, `explorer.css`.
-- [x] `features/test-page` (3A): `TestReport` (заголовок + Q-прапорці → What happened TODO → Watch → d² → діаметри → параметри → коментар → схожі → файли), `MediaBlock` (вкладки відео / replay), `FileList`, `test.css`.
-- [x] `features/compare` (4A): `Compare` (до 3 колонок, спільні осі d², поле «Add test №», попередження про змішування класів нитки, TODO «How they differ»), `compare.css`. На мобільному scroll-snap.
-- [x] `features/replay/api.ts`: додано `useReplays`.
+- [x] `shared/lib/format.ts`, `shared/lib/useWidth.ts`, `shared/ui/Placeholder.tsx`, `shared/ui/CopyButton.tsx` (винесено з Огляду, використовується в Огляді й Бібліотеці), `shared/ui/chart/TimeChart.tsx`.
+- [x] `features/flex-tests`: типи, хуки, `mediaUrl`, `seriesCsvUrl`, `compare.ts`.
+- [x] `features/explorer` (2B), `features/test-page` (3A), `features/compare` (4A), `features/replay` (+ `useReplays`).
+- [x] `features/library` (5B): `content.ts` (словник полів `tests` і `series.csv`, теми публікацій, застереження), `Library.tsx` зі sticky-меню якорів (`#cite`, `#cart`, `#dictionary`, `#limitations`, `#publications`, `#documents`). Обмеження — числа з API; теми публікацій — збіг ключових слів у назві, підписано *derived*.
+- [x] `features/landing`: `lib/sky.ts` (порт `drawSky` / `drawCosmos` з `flex-landing.html`), `useSky` (≈11 кадрів/с, пауза поза екраном, при reduced motion — один кадр), hero «Deep dive into space» без чисел, `StudyCards` з `/api/studies` (FLEX активний з фактами; решта — пунктир, «coming soon», DOI).
+- [x] Огляд 1B → **1A**: hero + мета-рядок → replay №35 на всю ширину (21:8, на телефоні 4:3) → How it worked → What was found (TODO) → пресети (кожна відповідь — посилання `presetHref`) → пастки → цитування й паспорт. Мобільний CSS `order` прибрано, `chem()` береться з `shared/lib/format`.
+- [x] `app/router.tsx`: `/` → лендінг; сторінки `pages/{Landing,Tests,Test,Compare,Library}Page.tsx`; `TestPage` бере `:id` з `useParams`, нечисловий id → NotFound.
+- [x] `app/Layout.tsx`: навігація `[Overview] [Tests] [Compare] [Library]` з `aria-current` (дужки в активного), кнопка `Cart · 0` неактивна (на ≤ 600 px схована), пошук — заглушка, на `/` без FLEX-навігації, чип FLEX веде на `/`.
+- [x] Тести: замість vitest — `node:test` (`npm test`), бо `npm install` на Windows ламає `package-lock.json` для `npm ci` у Docker. `explorer/lib/filter.test.ts` (межі смуг, URL-стан, фасети + реальні дані з `data/flex/tests.csv`: ISS air 21, clean 161, lunar 13, cool 40, CO₂ 99, He 41 — ті самі числа, що в пресетах), `replay/lib/frame.test.ts`. Типи тестів перевіряє `tsconfig.test.json`.
+- [x] Виправлено в `replay/lib/ascii.ts`: canvas перевиділявся лише при зміні ширини, тож при іншій висоті сфера розтягувалась в еліпс.
+- [x] Документи: `design/README.md` (вибрані варіанти, `flex-landing.html`), `architecture.md` (API, `studies/`, маршрути фронтенду), `development.md` і `CLAUDE.md` (`npm test`), індекс `docs/README.md`, статус `0001`.
+- [x] Перевірка в браузері (десктоп 1707 px і iframe 375 px), кожен маршрут: горизонтального скролу немає, консоль чиста; відео №207 грає; `FLEX-207_Summary.pdf` віддається (206, `application/pdf`); пресет «ISS air» відкриває Дослідник з тими самими 21 (10 · 8 · 3); галочки → `/compare?ids=1,2,3`.
 
-Залишилось:
-1. [ ] `shared/ui/CopyButton.tsx`. Винести копіювання з `study-overview/components/AboutDetails.tsx` і використати там і в Бібліотеці.
-2. [ ] `features/library` (5B):
-   - `content.ts` (словник полів `tests` і рядів, теми публікацій);
-   - `Library.tsx` зі sticky-меню якорів: How to cite · Lab cart (TODO) · Data dictionary · Limitations · Publications (чипи-теми, derived) · NASA documents (`FileList` з `test-page`).
-3. [ ] `features/landing`:
-   - порт `drawSky` / `drawCosmos` з `flex-landing.html` у `lib/sky.ts` (пауза поза екраном і при reduced motion);
-   - hero «Deep dive into space» + Start → `#studies`;
-   - `StudyCards` з `/api/studies` (FLEX → `/studies/flex`; решта — пунктир, «coming soon», DOI).
-4. [ ] Огляд 1B → **1A**. Вертикальний порядок: A hero + мета-рядок → G replay №35 на всю ширину → B How it worked → D findings (TODO) → D+L5 пресети (картки стають посиланнями `presetHref(group.id)`) → Q traps → A citation + паспорт. Прибрати мобільний CSS `order` з `overview.css`; `chem()` у `Hero.tsx` замінити на `shared/lib/format`.
-5. [ ] `app/router.tsx`:
-   - `/` → лендінг (зараз редирект на `/studies/flex`);
-   - нові сторінки `pages/{Landing,Tests,Test,Compare,Library}Page.tsx`;
-   - `TestPage` бере `:id` з `useParams`.
-6. [ ] `app/Layout.tsx`:
-   - навігація `[Overview] [Tests] [Compare] [Library]` у дужках з `aria-current`;
-   - кнопка `Cart · 0` неактивна;
-   - пошук-заглушка;
-   - на `/` без FLEX-навігації;
-   - чип FLEX веде на `/`.
-7. [ ] `vitest` + тести для `explorer/lib/filter.ts` (зокрема: пресет «ISS air» дає 21 вільний тест, «clean» дає 161) і `replay/lib/frame.ts`.
-8. [ ] Документи:
-   - `design/README.md`: вибрані варіанти 1A / 2B / 3A / 4A / 5B + `flex-landing.html`;
-   - `architecture.md`;
-   - індекс `docs/README.md`;
-   - у `0001` позначка «перероблено на 1A».
-9. [ ] Перевірка в браузері, на десктопі й у iframe на 375 px, кожен маршрут:
-   - немає горизонтального скролу, консоль чиста;
-   - відео тесту з `has_video` грає;
-   - Summary.pdf відкривається;
-   - пресет з Огляду відкриває Дослідник з тими самими числами;
-   - галочки → Порівняння з `?ids=`.
-10. [ ] `npm run build`, `uv run pytest`, `ruff`; потім PR.
+## Перед демо (команда)
+
+- [ ] Прибрати всі `TODO (team)`-плейсхолдери: Findings (3 висновки з № тесту й DOI — `study-overview/content.ts`), What happened (сторінка тесту), наш K-фіт, How they differ (Порівняння), Lab cart (Бібліотека й кнопка в шапці).
+- [ ] `docs/data/flex.md`, на який посилаються `CLAUDE.md`, `architecture.md` і `0001`, у репозиторії відсутній — треба повернути або написати (схема таблиць, якість даних, правило cool flame).
+- [ ] Дослідник на телефоні: фільтри зараз розгорнуті зверху; у макеті 2B для мобільного — кнопка-шторка.
 
 ## Як підняти локально завтра
 

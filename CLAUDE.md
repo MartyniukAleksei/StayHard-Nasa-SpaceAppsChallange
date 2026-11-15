@@ -24,6 +24,7 @@ Frontend (run from `frontend/`):
 npm install
 npm run dev     # :5173, proxies /api → :8000
 npm run build   # tsc -b && vite build (this is also the type check)
+npm test        # node:test over src/**/*.test.ts (no test framework dependency)
 ```
 
 Both production images together: `docker compose up --build` (backend :8000, frontend :8080; `./data` is mounted read-only as `/data`). `.claude/launch.json` defines the `backend` and `frontend` dev servers.

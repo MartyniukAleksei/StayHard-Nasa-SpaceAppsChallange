@@ -5,7 +5,21 @@
 | Файл | Що це |
 |---|---|
 | [layouts_flex.html](layouts_flex.html) | Каркаси (wireframes) усіх 5 сторінок FLEX, по 2–3 варіанти на сторінку, з оцінкою і рекомендацією. Мітки блоків A–H, L5, Q — з [../product/student_flow_flex.md](../product/student_flow_flex.md). Числа й графіки — реальні дані FLEX, вшиті в `const DATA` наприкінці файлу. |
+| [flex-landing.html](flex-landing.html) | Макет лендінгу `/`: ASCII-небо (Місяць, супутник, комети) і hero «Deep dive into space». Реалізовано у `frontend/src/features/landing` (`lib/sky.ts` — порт `drawSky` / `drawCosmos`). Комети й небо — **лише на лендінгу**. |
 | [stayhard-ds.html](stayhard-ds.html) | Дизайн-система StayHard v0.2: кольори, шрифти, ASCII/растрові фактури, компоненти, токени. Візуальний вигляд беремо **звідси**, а не з каркасів (у каркасах дизайну навмисно немає). |
+
+## Вибрані варіанти (рішення команди 2026-11-15, задача [0002](../tasks/0002-pages-1a-2b-3a-4a-5b.md))
+
+| Сторінка | Маршрут | Варіант |
+|---|---|---|
+| Лендінг | `/` | [flex-landing.html](flex-landing.html) + картки досліджень з `/api/studies` |
+| 1 · Огляд | `/studies/flex` | **1A** довга сторінка-розповідь: hero → replay №35 на всю ширину → How it worked → What was found → пресети-питання (посилання в Дослідник) → пастки → цитування й паспорт |
+| 2 · Дослідник | `/studies/flex/tests` | **2B** master–detail |
+| 3 · Тест | `/studies/flex/tests/:id` | **3A** довгий звіт |
+| 4 · Порівняння | `/studies/flex/compare?ids=` | **4A** картки поруч (≤ 3) |
+| 5 · Бібліотека | `/studies/flex/library` | **5B** документація з якорями |
+
+Таблиця нижче — початкові рекомендації з каркасів; там, де вони відрізняються, діє вибір вище.
 
 ## Рекомендовані варіанти (з layouts_flex.html, «Підсумок»)
 
