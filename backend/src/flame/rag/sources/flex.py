@@ -108,7 +108,8 @@ def _doc_title(path: Path) -> str:
     return stem[len(prefix) :] if stem.startswith(prefix) else stem
 
 
-def pdf_documents(flex_dir: Path) -> Iterator[Document]:
+def pdf_documents(flex_dir: Path, study: str = STUDY) -> Iterator[Document]:
+    """PDF з docs/ посторінково. `study` — для знімків інших досліджень тієї ж будови."""
     from pypdf import PdfReader
 
     for path in sorted((flex_dir / "docs").rglob("*.pdf")):
@@ -127,7 +128,7 @@ def pdf_documents(flex_dir: Path) -> Iterator[Document]:
                 continue
             if len(text) < MIN_PAGE_CHARS:
                 continue
-            yield Document(STUDY, "doc_pdf", rel, title, text, page=i)
+            yield Document(study, "doc_pdf", rel, title, text, page=i)
 
 
 def docx_documents(flex_dir: Path) -> Iterator[Document]:

@@ -12,12 +12,13 @@ from flame.core.citations import doi_url, media_url
 from flame.core.studies import ALL_STUDIES
 from flame.rag.sources import Document
 from flame.rag.sources import flex as flex_sources
+from flame.rag.sources import psi_studies as psi_sources
 
 MAX_WORDS = 300  # ≈ 400 токенів; bge-small обрізає після 512
 OVERLAP_WORDS = 40
 
 STUDY_LABELS = {s.accession: s.acronym for s in ALL_STUDIES.values()}
-GLOSSARIES = {"PSI-69": flex_sources.GLOSSARY}
+GLOSSARIES = {"PSI-69": flex_sources.GLOSSARY, **psi_sources.GLOSSARIES}
 
 
 def glossary_terms(study: str, text: str) -> str:
