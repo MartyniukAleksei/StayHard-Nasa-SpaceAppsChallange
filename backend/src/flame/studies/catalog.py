@@ -15,7 +15,7 @@ from flame.studies.flex.pages.schemas import Facts
 CATALOG = Path(__file__).with_name("catalog.json")
 
 # Дослідження, які вже мають сторінки й дані: accession → маршрут фронтенду.
-ACTIVE: dict[str, str] = {"PSI-69": "/studies/flex"}
+ACTIVE: dict[str, str] = {"PSI-69": "/studies/flex", "PSI-101": "/studies/same-r"}
 
 
 class StudyCard(BaseModel):
@@ -41,7 +41,9 @@ def list_studies(cur: DuckDBPyConnection | None) -> list[StudyCard]:
     cards = []
     for s in load_catalog():
         route = ACTIVE.get(s["accession"])
-        facts = Facts(**flex_repo.get_facts(cur)) if route and cur is not None else None
+        # факти з БД є лише у FLEX; SAME-R поки читає знімок (studies/same_r)
+        is_flex = s["accession"] == "PSI-69"
+        facts = Facts(**flex_repo.get_facts(cur)) if is_flex and cur is not None else None
         cards.append(
             StudyCard(
                 **{k: s.get(k, "") for k in StudyCard.model_fields if k in s},

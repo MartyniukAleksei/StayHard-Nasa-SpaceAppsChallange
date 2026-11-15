@@ -63,3 +63,17 @@ def test_other_studies_about_and_publications(tmp_path: Path) -> None:
     assert chunk.citation == "CFI investigation objective (about.json, DOI 10.60555/m6pj-a914)"
     assert chunk.url == "https://doi.org/10.60555/m6pj-a914"
     assert chunk.embed_text.startswith("[PSI-39 CFI]")
+
+
+def test_pdfs_only_for_listed_studies_and_skips(tmp_path: Path, monkeypatch) -> None:
+    from flame.rag import chunking
+    from flame.rag.sources import Document, psi_studies
+
+    def fake_pdfs(study_dir: Path, study: str):
+        for name in ("Reports_SAME-R_Final Report.pdf", "SAME_VPRED.pdf"):
+            yield Document(study, "doc_pdf", f"docs/x/{name}", name, "text", page=1)
+
+    monkeypatch.setattr(psi_studies, "pdf_documents", fake_pdfs)
+    pdfs = [d for d in psi_studies.iter_documents(tmp_path) if d.source_type == "doc_pdf"]
+    assert [(d.study, d.title) for d in pdfs] == [("PSI-101", "Reports_SAME-R_Final Report.pdf")]
+    assert "P-Trak = condensation particle counter" in chunking.glossary_terms("PSI-101", "P-Trak")

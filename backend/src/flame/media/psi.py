@@ -33,14 +33,16 @@ _urls: dict[tuple[str, str], tuple[str, float]] = {}
 _urls_lock = threading.Lock()
 
 
-def _signed_url(name: str, version: str, *, fresh: bool = False) -> str:
+def signed_url(name: str, version: str, *, fresh: bool = False) -> str:
     key = (name, version)
     with _urls_lock:
         cached = _urls.get(key)
     if cached and not fresh and cached[1] > time.time():
         return cached[0]
     q = urllib.parse.urlencode({"file": name, "version": version, "redirect": "false"})
-    req = urllib.request.Request(f"{API}/studies/{STUDY}/download?{q}", headers=_UA)
+    # ім'я файлу PSI починається з accession: «PSI-101_Raw Data_…» → PSI-101
+    study = name.split("_", 1)[0] if name.startswith("PSI-") else STUDY
+    req = urllib.request.Request(f"{API}/studies/{study}/download?{q}", headers=_UA)
     try:
         with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
             url = r.read().decode().strip().strip('"')
@@ -56,7 +58,7 @@ def _signed_url(name: str, version: str, *, fresh: bool = False) -> str:
 def fetch_range(name: str, version: str, start: int, end: int) -> bytes:
     """Байти [start, end) файлу PSI. Одне HTTP-звернення до S3 (плюс, зрідка, оновлення лінка)."""
     for attempt in range(2):
-        url = _signed_url(name, version, fresh=attempt > 0)
+        url = signed_url(name, version, fresh=attempt > 0)
         req = urllib.request.Request(url, headers={**_UA, "Range": f"bytes={start}-{end - 1}"})
         try:
             with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:

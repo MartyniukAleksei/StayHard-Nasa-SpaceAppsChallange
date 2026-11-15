@@ -34,4 +34,4 @@
 ## Далі (поза цим PR)
 - Агент: інструменти над `rag.service.search` і `studies.flex.service` (кожен повертає `sources` → `search_result`), промпт, перевірка цитат за ADR 0006, стрімінг `POST /api/agent`. Потрібен ключ Claude API у змінних Railway (рішення власника).
 - Фронт: сторінка тесту за `/api/studies/flex/tests/{n}`, рендер цитат.
-- Нове дослідження: `rag/sources/<study>.py` + `evalsets/<study>.jsonl` + підключення в `build_db`.
+- Нове дослідження: опис і публікації індексуються для всіх з `core/studies.py` (`rag/sources/psi_studies.py`). PDF — по одному дослідженню: slug у `PDF_STUDIES`, за потреби глосарій у `GLOSSARIES`, `evalsets/<accession>.jsonl` для перевірки. Зроблено для SAME-R (PSI-101) — див. [techstack.md](techstack.md).

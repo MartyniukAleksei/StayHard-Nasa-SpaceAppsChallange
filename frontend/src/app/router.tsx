@@ -3,6 +3,11 @@ import { ComparePage } from "@/pages/ComparePage";
 import { LandingPage } from "@/pages/LandingPage";
 import { LibraryPage } from "@/pages/LibraryPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { SameRPage } from "@/pages/SameRPage";
+import { SameRComparePage } from "@/pages/SameRComparePage";
+import { SameRLibraryPage } from "@/pages/SameRLibraryPage";
+import { SameRTestPage } from "@/pages/SameRTestPage";
+import { SameRTestsPage } from "@/pages/SameRTestsPage";
 import { StudyOverviewPage } from "@/pages/StudyOverviewPage";
 import { TestPage } from "@/pages/TestPage";
 import { TestsPage } from "@/pages/TestsPage";
@@ -19,6 +24,11 @@ export const router = createBrowserRouter([
       { path: "/studies/flex/tests/:id", element: <TestPage /> },
       { path: "/studies/flex/compare", element: <ComparePage /> },
       { path: "/studies/flex/library", element: <LibraryPage /> },
+      { path: "/studies/same-r", element: <SameRPage /> },
+      { path: "/studies/same-r/tests", element: <SameRTestsPage /> },
+      { path: "/studies/same-r/tests/:id", element: <SameRTestPage /> },
+      { path: "/studies/same-r/compare", element: <SameRComparePage /> },
+      { path: "/studies/same-r/library", element: <SameRLibraryPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
