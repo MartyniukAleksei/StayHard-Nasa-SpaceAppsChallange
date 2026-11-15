@@ -42,8 +42,7 @@ export function IssPhotos({ bursts = false, limit }: Props) {
         </div>
       )}
       <figcaption className="small muted">
-        The SAME-R hardware in the Microgravity Science Glovebox, ISS Expeditions 23–24, 2010. NASA crew photos; not
-        linked to a test.
+        The SAME-R hardware in the Microgravity Science Glovebox, ISS Expeditions 23–24, 2010.
       </figcaption>
     </figure>
   );
