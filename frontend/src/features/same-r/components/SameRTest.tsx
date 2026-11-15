@@ -105,7 +105,8 @@ function Charts({ t }: { t: PageDetail }) {
   const mass: Series[] = [
     { id: "a", label: "DustTrak A", points: column(s, "dusttrak_a_mg_m3"), kind: "line", tone: "s1" },
     { id: "b", label: "DustTrak B", points: column(s, "dusttrak_b_mg_m3"), kind: "line" },
-  ].filter((x) => x.points.length) as Series[];
+    // DustTrak A has almost only status codes and zeros in SAME-R: a flat or sparse line would read as "no smoke"
+  ].filter((x) => x.points.length >= 0.2 * s.n_total && x.points.some((p) => p[1] !== x.points[0][1])) as Series[];
   if (mass.length) {
     mass.push({ id: "alarm", label: `${MASS_ALARM_MG_M3} mg/m³ ref.`, points: [[xDomain[0], MASS_ALARM_MG_M3], [xDomain[1], MASS_ALARM_MG_M3]], kind: "line", tone: "ash" });
   }

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import { PTRAK_LIMIT } from "@/features/same-r-3d";
 import { useWidth } from "@/shared/lib/useWidth";
 import { niceTicks } from "@/shared/ui/chart/TimeChart";
 import { AXES, axis, dodge, type Axis } from "../lib/map";
 import { markIndexer, type TestGroup } from "../lib/tests";
-import { Shape } from "./Mark";
+import { markColor, Shape } from "./Mark";
 
 // All tests on one map, axes chosen by the reader in selectors at the ends of the axes. Each test is a mark
 // per material; tests outside the filters are faint. Overlapping marks are spread sideways (display only).
@@ -98,6 +98,7 @@ export function TestMap({ groups, hits, href }: Props) {
                     navigate(to);
                   }}
                   className={hits.has(g.test_no) ? "sr-map-pt" : "sr-map-pt off"}
+                  style={{ "--c": markColor(mark(g.main.material)) } as CSSProperties}
                 >
                   <title>
                     #{g.main.test_id} · {g.main.material} · {g.main.description} · {ax.label}: {x} · {ay.label}: {y}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type P
 import { useLocation, useNavigate } from "react-router";
 import { proposalHref } from "../lib/actions";
 import { describeContext } from "../lib/context";
-import type { AssistantItem, ChatItem, PageContext, Proposal, Source } from "../types";
+import type { AssistantItem, ChatItem, PageContext, Proposal, Source, Tour } from "../types";
 import { useAgent } from "./AgentProvider";
 import { AnswerText, SourceCard } from "./AnswerText";
 import { ChartBlock } from "./ChartBlock";
@@ -165,7 +165,7 @@ function Welcome({ context, onPick, empty, busy }: { context: PageContext; onPic
       <div className="ag-welcome-box">
         <div className="ag-welcome-text">
           <p className="ag-welcome-title">
-            <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>Flame in Freefall</b> agent
+            <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>StayHard</b> agent
           </p>
           <p className="muted">Answers only from NASA FLEX data (PSI-69); every number links to its source.</p>
           <p className="muted">
@@ -251,8 +251,26 @@ function Reply({ it, onCite }: { it: AssistantItem; onCite: (s: Source) => void 
           {n.message}
         </p>
       ))}
+      {it.tour && it.done && <TourButton tour={it.tour} />}
       {it.proposals.length > 0 && <Proposals list={it.proposals} />}
       {it.answer && it.answer.sources.length > 0 && <SourceCount n={it.answer.sources.length} />}
+    </div>
+  );
+}
+
+/** The walkthrough started by itself with the answer; this plays it again. */
+function TourButton({ tour }: { tour: Tour }) {
+  const { playTour } = useAgent();
+  return (
+    <div className="ag-actions">
+      <span className="ag-action">
+        <button type="button" className="btn" onClick={() => playTour(tour)}>
+          Replay 3D walkthrough
+        </button>
+        <span className="muted small">
+          test #{tour.test_no} · {tour.steps.length} steps
+        </span>
+      </span>
     </div>
   );
 }

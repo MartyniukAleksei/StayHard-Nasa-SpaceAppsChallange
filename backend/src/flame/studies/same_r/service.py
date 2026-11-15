@@ -309,8 +309,8 @@ def _render_photo(member: str) -> bytes:
 # Колонки ряду hkp, які агент може намалювати: підпис і одиниця.
 CHART_COLUMNS: dict[str, tuple[str, str]] = {
     "ptrak_per_cc": ("P-Trak particle count", "particles/cm³"),
+    # DustTrak A: у жодному прогоні немає придатного ряду (майже лише коди стану й нулі)
     "dusttrak_b_mg_m3": ("DustTrak B smoke mass", "mg/m³"),
-    "dusttrak_a_mg_m3": ("DustTrak A smoke mass", "mg/m³"),
     "plume_c": ("smoke (plume) temperature", "°C"),
     "iss_scatter_v": ("ISS detector, light scatter", "V"),
     "iss_obscuration_v": ("ISS detector, obscuration", "V"),
@@ -320,6 +320,7 @@ CHART_COLUMNS: dict[str, tuple[str, str]] = {
     "heating": ("heater on (1) / off (0)", ""),
 }
 CHART_POINTS = 400
+MIN_VALID_SHARE = 0.2  # менше справжніх значень — ряд не малюємо, а пояснюємо чому
 _TONES = ["s1", "s2", "ink"]
 
 
@@ -342,8 +343,14 @@ def chart(cur: DuckDBPyConnection, column: str, test_nos: list[int]) -> dict[str
         cols, rows = data
         k = cols.index(column)
         pts = [[r[0], r[k]] for r in rows if r[k] is not None]
-        if not pts:
-            notes.append(f"{test_name(n)}: no valid {label} readings")
+        ys = [p[1] for p in pts]
+        if len(pts) < MIN_VALID_SHARE * len(rows) or min(ys, default=0) == max(ys, default=0):
+            # пласка лінія чи кілька точок на тисячу виглядали б як «дим не зафіксовано»
+            flat = f", all {ys[0]:g} {unit}" if ys and min(ys) == max(ys) else ""
+            notes.append(
+                f"{test_name(n)}: {label} has no usable series ({len(pts)} valid readings of "
+                f"{len(rows)}{flat}); this does not mean there was no smoke"
+            )
             continue
         step = max(1, math.ceil(len(pts) / CHART_POINTS))
         thin = pts[::step] + ([pts[-1]] if (len(pts) - 1) % step else [])
@@ -351,7 +358,6 @@ def chart(cur: DuckDBPyConnection, column: str, test_nos: list[int]) -> dict[str
         series.append(
             {"id": name, "label": name, "points": thin, "kind": "line", "tone": _TONES[i]}
         )
-        ys = [p[1] for p in pts]
         # детектор може реагувати і зростанням, і падінням сигналу: даємо обидва екстремуми з часом
         lo_t, hi_t = pts[ys.index(min(ys))][0], pts[ys.index(max(ys))][0]
         text = (

@@ -1,5 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Select } from "@react-three/postprocessing";
+import { useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 
 import { dropletPosition, type Experiment } from "../lib/experiment";
@@ -33,7 +34,14 @@ interface Props {
   playback: Playback;
 }
 
-export function Apparatus({ experiment, playback }: Props) {
+interface ApparatusProps extends Props {
+  /** The first needle and the first igniter register here: tour labels attach to them. */
+  anchors?: RefObject<Partial<Record<"needles" | "igniters", THREE.Object3D | null>>>;
+  /** Objects the current tour step outlines. */
+  focus?: ReadonlySet<string>;
+}
+
+export function Apparatus({ experiment, playback, anchors, focus }: ApparatusProps) {
   const needles = useRef<(THREE.Group | null)[]>([]);
   const igniters = useRef<(THREE.Group | null)[]>([]);
   const { events } = experiment;
@@ -85,8 +93,15 @@ export function Apparatus({ experiment, playback }: Props) {
 
   return (
     <group position={experiment.deploySite}>
+      <Select enabled={focus?.has("needles") ?? false}>
       {[-1, 1].map((s, i) => (
-        <group key={s} ref={(g) => void (needles.current[i] = g)}>
+        <group
+          key={s}
+          ref={(g) => {
+            needles.current[i] = g;
+            if (i === 0 && anchors) anchors.current.needles = g;
+          }}
+        >
           {/* vertical run from the tip, then a horizontal run to the drive */}
           <mesh material={steel} position={[0, s * 5, 0]}>
             <cylinderGeometry args={[NEEDLE_RADIUS, NEEDLE_RADIUS, 10, 12]} />
@@ -100,9 +115,17 @@ export function Apparatus({ experiment, playback }: Props) {
           </mesh>
         </group>
       ))}
+      </Select>
 
+      <Select enabled={focus?.has("igniters") ?? false}>
       {IGNITER_DIRS.map(([dx, dy], i) => (
-        <group key={i} ref={(g) => void (igniters.current[i] = g)}>
+        <group
+          key={i}
+          ref={(g) => {
+            igniters.current[i] = g;
+            if (i === 0 && anchors) anchors.current.igniters = g;
+          }}
+        >
           {/* local +Y points away from the droplet */}
           <group rotation={[0, 0, Math.atan2(dy, dx) - Math.PI / 2]}>
             <mesh material={wire} rotation={[0, Math.PI / 2, 0]}>
@@ -120,6 +143,7 @@ export function Apparatus({ experiment, playback }: Props) {
           </group>
         </group>
       ))}
+      </Select>
 
       {experiment.test.fiber && (
         <mesh quaternion={fiberQuaternion}>

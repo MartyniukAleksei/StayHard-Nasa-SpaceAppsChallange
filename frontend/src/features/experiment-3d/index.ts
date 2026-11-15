@@ -1,1 +1,1 @@
-export { Experiment3D } from "./components/Experiment3D";
+export { Experiment3D, preloadScene } from "./components/Experiment3D";
