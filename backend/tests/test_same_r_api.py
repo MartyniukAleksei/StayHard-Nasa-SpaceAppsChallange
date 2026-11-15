@@ -242,6 +242,9 @@ def test_agent_tools_for_same_r(client: TestClient):
     assert "highest 500 particles/cm³ at t = 2 s" in out.sources[0].text
     with pytest.raises(tools.ToolError):
         tools.make_study_chart(cur, {**args, "test_nos": [51]})
+    # плаский ряд (STS у фікстурі — суцільні 0) не малюється: агент отримує причину
+    with pytest.raises(tools.ToolError, match="no usable series"):
+        tools.make_study_chart(cur, {**args, "column": "sts_v"})
 
     base = {"label": "Open", "t_s": 0, "explorer": {}, "study": "samer"}
     out = tools.propose_action(cur, {**base, "action": "open_test", "test_nos": [73]})

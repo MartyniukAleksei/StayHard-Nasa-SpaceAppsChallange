@@ -273,7 +273,9 @@ STUDY_CHART_TOOL = {
         "Draw a SAME-R sensor over time in the chat for 1-3 SAME-R tests on shared axes, e.g. how "
         "the P-Trak count, smoke mass or a smoke detector reacted. t = 0 is when the heater "
         "turned on; instrument status codes are left out. test_nos are SAME-R run numbers (73 for "
-        "test 73 / 73a). study must be samer. Describe what the chart shows using the returned "
+        "test 73 / 73a). study must be samer. Smoke mass is DustTrak B (DustTrak A has no usable "
+        "readings in SAME-R). A sensor with almost no valid readings, or a flat one, is not "
+        "drawn: you get the reason instead. Describe what the chart shows using the returned "
         "summaries; they give the range and when the reading peaked."
     ),
     "input_schema": _obj(
