@@ -32,14 +32,16 @@ def test_media_describes_known_file_kinds() -> None:
     assert media.describe("181F001_HIBMS_Camera_Settings.txt").startswith("Instrument")
 
 
-def test_studies_catalog_has_flex_active_first() -> None:
+def test_studies_catalog_has_active_studies_first() -> None:
     r = client.get("/api/studies")
 
     assert r.status_code == 200
     cards = r.json()
     assert cards[0]["acronym"] == "FLEX" and cards[0]["status"] == "active"
     assert cards[0]["route"] == "/studies/flex"
-    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[1:])
+    assert cards[1]["acronym"] == "SAME-R" and cards[1]["route"] == "/studies/same-r"
+    assert cards[1]["facts"] is None  # факти з БД лише у FLEX
+    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[2:])
     assert all(c["doi"] for c in cards)
 
 

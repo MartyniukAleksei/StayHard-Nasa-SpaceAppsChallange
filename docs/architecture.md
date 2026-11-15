@@ -36,6 +36,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `studies/` | `catalog.py` + `catalog.json` (паспорти досліджень PSI, генерує `flame.ingest.psi_catalog`), `router.py` — `/api/studies` |
 | `studies/flex/` | домен FLEX: `fields` (whitelist полів і сигналів) → `schemas` → `repository` (SQL) → `service` (логіка, `sources` у кожному результаті) → `router` (HTTP) — агентне API з фільтрами; `pages/` — відповіді під сторінки UI (огляд, дослідник, звіт тесту, replay, CSV, бібліотека) |
 | `studies/psi/` | інші дослідження PSI (схема на дослідження): `notes` (примітки до даних, колонки за замовчуванням) → `schemas` → `repository` (SQL, ідентифікатори — лише після перевірки за `core/studies.py` і `information_schema`) → `service` (`sources` у кожному результаті) → `router` (`/api/studies/{slug}/…`); реєстр досліджень — `core/studies.py` |
+| `studies/same_r/` | SAME-R (PSI-101): read-only модуль над схемою `samer` у `flame.duckdb` (`repository` — SQL; рядки й ряди перейменовуються на поля API, службові коди приладів → NULL; покриття телеметрії й активні детектори обчислюються з `ts_sensors`) → `service` (`sources`) → `router` (503, якщо схеми `samer` немає); ТЕМ-знімки читає з PSI на вимогу через `media/psi.py` (accession береться з імені файлу), фото й документи — з `data/samer/docs` |
 | `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела; там же переліки файлів тесту, відео й NASA-документів для UI; `timing.py`: час кадру від запалювання (з логу тест-пойнта) для агента |
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
 | `agent/` | LLM-агент (Claude Sonnet 5.5; фронтенд — `frontend/src/features/agent`, бічна панель чату): інструменти даних над `studies/flex` і `rag`, цикл зі стрімінгом SSE, цитати й «No source», ліміти, eval ([docs/agent/](agent/README.md), [ADR 0007](decisions/0007-agent-architecture.md)) |
@@ -58,10 +59,18 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/studies/flex/tests/{n}/timeseries/{signal}?max_points=` | ✅ `droplet`, `flame_color`, `flame_uv`, `chamber`; проріджування зі збереженням останньої точки |
 | GET | `/api/studies/flex/tests/{n}/neighbors?k=` | ✅ найближчі за умовами (те саме паливо й тип краплі; оцінка) |
 | GET | `/api/studies/flex/compare?ids=&ids=` | ✅ детермінований diff + попередження (нитка, паливо, Disruption, пропуски) |
+| GET | `/api/studies/same-r/tests` | ✅ SAME-R (PSI-101): рядки `samer.tests` + `ptrak_peak_per_cc`, `active_detectors` (з `samer.ts_sensors`) і `has_tem` (карта й фільтри тестів) |
+| GET | `/api/studies/same-r/tests/{n}` | ✅ рядки тесту (`N` і `Na`), `coverage`, ТЕМ-архіви, `sources` з DOI |
+| GET | `/api/studies/same-r/tests/{n}/timeseries/hkp?max_points=` | ✅ 1 Гц телеметрія, форма як у FLEX; порожні значення — `null`; за замовчуванням не проріджується |
+| GET | `/api/studies/same-r/overview` | ✅ UI: паспорт з `study_about`, NASA-документи з `data/samer/docs` за категоріями |
+| GET | `/api/studies/same-r/tests/{n}/tem` | ✅ ТЕМ-знімки тесту: каталоги zip з PSI (Range), ~3–7 с на перший виклик |
+| GET | `/api/studies/same-r/tests/{n}/tem/{k}/{i}.jpg?max_side=` | ✅ один ТЕМ-знімок (tif → JPEG у сірому), кеш у пам'яті |
+| GET | `/api/studies/same-r/photos`, `/photos/{i}.jpg?max_side=` | ✅ фото екіпажу з апаратурою SAME-R (Expedition 23–24) із zip `Flight Ops photos` у `data/samer/docs`; не прив'язані до тестів |
+| GET | `/api/studies/same-r/psi/{name}` | ✅ 307 на підписане S3-посилання PSI; лише імена з `samer.test_files` (файли, яких немає в знімку: ТЕМ-архіви, pptx, xls) |
 | GET | `/api/media/flex/{test_no}/cameras` | ✅ камери з кадрами в PSI (`A` HiBMS, `B` LLL-UV, `D` колір), лише БД |
 | GET | `/api/media/flex/{test_no}/cameras/{camera}/frames` | ✅ `{n_frames, fps, start_time, t_ms[], frame_url}`, перший виклик ~3–6 с |
 | GET | `/api/media/flex/{test_no}/cameras/{camera}/frames/{i}.jpg?max_side=` | ✅ JPEG одного кадру, ~1–2 с без кешу |
-| GET | `/api/media/flex/files/{path}` | ✅ файли знімка (`raw/…`, `docs/…`, `media/…`), inline, Range |
+| GET | `/api/media/flex/files/{path}`, `/api/media/{slug}/files/{path}` | ✅ файли знімка FLEX та інших досліджень (`samer` — для SAME-R): `raw/…`, `docs/…`, `media/…`, inline, Range |
 | GET | `/api/studies/{slug}` + `/tests`, `/aggregate`, `/tests/{id}`, `/tests/{id}/timeseries/{series}` | ✅ інші дослідження (`cfi`, `cfig`, `bass2`, `samer`, `saffire2`): огляд, фільтри `column:op:value`, агрегати, тест, ряд; кожна відповідь несе `sources` ([data/psi-studies.md](data/psi-studies.md)) |
 | GET | `/api/studies` | ✅ картки досліджень для лендінгу: паспорт з `studies/catalog.json` (PSI-69 FLEX, PSI-39 CFI, PSI-25 BASS-II, PSI-99 SAFFIRE-II, PSI-107 SPICE, PSI-102 SAME) + `status` (`active`/`coming_soon`), `route`, `facts` (лише для активних, з БД) |
 | GET | `/api/studies/flex/overview` | ✅ UI: `{about, facts, presets[]}` — паспорт (з `study_about`), факти, пресети-питання з розкладом за фіналами (лише вільні краплі + скільки виключено через нитку) |
@@ -100,6 +109,11 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | `/studies/flex/tests/:id` | Тест 3A | `features/test-page` (+ `replay`, `experiment-3d`: вкладка «3D replay» у блоці Watch) |
 | `/studies/flex/compare?ids=` | Порівняння 4A | `features/compare` (≤ 3 тести) |
 | `/studies/flex/library` | Бібліотека 5B | `features/library` |
+| `/studies/same-r` | Огляд SAME-R: питання, факти, фото з МКС (по одному на серію), чому важливо, цитата | `features/same-r` |
+| `/studies/same-r/tests` | Тести SAME-R: фільтр матеріалу, карта з вибором осей, таблиця, вибір для порівняння | `features/same-r` |
+| `/studies/same-r/compare?ids=` | Порівняння до 3 тестів SAME-R: спільні осі P-Trak і DustTrak B, ТЕМ-знімок на тест | `features/same-r` |
+| `/studies/same-r/library` | Бібліотека SAME-R: NASA-документи зі знімка, усі фото з МКС, цитата | `features/same-r` |
+| `/studies/same-r/tests/:id` | Тест SAME-R: Watch (3D-відтворення з даних), графіки телеметрії, параметри, ТЕМ-знімки, файли (локальні або з PSI) | `features/same-r`, `features/same-r-3d` |
 
 Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`.
 `features/experiment-3d` — 3D-відтворення тесту з виміряних рядів (React Three Fiber) поруч із реальними кадрами камер; three.js вантажиться окремим чанком лише при відкритті вкладки ([ADR 0007](decisions/0007-3d-replay.md)). Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
