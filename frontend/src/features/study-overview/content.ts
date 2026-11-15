@@ -18,6 +18,9 @@ export const END_DEFINITIONS = {
   Disruption: "the test ended early; self-extinction was not observed",
 } as const;
 
+/** The test shown as the 3D example on the overview (methanol in ISS air, goes out by itself). */
+export const SHOWCASE_TEST = 33;
+
 export type Trap = { title: string; body: string; cite?: { test: number; quote: string } };
 
 export const TRAPS: Trap[] = [
