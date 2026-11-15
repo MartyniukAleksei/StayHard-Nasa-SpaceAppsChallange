@@ -98,7 +98,7 @@ function Charts({ t }: { t: TestDetail }) {
         <TimeChart
           series={[
             { id: "d2", label: "d² measured", points: d2 },
-            ...(fit ? [{ id: "fit", label: "linear fit (our estimate)", points: fitLine(fit), kind: "dashed" as const }] : []),
+            ...(fit ? [{ id: "fit", label: "linear fit (our estimate)", points: fitLine(fit), kind: "dashed" as const, tone: "flame" as const }] : []),
           ]}
           xLabel="time, s"
           yLabel="d², mm²"

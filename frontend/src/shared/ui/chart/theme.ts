@@ -4,10 +4,10 @@
 import type { EndType } from "@/shared/ui/EndMark";
 
 /** Plot margins: left fits 4-digit ticks, bottom fits ticks + axis label. */
-export const MARGIN = { l: 48, r: 16, t: 18, b: 36 } as const;
+export const MARGIN = { l: 48, r: 12, t: 18, b: 36 } as const;
 
-/** Raster dot of a measured series (DS: measurements are dots, models are lines). */
-export const DOT = 2;
+/** Radius of a measured point: a hollow circle (style A "instrument"). */
+export const DOT = 2.2;
 
 /** Radius of an end-type glyph on a scatter. */
 export const GLYPH_R = 4;

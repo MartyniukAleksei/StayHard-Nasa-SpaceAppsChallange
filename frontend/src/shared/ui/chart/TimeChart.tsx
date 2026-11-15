@@ -1,11 +1,13 @@
+import { useId, useState, type MouseEvent } from "react";
 import { useWidth } from "@/shared/lib/useWidth";
 import { ChartLegend, type LegendItem } from "./ChartLegend";
 import { DOT, MARGIN as M, type Tone } from "./theme";
 import "./chart.css";
 
-// SVG chart in the StayHard theme (shared/ui/chart/theme.ts): measurements are raster dots,
-// models thin lines, our estimates dashed, events blue marks; series names go in the legend
-// under the chart so they are never clipped by the plot area.
+// SVG chart in the StayHard theme, style A "instrument" (docs/design/charts-variants.html):
+// graph-paper grid at the ticks, framed plot, measurements = hollow circles, our estimates =
+// blue dashed line, gaps = hatched band, events = blue marks, a crosshair with the value under
+// the mouse. Series names live in the legend bottom-right under the chart, never on the plot.
 
 export type { Tone } from "./theme";
 export type Point = [x: number, y: number];
@@ -55,6 +57,15 @@ export function extent(series: Series[], axis: 0 | 1): [number, number] {
 }
 
 const fmtTick = (v: number) => (Math.abs(v) >= 100 ? v.toFixed(0) : String(Number(v.toFixed(2))));
+const fmtVal = (v: number) => (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2));
+
+/** "time, s" -> { name: "time", unit: "s" } for the crosshair readout. */
+function axisName(label: string): { name: string; unit: string } {
+  const [name, unit = ""] = label.split(",").map((x) => x.trim());
+  return { name, unit };
+}
+/** Readout flips to the left of the crosshair this close to the right edge, px. */
+const READOUT_FLIP = 170;
 
 const SWATCH = { dots: "dots", line: "line", dashed: "dashed" } as const;
 /** Marker labels flip to the left of their line when this close to the right edge, px. */
@@ -73,6 +84,22 @@ export function TimeChart(props: Props) {
   const inX = (v: number) => v >= x0 && v <= x1;
   const clampX = (v: number) => Math.min(x1, Math.max(x0, v));
 
+  const hatch = `hatch-${useId().replace(/:/g, "")}`;
+  const [hover, setHover] = useState<Point | null>(null);
+  const probe = series.find((s) => s.kind !== "line" && s.kind !== "dashed" && s.points.length) ?? series[0];
+  const onMove = (e: MouseEvent<SVGSVGElement>) => {
+    if (!probe?.points.length) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    if (px < M.l || px > W - M.r) return setHover(null);
+    const t = x0 + ((px - M.l) / (W - M.l - M.r)) * (x1 - x0);
+    let best = probe.points[0];
+    for (const p of probe.points) if (Math.abs(p[0] - t) < Math.abs(best[0] - t)) best = p;
+    setHover(inX(best[0]) ? best : null);
+  };
+  const xn = axisName(xLabel);
+  const yn = axisName(yLabel);
+
   const legend: LegendItem[] = [
     ...series
       .filter((s) => s.label)
@@ -82,29 +109,40 @@ export function TimeChart(props: Props) {
 
   return (
     <div ref={ref} className="tchart">
-      <svg width={W} height={H} role="img" aria-label={ariaLabel}>
+      <svg width={W} height={H} role="img" aria-label={ariaLabel} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+        <defs>
+          <pattern id={hatch} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line className="hatch" x1="0" y1="0" x2="0" y2="6" />
+          </pattern>
+        </defs>
+        {niceTicks(x0, x1).map((t) => (
+          <g key={`x${t}`}>
+            <line className="grid" x1={sx(t)} x2={sx(t)} y1={M.t} y2={H - M.b} />
+            <text x={sx(t)} y={H - M.b + 16} textAnchor="middle">
+              {fmtTick(t)}
+            </text>
+          </g>
+        ))}
+        {niceTicks(y0, y1, 4).map((t) => (
+          <g key={`y${t}`}>
+            <line className="grid" x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} />
+            <text x={M.l - 8} y={sy(t) + 4} textAnchor="end">
+              {fmtTick(t)}
+            </text>
+          </g>
+        ))}
         {gaps.map(([a, b]) => (
           <rect
             key={`g${a}`}
             className="gap"
+            fill={`url(#${hatch})`}
             x={sx(clampX(a))}
             y={M.t}
             width={Math.max(0, sx(clampX(b)) - sx(clampX(a)))}
             height={H - M.t - M.b}
           />
         ))}
-        <line className="ax" x1={M.l} y1={H - M.b} x2={W - M.r} y2={H - M.b} />
-        <line className="ax" x1={M.l} y1={M.t} x2={M.l} y2={H - M.b} />
-        {niceTicks(x0, x1).map((t) => (
-          <text key={`x${t}`} x={sx(t)} y={H - M.b + 16} textAnchor="middle">
-            {fmtTick(t)}
-          </text>
-        ))}
-        {niceTicks(y0, y1, 4).map((t) => (
-          <text key={`y${t}`} x={M.l - 8} y={sy(t) + 4} textAnchor="end">
-            {fmtTick(t)}
-          </text>
-        ))}
+        <rect className="frame" x={M.l} y={M.t} width={Math.max(0, W - M.l - M.r)} height={H - M.t - M.b} />
         <text x={(M.l + W - M.r) / 2} y={H - 4} textAnchor="middle" className="axlabel">
           {xLabel}
         </text>
@@ -128,8 +166,21 @@ export function TimeChart(props: Props) {
         {cursor != null && inX(cursor) && (
           <line className="cursor" x1={sx(cursor)} y1={M.t} x2={sx(cursor)} y2={H - M.b} />
         )}
+        {hover && (
+          <g className="crosshair" aria-hidden="true">
+            <line x1={sx(hover[0])} x2={sx(hover[0])} y1={M.t} y2={H - M.b} />
+            <circle cx={sx(hover[0])} cy={sy(hover[1])} r={4} />
+            <text
+              x={sx(hover[0]) + (sx(hover[0]) > W - M.r - READOUT_FLIP ? -8 : 8)}
+              y={Math.max(M.t + 12, sy(hover[1]) - 10)}
+              textAnchor={sx(hover[0]) > W - M.r - READOUT_FLIP ? "end" : "start"}
+            >
+              {xn.name} {fmtVal(hover[0])} {xn.unit} · {yn.name} {fmtVal(hover[1])} {yn.unit}
+            </text>
+          </g>
+        )}
       </svg>
-      {legend.length > 0 && <ChartLegend items={legend} />}
+      {legend.length > 0 && <ChartLegend items={legend} align="right" label="What the marks mean" />}
     </div>
   );
 }
@@ -154,9 +205,9 @@ function SeriesMarks({ s, sx, sy, inX }: {
     );
   }
   return (
-    <g className={tone}>
+    <g className={`${tone} measured`}>
       {pts.map((p, i) => (
-        <rect key={i} x={sx(p[0]) - DOT / 2} y={sy(p[1]) - DOT / 2} width={DOT} height={DOT} />
+        <circle key={i} cx={sx(p[0])} cy={sy(p[1])} r={DOT} />
       ))}
     </g>
   );

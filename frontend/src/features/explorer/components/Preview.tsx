@@ -51,7 +51,7 @@ export function Preview({ test, inCompare, compareFull, onToggleCompare, onClose
       </dl>
       {d2.length > 0 && (
         <TimeChart
-          series={[{ id: "d2", label: "d²", points: d2 }]}
+          series={[{ id: "d2", label: "d² measured", points: d2 }]}
           xLabel="t, s"
           yLabel="d², mm²"
           height={150}
