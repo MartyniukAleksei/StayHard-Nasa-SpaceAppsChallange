@@ -152,4 +152,4 @@ def test_video_series_points_to_its_psi_video() -> None:
     assert vs is not None and vs["columns"][0] == "t_s"
     assert d["psi_videos"][vs["psi_video_index"]]["name"].endswith("TEST_O13a.mp4")
     assert len(vs["points"]) > 1000
-    assert client.get("/api/studies/bass2/tests/B1/report").json()["video_series"] is None
+    assert client.get("/api/studies/bass2/tests/B17/report").json()["video_series"] is None
