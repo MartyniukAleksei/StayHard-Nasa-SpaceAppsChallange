@@ -44,7 +44,7 @@
 @keyframes land-bob { 50% { transform: translateY(4px); } }
 
 /* study picker */
-.land-studies { border-top: var(--rule); scroll-margin-top: 0; } /* transparent: stars and comets show through */
+.land-studies { scroll-margin-top: 0; } /* no divider, transparent: stars and comets show through */
 .land-cards {
   list-style: none;
   margin: 0;

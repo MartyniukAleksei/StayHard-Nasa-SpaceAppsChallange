@@ -19,7 +19,7 @@ export function StudyCards() {
   return (
     <section id="studies" className="band land-studies" aria-labelledby="studies-title">
       <div className="wrap">
-        <h2 id="studies-title" className="h-section">Choose a study</h2>
+        <h2 id="studies-title" className="sr-only">Choose a study</h2>
         <p className="lede">
           Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX and
           SAME-R are open now; the others are next.
