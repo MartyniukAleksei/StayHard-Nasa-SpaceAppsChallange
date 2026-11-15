@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type P
 import { useLocation, useNavigate } from "react-router";
 import { proposalHref } from "../lib/actions";
 import { describeContext } from "../lib/context";
-import type { AssistantItem, ChatItem, PageContext, Proposal, Source } from "../types";
+import type { AssistantItem, ChatItem, PageContext, Proposal, Source, Tour } from "../types";
 import { useAgent } from "./AgentProvider";
 import { AnswerText, SourceCard } from "./AnswerText";
 import { ChartBlock } from "./ChartBlock";
@@ -251,8 +251,26 @@ function Reply({ it, onCite }: { it: AssistantItem; onCite: (s: Source) => void 
           {n.message}
         </p>
       ))}
+      {it.tour && it.done && <TourButton tour={it.tour} />}
       {it.proposals.length > 0 && <Proposals list={it.proposals} />}
       {it.answer && it.answer.sources.length > 0 && <SourceCount n={it.answer.sources.length} />}
+    </div>
+  );
+}
+
+/** The walkthrough started by itself with the answer; this plays it again. */
+function TourButton({ tour }: { tour: Tour }) {
+  const { playTour } = useAgent();
+  return (
+    <div className="ag-actions">
+      <span className="ag-action">
+        <button type="button" className="btn" onClick={() => playTour(tour)}>
+          Replay 3D walkthrough
+        </button>
+        <span className="muted small">
+          test #{tour.test_no} · {tour.steps.length} steps
+        </span>
+      </span>
     </div>
   );
 }

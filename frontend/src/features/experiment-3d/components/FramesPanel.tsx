@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { frameUrl, useCameras, useFramesIndex } from "../api";
 import type { Experiment } from "../lib/experiment";
-import { frameTimes, keyframeStep, nearestKeyframe, pickKeyframes, type Keyframe } from "../lib/keyframes";
+import { frameTimes, keyframeStep, nearestKeyframe, pickKeyframes, prioritize, type Keyframe } from "../lib/keyframes";
 import { usePlayback, type Playback } from "../lib/playback";
 import type { CameraInfo } from "../types";
 
@@ -14,13 +14,27 @@ const PARALLEL = 2; // the backend reads each frame from NASA PSI in 1–2 s
 interface Props {
   experiment: Experiment;
   playback: Playback;
+  /** Moments of the assistant's walkthrough, s from ignition: their frames load first. */
+  tourTimes?: number[];
+  /** Called when the frame of the first walkthrough moment is on screen, or when no frame can come. */
+  onPrimed?: () => void;
+  /** Text of the walkthrough step that points at the frame of this second; null: nothing is marked. */
+  mark?: string | null;
 }
 
+const NO_TIMES: number[] = [];
+
 /** Real onboard frames next to the 3D scene, in step with the playback clock. */
-export function FramesPanel({ experiment, playback }: Props) {
+export function FramesPanel({ experiment, playback, tourTimes = NO_TIMES, onPrimed, mark = null }: Props) {
   const testNo = experiment.test.test_no;
   const cameras = useCameras(testNo);
   const shown = CAMERAS.map((id) => cameras.data?.find((c) => c.camera === id)).filter((c): c is CameraInfo => !!c);
+
+  // nothing to wait for: the walkthrough must not hang on frames that will never load
+  const noFrames = experiment.ignitionEpochMs == null || cameras.isError || (!cameras.isPending && shown.length === 0);
+  useEffect(() => {
+    if (noFrames && tourTimes.length) onPrimed?.();
+  }, [noFrames, tourTimes, onPrimed]);
 
   let body;
   if (experiment.ignitionEpochMs == null) {
@@ -39,6 +53,9 @@ export function FramesPanel({ experiment, playback }: Props) {
         tMin={experiment.tMin}
         tMax={experiment.tMax}
         playback={playback}
+        tourTimes={tourTimes}
+        onPrimed={onPrimed}
+        mark={mark}
       />
     ));
   }
@@ -65,11 +82,14 @@ interface FeedProps {
   tMin: number;
   tMax: number;
   playback: Playback;
+  tourTimes: number[];
+  onPrimed?: () => void;
+  mark: string | null;
 }
 
 type LoadedFrame = Keyframe & { url: string };
 
-function CameraFeed({ camera, testNo, ignitionEpochMs, tMin, tMax, playback }: FeedProps) {
+function CameraFeed({ camera, testNo, ignitionEpochMs, tMin, tMax, playback, tourTimes, onPrimed, mark }: FeedProps) {
   const index = useFramesIndex(testNo, camera.camera);
   const [loaded, setLoaded] = useState<LoadedFrame[]>([]);
   const { t } = usePlayback(playback);
@@ -82,14 +102,17 @@ function CameraFeed({ camera, testNo, ignitionEpochMs, tMin, tMax, playback }: F
     return pickKeyframes(times, tMin, tMax, step).map((k) => ({ ...k, url: frameUrl(idx, k.i, FRAME_SIDE) }));
   }, [index.data, ignitionEpochMs, tMin, tMax, step]);
 
-  // preload in order, a few at a time
+  // preload a few at a time: the frames of the walkthrough moments first, then the rest in order
+  const firstTimes = useRef(tourTimes);
+  firstTimes.current = tourTimes;
   useEffect(() => {
     let alive = true;
     let next = 0;
     setLoaded([]);
+    const queue = prioritize(keyframes, firstTimes.current);
     const pump = () => {
-      if (!alive || next >= keyframes.length) return;
-      const kf = keyframes[next++];
+      if (!alive || next >= queue.length) return;
+      const kf = queue[next++];
       const img = new Image();
       img.onload = () => {
         if (alive) setLoaded((prev) => [...prev, kf]);
@@ -104,13 +127,22 @@ function CameraFeed({ camera, testNo, ignitionEpochMs, tMin, tMax, playback }: F
     };
   }, [keyframes]);
 
+  // the walkthrough starts once the frame of its first moment is here (or the index failed)
+  const firstT = tourTimes[0];
+  const primed =
+    firstT != null && (index.isError || (index.isSuccess && keyframes.length === 0) || nearestKeyframe(keyframes, firstT) === nearestKeyframe(loaded, firstT));
+  const hasFirst = primed && (index.isError || keyframes.length === 0 || loaded.length > 0);
+  useEffect(() => {
+    if (hasFirst) onPrimed?.();
+  }, [hasFirst, onPrimed]);
+
   const current = nearestKeyframe(loaded, t);
   const stale = current != null && Math.abs(current.t - t) > step;
   const loading = keyframes.length > 0 && loaded.length < keyframes.length;
 
   return (
     <figure className="x3d-feed">
-      <div className={stale ? "x3d-feed-image stale" : "x3d-feed-image"}>
+      <div className={`x3d-feed-image${stale ? " stale" : ""}${mark && current && !stale ? " marked" : ""}`}>
         {current ? (
           <img src={current.url} alt={`${camera.label} camera, frame ${current.i} of test ${testNo}`} />
         ) : (
@@ -128,6 +160,7 @@ function CameraFeed({ camera, testNo, ignitionEpochMs, tMin, tMax, playback }: F
         </span>
         <span className="x3d-feed-file">{camera.psi_file}</span>
       </figcaption>
+      {mark && current && !stale && <p className="x3d-feed-mark">{mark}</p>}
     </figure>
   );
 }

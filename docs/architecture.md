@@ -117,6 +117,8 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 
 Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`.
 `features/experiment-3d` — 3D-відтворення тесту з виміряних рядів (React Three Fiber) поруч із реальними кадрами камер; three.js вантажиться окремим чанком лише при відкритті вкладки ([ADR 0007](decisions/0007-3d-replay.md)). Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
+
+**3D-тур агента** ([ADR 0010](decisions/0010-agent-3d-tour.md), контракт — [agent/ui-actions.md](agent/ui-actions.md)): агент викликає `show_in_3d` → бекенд (`studies/flex/tour.py`) обчислює моменти й підставляє числа → SSE-подія `tour` → `features/agent` кладе спец у `sessionStorage` (`flame.tour.<id>`) і після `done` відкриває `/studies/flex/tests/{n}?view=3d&tour={id}` (або шле подію `window` `agent:tour`, якщо сторінка вже відкрита) → `features/experiment-3d` програє кроки: `lib/tour.ts` (`TourRunner` на годиннику `Playback`: `scrubTo`, плавна швидкість), `Scene.tsx` (переліт камери, контур `Outline`, підписи `Html`), `TourDirector.tsx` (смуга `[Pause] [Next] [Replay] [Exit tour]`), `FramesPanel.tsx` (кадр NASA за ту саму секунду). Фічі одна одну не імпортують, крім `preloadScene` через `index.ts`.
 Імпорти через alias `@/`. Фічі не імпортують одна одну всередину — тільки через `index.ts`.
 
 ## Деплой
