@@ -22,13 +22,13 @@
 - Не вигадує цитат: кожен результат уже має поле `citation`.
 
 ## Правила
-- Кожен hit має джерело: тест (`FLEX-002 TestSheet`), файл + сторінка або DOI. Дослідження FLEX цитується DOI з `data/flex/about.json`.
+- **Кожна відповідь агента має посилання на джерело** — контракт [ADR 0005](../decisions/0005-citation-contract.md). Кожен hit RAG і кожен результат `studies/flex` несе `Source(url, title, text)`; агент передає їх у Claude API як блоки `search_result`, і API сам повертає цитати з нашим `url` і дослівним `cited_text`. URL: тест → `/api/studies/flex/tests/{n}`, файл/PDF-сторінка → `/api/media/flex/…#page=N`, опис і публікації → `https://doi.org/…` (FLEX DOI з `data/flex/about.json`).
 - Disruption = «самозгасання не спостерігалось», не «горіло б вічно».
-- Тести з ниткою (`ts_fiber`) не змішуємо з вільними краплями — префікс TestSheet-чанка містить `fiber yes/no`.
+- Тести з ниткою (`ts_fiber`) не змішуємо з вільними краплями — префікс TestSheet-чанка містить `fiber yes/no`. У 8 тестах прапорець суперечить коментарю — `fiber_conflict` (див. [data/flex.md](../data/flex.md)).
 - Індекс будується офлайн у `build_db`; API лише читає.
 
 ## Масштаб
 Ціль — ще ~10 досліджень PSI. Тому з першого дня: колонка `study` і фільтр за нею, мітка дослідження в тексті чанка, модуль джерел на дослідження (`rag/sources/<study>.py`), кеш ембеддингів, контрольний набір питань на кожне дослідження.
 
 ## Критерій успіху
-`recall@5 ≥ 0.8` на контрольному наборі `backend/src/flame/rag/evalsets/<study>.jsonl` (`uv run python -m flame.rag.eval`).
+`recall@5 ≥ 0.8` на контрольному наборі `backend/src/flame/rag/evalsets/<study>.jsonl` і на відкладеному `<study>_holdout.jsonl`, який не використовується для тюнінгу (`uv run python -m flame.rag.eval --set …`). FLEX: 0.93 і 0.90 (див. [plan.md](plan.md)).

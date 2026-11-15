@@ -3,7 +3,8 @@
     uv run python -m flame.rag.eval [--set psi69] [--k 5] [--with-examples]
 
 Формат рядка `evalsets/<set>.jsonl`:
-  {"q": "...", "expected": [{"test_no": 2}, {"source_path": "...", "page": 5}], "note": "..."}
+  {"q": "...", "expected": [{"test_no": 2}, {"source_path": "...", "page": 5}],
+   "filters": {"test_nos": [2]}, "note": "..."}   # filters — необов'язково, як у search_docs
 Питання влучне, якщо в top-k є чанк, що збігається з будь-яким `expected` за всіма його ключами
 (test_no, source_path, page, source_type). Рядки з "example": true пропускаються.
 """
@@ -14,7 +15,7 @@ from pathlib import Path
 
 from flame.db.duckdb import get_connection
 from flame.rag import service
-from flame.rag.schemas import Hit
+from flame.rag.schemas import Hit, SearchFilters
 
 EVALSETS = Path(__file__).parent / "evalsets"
 
@@ -35,6 +36,7 @@ def main() -> None:
     ap.add_argument("--set", default="psi69")
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--with-examples", action="store_true", help="рахувати й рядки-приклади")
+    ap.add_argument("--no-rerank", action="store_true", help="без cross-encoder (для порівняння)")
     args = ap.parse_args()
 
     lines = (EVALSETS / f"{args.set}.jsonl").read_text(encoding="utf-8").splitlines()
@@ -46,7 +48,8 @@ def main() -> None:
     cur = get_connection().cursor()
     found, rr = 0, 0.0
     for c in cases:
-        hits = service.search(cur, c["q"], args.k)
+        filters = SearchFilters(**c["filters"]) if c.get("filters") else None
+        hits = service.search(cur, c["q"], args.k, filters, rerank=not args.no_rerank)
         rank = first_rank(hits, c["expected"])
         if rank:
             found += 1

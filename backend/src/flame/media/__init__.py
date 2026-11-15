@@ -1,5 +1,5 @@
-"""Віддача важких файлів тесту (raw txt/pdf, mp4) з Railway Volume ($DATA_DIR/flex/raw|media).
+"""Віддача файлів знімка дослідження (raw txt/pdf, docs, mp4) з $DATA_DIR.
 
-Плановано: router.py з /api/media/flex/{test_no}/{path} через FileResponse
-з перевіркою, що шлях не виходить за межі data_dir.
+GET /api/media/{study}/{path} — на ці URL ведуть посилання-джерела (flame.core.citations).
+Лише локальний знімок; файли шару C (архіви кадрів у PSI) — окрема задача.
 """
