@@ -23,7 +23,9 @@
 - **FLEX** лежить у `main` (`tests`, `ts_droplet`, …: на них спирається API). Схема `flex` містить view на ці ж таблиці, тож `flex.tests` ≡ `main.tests`.
 - `study_about(study, about JSON)` — `about.json` кожного дослідження, ключ `study` = slug.
 - `meta.datasets` — JSON `{slug: версія знімка}` (`meta.dataset` лишається версією FLEX).
-- RAG (`chunks`) і агент поки покривають лише FLEX.
+- **API** (тільки читання, для розробників і посилань агента): `GET /api/studies/{slug}` (реєстр, профіль колонок, ряди, примітки), `…/tests?f=column:op:value&columns=…&sort=…&desc=…&limit=…`, `…/aggregate?f=…&group_by=…&metric=…`, `…/tests/{id}`, `…/tests/{id}/timeseries/{series}?max_points=…`; файли знімка — `/api/media/{slug}/files/{raw|docs|media}/…`. Код: `backend/src/flame/studies/psi/`.
+- **Агент** відповідає по всіх п'яти дослідженнях (інструменти `describe_study`, `query_study_tests`, `aggregate_study_tests`, `get_study_test`, `get_study_timeseries_summary`; [agent/README.md](../agent/README.md)). **RAG** містить їхні `about.json` (опис, цілі, підхід, публікації); PDF з `docs/` поки не індексуються.
+- **UI**: сторінок для цих досліджень ще немає.
 
 ```sql
 SELECT slug, acronym, n_tests, tables FROM studies;

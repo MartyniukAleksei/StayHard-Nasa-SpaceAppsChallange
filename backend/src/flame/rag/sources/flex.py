@@ -165,17 +165,21 @@ ABOUT_FIELDS = {
 
 def about_documents(flex_dir: Path) -> Iterator[Document]:
     """Опис дослідження з about.json + список публікацій. Кожен несе FLEX DOI."""
-    path = flex_dir / "about.json"
+    yield from study_about_documents(flex_dir / "about.json", STUDY, LABEL)
+
+
+def study_about_documents(path: Path, study: str, label: str) -> Iterator[Document]:
+    """about.json будь-якого дослідження PSI: поля опису + публікації, з DOI дослідження."""
     if not path.exists():
         return
     about = json.loads(path.read_text(encoding="utf-8"))
     doi = about.get("doi", "")
-    name = about.get("title") or LABEL
+    name = about.get("title") or label
     for key, label in ABOUT_FIELDS.items():
         text = _clean(str(about.get(key) or ""))
         if text:
             yield Document(
-                STUDY,
+                study,
                 "about",
                 "about.json",
                 f"{name}: {label}",
@@ -188,11 +192,11 @@ def about_documents(flex_dir: Path) -> Iterator[Document]:
             continue
         authors = (pub.get("authorList") or "").strip()
         pub_doi = (pub.get("doi") or "").strip()
-        text = f"Publication from the {LABEL} experiment: {title}. Authors: {authors or 'n/a'}."
+        text = f"Publication from the {label} experiment: {title}. Authors: {authors or 'n/a'}."
         if pub_doi:
             text += f" DOI: {pub_doi}."
         yield Document(
-            STUDY,
+            study,
             "publication",
             "about.json",
             title,

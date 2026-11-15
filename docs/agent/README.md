@@ -1,6 +1,6 @@
 # Агент
 
-Агент відповідає на питання про FLEX лише з даних інструментів, кожне число — з посиланням ([ADR 0006](../decisions/0006-citation-contract.md)). Архітектура — [ADR 0007](../decisions/0007-agent-architecture.md). Код: `backend/src/flame/agent/`.
+Агент відповідає на питання про FLEX і ще п'ять досліджень PSI (CFI, ACME CFI-G, BASS-II, SAME-R, Saffire-II — [data/psi-studies.md](../data/psi-studies.md)) лише з даних інструментів, кожне число — з посиланням ([ADR 0006](../decisions/0006-citation-contract.md)). Архітектура — [ADR 0007](../decisions/0007-agent-architecture.md). Код: `backend/src/flame/agent/`.
 
 ## Етапи
 | Етап | Що | Стан |
@@ -9,6 +9,7 @@
 | 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | ✅ |
 | 3 | Графіки `make_chart` | ✅ |
 | 4 | Кадри камер за подією, відео, replay | ✅ |
+| 5 | Інші дослідження PSI: інструменти над схемами `cfi`, `cfig`, `bass2`, `samer`, `saffire2`, RAG по їхніх описах і публікаціях | ✅ |
 | — | Симуляція what-if | відкладено |
 
 ## Модель і налаштування
@@ -22,12 +23,19 @@
 | `compare_tests(test_nos)` | `compare_tests` | обчислене порівняння (`/compare?ids=`) + рядки |
 | `find_similar_tests(test_no, k)` | `neighbors` | рейтинг схожості (оцінка) + рядки |
 | `get_timeseries_summary(test_no, signal)` | `get_timeseries` | зведення ряду, сирий файл |
-| `search_docs(query, test_nos, source_types)` | `rag.service.search` | чанки RAG |
+| `search_docs(query, study, test_nos, source_types)` | `rag.service.search` | чанки RAG; `study` = slug або `any` (FLEX: документи й TestSheet; інші — лише опис і публікації з `about.json`) |
 | `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 | `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |
 | `find_frame(test_no, event, t_s, camera)` | `media.service` + `media/timing.py` | подія `frame`; джерело — URL кадру з часом від запалювання |
 | `look_at_frames(test_no, camera, t_s[≤4])` | те саме + `frame_jpeg(…, 512)` | зображення для зору моделі (без `search_result`), події `frame` для UI |
+| `describe_study(study)` | `studies.psi.service.overview` | DOI, профіль колонок `tests` (діапазони, категорії), часові ряди, примітки до даних (`studies/psi/notes.py`) |
+| `query_study_tests(study, filters, columns, sort, descending, limit)` | `query_tests` | підсумок запиту + рядки (`/api/studies/{slug}/tests/{id}`); оп. `contains` для тексту |
+| `aggregate_study_tests(study, filters, group_by, metric)` | `aggregate` | обчислені кількості й count/mean/min/max (`/api/studies/{slug}/aggregate`) |
+| `get_study_test(study, test_id)` | `get_test` | рядок тесту + які ряди й файли є |
+| `get_study_timeseries_summary(study, test_id, series)` | `timeseries` | кількість точок і діапазон кожної колонки (у samer — ряд прогону) |
+
+Інструменти FLEX (`query_tests`, `make_chart`, кадри, кнопки) працюють лише з FLEX. Для інших досліджень сторінок, графіків і кнопок поки немає; поле `field` у фільтрах — назва колонки таблиці, яку перевіряє `studies/psi/repository.py` за `information_schema`.
 
 `strict: true` — лише в інструментів з малими схемами (`tools.STRICT`): API компілює строгі схеми в граматику з обмеженням розміру, а переліки полів `query_tests` / `propose_action` / `highlight_params` / `make_chart` її переповнюють («compiled grammar is too large»); їхній ввід повністю перевіряє код. `tool_result` містить або лише блоки `search_result`, або лише текст/зображення (API не дозволяє змішувати).
 
