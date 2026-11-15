@@ -156,10 +156,17 @@ function Replay({ experiment, startAt, compact = false, tour, onExitTour }: Repl
   useEffect(() => {
     if (!runner) return;
     setLayers({ uv: true, visible: true }); // the tour may point at either flame
-    root.current?.scrollIntoView({ block: "nearest" });
     const timer = window.setTimeout(() => setPrimed(runner), FRAMES_WAIT_MS);
     return () => window.clearTimeout(timer);
   }, [runner]);
+  // A walkthrough cannot start while the scene is offscreen (the renderer is stopped there), and on a
+  // fresh page load the content above is still growing: bring the scene into view until it starts.
+  const waiting = runner?.phase === "waiting";
+  useEffect(() => {
+    if (!waiting || active) return;
+    const timer = window.setTimeout(() => root.current?.scrollIntoView({ block: "start" }), 250);
+    return () => window.clearTimeout(timer);
+  }, [waiting, active]);
   useEffect(() => {
     if (runner && sceneReady && primed === runner) runner.begin();
   }, [runner, sceneReady, primed]);

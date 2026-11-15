@@ -28,3 +28,5 @@
 {"id": "tour-155", "q": "What happens in FLEX-155?", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1}
 {"id": "tour-cool-flame-wording", "q": "Show me why the flame went out in FLEX-155 and what happened to the droplet afterwards.", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1, "mention_any": ["indicative", "likely", "suggest"]}
 {"id": "tour-no-series", "q": "Show me in 3D what happens in FLEX-009.", "expect_no_tour": true, "expect_tests": [9], "min_test_hits": 1, "mention_any": ["no measured", "no droplet", "not available", "no 3D", "cannot", "can't", "does not have", "doesn't have"]}
+{"id": "demo-compare-over-time", "q": "Compare how the droplet shrinks after the flame goes out in FLEX-155 and FLEX-129.", "expect_chart": "line", "expect_tests": [155, 129], "min_test_hits": 2}
+{"id": "demo-pick-one-test", "q": "Find me the most surprising experiment in FLEX.", "expect_proposal": "open_test"}
