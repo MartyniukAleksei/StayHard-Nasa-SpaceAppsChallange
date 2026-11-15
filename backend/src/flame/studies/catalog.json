@@ -64,16 +64,5 @@
   "flight_program": "International Space Station (ISS)",
   "objective": "The objective of SPICE is to better understand the complex process of combustion by observing flames in a microgravity environment aboard the International Space Station (ISS) and analogous ground experiments.\n\nSpecific objectives were:\n(1) Identify the laminar smoke-point properties of non-buoyant jet diffusion flames under various co-flow conditions in microgravity.\n(2) Determine the effects of burner diameter and co-flow velocity on the luminous flame lengths and smoke points.\n(3) Quantify the sooting propensity of different fuels, such as ethylene, propane, and propylene mixtures.\n(4) Validate the correlation between luminous flame shape and residence time under microgravity conditions.\n(5) Investigate the impact of air and fuel flow rate variations on smoke point phenomena in space.",
   "license": "CC0-1.0"
- },
- {
-  "accession": "PSI-102",
-  "acronym": "SAME",
-  "title": "Smoke and Aerosol Measurement Experiment",
-  "doi": "10.60555/gd4k-8h62",
-  "research_area": "Combustion Science",
-  "sub_research_area": "Spacecraft Fire Safety",
-  "flight_program": "International Space Station (ISS)",
-  "objective": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment. A numerical code was to be developed to predict the smoke droplet growth as a function of the fuel pyrolysis rate, the thermodynamic properties of the pyrolysis vapor, and the flow environment.",
-  "license": "CC0-1.0"
  }
 ]

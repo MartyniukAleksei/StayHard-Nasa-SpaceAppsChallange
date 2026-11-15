@@ -14,7 +14,7 @@ from typing import Any
 from flame.ingest.psi_flex import API, get_json
 
 # Порядок = порядок карток на лендінгу. Перше — активне дослідження з повними даними.
-ACCESSIONS = ("PSI-69", "PSI-101", "PSI-39", "PSI-25", "PSI-99", "PSI-107", "PSI-102")
+ACCESSIONS = ("PSI-69", "PSI-101", "PSI-39", "PSI-25", "PSI-99", "PSI-107")
 OUT = Path(__file__).resolve().parents[1] / "studies" / "catalog.json"
 
 
