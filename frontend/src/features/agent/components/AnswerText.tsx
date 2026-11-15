@@ -1,7 +1,8 @@
-import { Fragment, type ReactElement } from "react";
+import { Fragment, useState, type ReactElement } from "react";
 import { Link } from "react-router";
 import { API_BASE } from "../api";
 import { answerBlocks, toBlocks, type Block, type Inline } from "../lib/answer";
+import { sourceTarget } from "../lib/jump";
 import { sourceLink } from "../lib/links";
 import type { Answer, Source } from "../types";
 
@@ -23,7 +24,7 @@ function renderBlocks(blocks: Block[], sources: Map<number, Source>, onCite: OnC
     out.push(
       <Tag key={`l${out.length}`}>
         {list.items.map((b, i) => (
-          <li key={i} className={b.general ? "ag-general" : undefined}>
+          <li key={i}>
             <Inlines inlines={b.inlines} sources={sources} onCite={onCite} />
           </li>
         ))}
@@ -31,7 +32,6 @@ function renderBlocks(blocks: Block[], sources: Map<number, Source>, onCite: OnC
     );
     list = null;
   };
-  let generalShown = false;
   blocks.forEach((b, i) => {
     if (b.type === "li" || b.type === "oli") {
       const ordered = b.type === "oli";
@@ -43,16 +43,12 @@ function renderBlocks(blocks: Block[], sources: Map<number, Source>, onCite: OnC
       return;
     }
     flush();
-    const tag = b.general && !generalShown;
-    generalShown = b.general;
     const body = <Inlines inlines={b.inlines} sources={sources} onCite={onCite} />;
     out.push(
       b.type === "h" ? (
         <p key={i} className="ag-h">{body}</p>
       ) : (
-        <p key={i} className={b.general ? "ag-general" : undefined}>
-          {tag && <span className="tag ag-tag" title="Background physics, not from the FLEX data">general knowledge</span>} {body}
-        </p>
+        <p key={i}>{body}</p>
       ),
     );
   });
@@ -72,14 +68,61 @@ function Inlines({ inlines, sources, onCite }: { inlines: Inline[]; sources: Map
           <Fragment key={i}>
             {x.n.map((k) => {
               const s = sources.get(k);
-              return s ? (
-                <button key={k} type="button" className="ag-cite" aria-label={`Source ${k}: ${s.title}`} onClick={() => onCite(s)}>
-                  [{k}]
-                </button>
-              ) : null;
+              return s ? <Cite key={k} src={s} onCite={onCite} /> : null;
             })}
           </Fragment>
         ),
+      )}
+    </>
+  );
+}
+
+const POP_W = 300;
+const QUOTE_MAX = 360;
+
+/** [n] like NotebookLM: hover/focus shows the verbatim quote, click shows the cited place. */
+function Cite({ src, onCite }: { src: Source; onCite: OnCite }) {
+  const [pos, setPos] = useState<{ left: number; top: number; below: boolean } | null>(null);
+  const show = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const panel = el.closest(".ag-panel")?.getBoundingClientRect();
+    const minL = (panel?.left ?? 0) + 8;
+    const maxL = Math.min(window.innerWidth, panel?.right ?? window.innerWidth) - POP_W - 8;
+    const below = r.bottom + 180 < window.innerHeight;
+    setPos({ left: Math.max(minL, Math.min(maxL, r.left - 20)), top: below ? r.bottom + 6 : r.top - 6, below });
+  };
+  const quote = src.quotes[0] ?? "";
+  const onPage = sourceTarget(src).kind === "page";
+  const tipId = `ag-pop-${src.n}`;
+  return (
+    <>
+      <button
+        type="button"
+        className="ag-cite"
+        aria-label={`Source ${src.n}: ${src.title}`}
+        aria-describedby={pos ? tipId : undefined}
+        onMouseEnter={(e) => show(e.currentTarget)}
+        onMouseLeave={() => setPos(null)}
+        onFocus={(e) => show(e.currentTarget)}
+        onBlur={() => setPos(null)}
+        onClick={() => {
+          setPos(null);
+          onCite(src);
+        }}
+      >
+        [{src.n}]
+      </button>
+      {pos && (
+        <span
+          id={tipId}
+          role="tooltip"
+          className={pos.below ? "ag-pop" : "ag-pop above"}
+          style={{ left: pos.left, top: pos.top, width: POP_W }}
+        >
+          <span className="mono small muted">[{src.n}] {src.title}</span>
+          {quote && <q className="ag-quote">{quote.length > QUOTE_MAX ? `${quote.slice(0, QUOTE_MAX)}…` : quote}</q>}
+          <span className="small muted">{onPage ? "Click to show it on the page" : "Click to open the source"}</span>
+        </span>
       )}
     </>
   );

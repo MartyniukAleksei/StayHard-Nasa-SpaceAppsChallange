@@ -40,7 +40,7 @@ export function ChartBlock({ chart }: { chart: Chart }) {
       {chart.kind === "scatter" && (
         <p className="small ag-legend">
           {chart.series.map((s) => (
-            <EndMark key={s.id} type={s.id as EndType} count={s.points.length} short />
+            <EndMark key={s.id} type={s.id as EndType} count={s.points.length} />
           ))}
         </p>
       )}

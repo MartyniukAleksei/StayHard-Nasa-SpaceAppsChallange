@@ -98,7 +98,7 @@ export function TestTable({ rows, selected, onSelect, compareIds, onToggleCompar
                 <td className="hide-m">{num(t.k_mm2_s, 2)}</td>
                 <td className="hide-m">{num(t.burn_time_s, 1)}</td>
                 <td>
-                  <EndMark type={t.end_type} short />
+                  <EndMark type={t.end_type} />
                 </td>
                 <td className="ex-media">
                   {t.has_3d && (

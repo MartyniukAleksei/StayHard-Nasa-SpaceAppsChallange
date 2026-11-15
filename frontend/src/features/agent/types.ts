@@ -58,6 +58,8 @@ export type AgentEvent =
 
 export type PageContext = {
   route: string;
+  /** heading of the page section the user is looking at ("Watch", "Droplet: the d² law") */
+  section?: string;
   test_no?: number;
   ids?: number[];
   explorer?: ExplorerParams;
