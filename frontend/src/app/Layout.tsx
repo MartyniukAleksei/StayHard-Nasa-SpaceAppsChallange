@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { AgentPanel, AgentProvider, AgentSearch } from "@/features/agent";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
 import "./shell.css";
@@ -12,14 +13,15 @@ const FLEX_NAV = [
 
 export function Layout() {
   return (
-    <>
+    <AgentProvider>
       <a className="skip" href="#main">Skip to content</a>
       <Header />
       <main id="main">
         <Outlet />
       </main>
       <Footer />
-    </>
+      <AgentPanel />
+    </AgentProvider>
   );
 }
 
@@ -51,10 +53,7 @@ function Header() {
             </nav>
           </>
         )}
-        <label className="search">
-          <span className="sr-only">Ask the agent</span>
-          <input type="search" disabled placeholder="Ask the agent — coming soon" />
-        </label>
+        <AgentSearch />
         <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
           Cart · 0
         </button>

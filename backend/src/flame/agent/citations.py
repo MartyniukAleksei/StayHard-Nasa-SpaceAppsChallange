@@ -105,7 +105,7 @@ def _mark(segments: list[Segment], known: set[float]) -> None:
         text = "".join(p for _, p in line).strip()
         if not text:
             in_general = False  # порожній рядок закриває абзац
-        elif text.startswith(GENERAL_KNOWLEDGE_PREFIX):
+        elif text.lstrip("*_# ").startswith(GENERAL_KNOWLEDGE_PREFIX):  # і «**General…:**»
             in_general = True
         for i, piece in line:
             if piece.strip():

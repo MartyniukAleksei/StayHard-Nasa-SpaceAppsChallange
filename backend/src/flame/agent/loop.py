@@ -57,15 +57,18 @@ def build_messages(history: list[HistoryTurn]) -> list[dict[str, Any]]:
     return out
 
 
-def _run_tool(cur: duckdb.DuckDBPyConnection, block: Any) -> dict[str, Any]:
+def _run_tool(cur: duckdb.DuckDBPyConnection, block: Any) -> tuple[dict[str, Any], list[Event]]:
+    """Виконує інструмент → (tool_result для моделі, SSE-події для UI)."""
     handler = tools.HANDLERS.get(block.name)
     result: dict[str, Any] = {"type": "tool_result", "tool_use_id": block.id}
     if handler is None or not isinstance(block.input, dict):
-        return {**result, "is_error": True, "content": f"Unknown tool or bad input: {block.name}"}
+        bad = {**result, "is_error": True, "content": f"Unknown tool or bad input: {block.name}"}
+        return bad, []
     try:
-        return {**result, "content": handler(cur, block.input).content()}
+        out = handler(cur, block.input)
     except tools.ToolError as e:
-        return {**result, "is_error": True, "content": f"Error: {e}"}
+        return {**result, "is_error": True, "content": f"Error: {e}"}, []
+    return {**result, "content": out.content()}, out.events
 
 
 def run_turn(
@@ -137,7 +140,10 @@ def run_turn(
             for block in tool_uses:
                 args = block.input if isinstance(block.input, dict) else {}
                 yield _ev("status", tool=block.name, text=tools.status_text(block.name, args))
-                results.append(_run_tool(cur, block))
+                result, ui_events = _run_tool(cur, block)
+                results.append(result)
+                for i, ev in enumerate(ui_events):
+                    yield {**ev, "data": {**ev["data"], "id": f"{block.id}-{i}"}}
             messages.append({"role": "user", "content": results})
             continue
 

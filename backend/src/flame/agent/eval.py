@@ -62,11 +62,17 @@ def _numbers_ok(answer: dict[str, Any], question: str) -> list[str]:
     return bad
 
 
-def check(case: dict[str, Any], done: dict[str, Any]) -> list[str]:
+def check(case: dict[str, Any], done: dict[str, Any], ui: dict[str, list]) -> list[str]:
     ans = done["answer"]
     text = "".join(s["text"] for s in ans["segments"])
     srcs = ans["sources"]
     fails = []
+    if case.get("expect_proposal"):
+        acts = [p["action"] for p in ui["proposal"]]
+        if case["expect_proposal"] not in acts:
+            fails.append(f"no {case['expect_proposal']} proposal (got {acts})")
+    if case.get("expect_highlight") and not ui["highlight"]:
+        fails.append("no highlight")
     if case.get("off_topic"):
         if srcs:
             fails.append("off-topic answer has sources")
@@ -117,16 +123,20 @@ def main() -> None:
         turn = HistoryTurn(role="user", text=case["q"], page_context=case.get("page_context"))
         t0 = time.time()
         try:
-            done = next(
-                e["data"] for e in loop.run_turn(client(), cur, [turn], settings)
-                if e["event"] == "done"
-            )  # fmt: skip
+            ui: dict[str, list] = {"proposal": [], "highlight": []}
+            done = None
+            for e in loop.run_turn(client(), cur, [turn], settings):
+                if e["event"] in ui:
+                    ui[e["event"]].append(e["data"])
+                elif e["event"] == "done":
+                    done = e["data"]
+            assert done is not None
         except anthropic.APIError as e:  # мережа/API: питання пропускаємо, прогін триває
             print(f"  ERR  {case['id']:24} {type(e).__name__}")
             continue
         spent += done["cost_usd"]
         ledger_add(LEDGER, done["cost_usd"], f"eval:{case['id']}")
-        fails = check(case, done)
+        fails = check(case, done, ui)
         passed += not fails
         status = "ok  " if not fails else "FAIL"
         rows.append((case["id"], done["duration_s"], done["cost_usd"], done["rewritten"]))

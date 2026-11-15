@@ -6,7 +6,7 @@
 | Етап | Що | Стан |
 |---|---|---|
 | 1 | Бекенд: цикл, інструменти даних, цитати, ліміти, SSE, eval | ✅ |
-| 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | після мерджу сторінок фронтенду |
+| 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | ✅ |
 | 3 | Графіки `make_chart` | план |
 | 4 | Кадри камер за подією, відео, replay | план |
 | — | Симуляція what-if | відкладено |
@@ -23,6 +23,8 @@
 | `find_similar_tests(test_no, k)` | `neighbors` | рейтинг схожості (оцінка) + рядки |
 | `get_timeseries_summary(test_no, signal)` | `get_timeseries` | зведення ряду, сирий файл |
 | `search_docs(query, test_nos, source_types)` | `rag.service.search` | чанки RAG |
+| `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
+| `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 
 Усі схеми `strict: true`. `tool_result` містить лише блоки `search_result` (API не дозволяє змішувати їх з текстом).
 
@@ -38,7 +40,9 @@
 | `rewrite` | `reason` | відповідь переписується: очистити буфер |
 | `limit` | `reason` (`max_steps`, `max_tokens`, `refusal`), `message` | пояснення користувачеві |
 | `error` | `reason` (`model_busy`, `api_error`), `message` | пояснення користувачеві |
-| `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, popover з `quotes`, позначки «General knowledge» / «No source» |
+| `proposal` | `{id, action, label, params}` | кнопка-пропозиція (див. ui-actions.md) |
+| `highlight` | `{fields[], test_nos[]}` | підсвітити `[data-field]` на поточній сторінці |
+| `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, картка джерела з `quotes`, позначки «General knowledge» / «No source» |
 
 Відмови до стріму — JSON `{"detail": {"reason", "message", "retry_after"}}`: 503 `not_configured` / `budget`, 429 `rate_limit` (+ `Retry-After`), 422 `bad_history` / `too_long`. Фронт показує `message` як є.
 
@@ -60,3 +64,9 @@ uv run python -m flame.agent.eval --only trap-no-data
 - Час: медіана 10–13 с, максимум 27 с (складні змішані питання й перезапит через «No source»).
 - Останній прогін: 9/12 (3 питання — мережеві збої з боку розробника). Провали — справжні речення без цитати після перезапиту; їх UI позначить «No source».
 - Відкриті питання: чи лишати перезапит (дає +5–8 с, допомагає не завжди); переранжування в RAG на Railway додає ~2–3 с на `search_docs` (див. memory/плани).
+
+## Фронтенд (`frontend/src/features/agent`)
+- `AgentProvider` (у `app/Layout.tsx`) — стан чату, стрім `POST /api/agent` (`api.ts`), історія в `sessionStorage` (`lib/history.ts`), `page_context` з URL (`lib/context.ts`).
+- `AgentSearch` — поле в шапці замість заглушки: Enter відкриває панель і надсилає питання.
+- `AgentPanel` — права панель (420 px; на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран), живий текст і статуси, позначки «general knowledge» / «no source», номери `[n]` → картка джерела внизу панелі (назва, дослівні цитати, `[Open source]`: рядок тесту й порівняння ведуть на сторінки застосунку, файли й PDF — на бекенд, DOI — на doi.org; `lib/links.ts`), кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
+- Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`; `highlight` — DOM.

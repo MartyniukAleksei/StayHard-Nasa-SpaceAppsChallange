@@ -42,6 +42,7 @@ class ToolOutput:
     sources: list[Source] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)  # підсумок виклику («8 tests match…»)
     note_url: str = ""  # джерело підсумку; API не дозволяє змішувати text і search_result
+    events: list[dict[str, Any]] = field(default_factory=list)  # SSE для UI (proposal…)
 
     def content(self) -> list[dict[str, Any]]:
         if not self.sources:
@@ -160,6 +161,63 @@ TOOLS: list[dict[str, Any]] = [
 ]
 
 
+# Фасети Дослідника (frontend/src/features/explorer/lib/filter.ts) — ті самі ключі й значення,
+# щоб пропозиція «open_tests» відкрила Explorer з тими самими фільтрами.
+EXPLORER_FACETS: dict[str, list[str]] = {
+    "fuel": ["Heptane", "Methanol"],
+    "diluent": ["N2", "CO2", "He"],
+    "pressure": ["0.7", "1", "2-3"],
+    "o2": ["<16.5", "16.5-21", "air", "21.6-30", "30+"],
+    "fiber": ["free", "fiber", "unknown", "all"],
+    "end": ["Extinction", "Disruption", "Completion"],
+    "tag": ["series", "video", "cool"],
+}
+ACTIONS = ["open_tests", "open_test", "open_compare"]
+
+UI_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "propose_action",
+        "description": (
+            "Show the user a button that opens a page of the website. Nothing happens until the "
+            "user clicks it. Use it when the user wants to see, open, browse or compare tests. "
+            "open_test: one test in test_nos. open_compare: 2-3 tests in test_nos (the compare "
+            "page holds at most 3). open_tests: the test explorer filtered by the explorer facets "
+            "(empty arrays mean no filter; pressure bands 0.7 / 1 / 2-3 atm; o2 bands <16.5, "
+            "16.5-21, air (21%), 21.6-30, 30+ percent; fiber defaults to free-floating, use all to "
+            "include fiber tests). label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'."
+        ),
+        "input_schema": _obj(
+            {
+                "action": {"type": "string", "enum": ACTIONS},
+                "label": {"type": "string"},
+                "test_nos": {"type": "array", "items": TEST_NO},
+                "explorer": _obj(
+                    {
+                        k: {"type": "array", "items": {"type": "string", "enum": v}}
+                        for k, v in EXPLORER_FACETS.items()
+                    }
+                ),
+            }
+        ),
+    },
+    {
+        "name": "highlight_params",
+        "description": (
+            "Highlight parameters on the page the user is looking at (test page or comparison), "
+            "e.g. the values your answer talks about. It happens immediately and changes nothing "
+            "else. Use field names from query_tests."
+        ),
+        "input_schema": _obj(
+            {
+                "fields": {"type": "array", "items": {"type": "string", "enum": list(FIELDS)}},
+                "test_nos": {"type": "array", "items": TEST_NO},
+            }
+        ),
+    },
+]
+TOOLS.extend(UI_TOOLS)
+
+
 def _clamp(v: int, lo: int, hi: int) -> int:
     return max(lo, min(int(v), hi))
 
@@ -226,7 +284,7 @@ def _compare_source(cmp: Any) -> Source:
             for n, v in f.values.items()
         )
         unit = f" [{f.unit}]" if f.unit else ""
-        line = f"{f.field}{unit}: {vals}"
+        line = f"{FIELDS[f.field].description}{unit}: {vals}"
         if f.diff_vs_first:
             diffs = ", ".join(
                 f"{flex.test_name(int(n))} {d:+g}" for n, d in f.diff_vs_first.items()
@@ -292,6 +350,55 @@ def search_docs(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOut
     return ToolOutput(sources=[h.to_source() for h in hits])
 
 
+def _existing(cur: duckdb.DuckDBPyConnection, nos: list[int]) -> list[int]:
+    found = {r["test_no"] for r in flex_repository.get_tests(cur, nos)}
+    missing = [n for n in nos if n not in found]
+    if missing:
+        raise ToolError(f"no such tests: {', '.join(flex.test_name(n) for n in missing)}")
+    return nos
+
+
+def propose_action(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    action = args.get("action")
+    nos = list(dict.fromkeys(int(n) for n in args.get("test_nos") or []))
+    params: dict[str, Any] = {}
+    if action == "open_test":
+        if len(nos) != 1:
+            raise ToolError("open_test needs exactly one test in test_nos")
+        params["test_nos"] = _existing(cur, nos)
+    elif action == "open_compare":
+        if not 2 <= len(nos) <= 3:
+            raise ToolError("open_compare needs 2 or 3 tests (the compare page holds at most 3)")
+        params["test_nos"] = _existing(cur, nos)
+    elif action == "open_tests":
+        explorer = args.get("explorer") or {}
+        clean = {}
+        for key, allowed in EXPLORER_FACETS.items():
+            vals = [v for v in explorer.get(key) or [] if v in allowed]
+            if vals:
+                clean[key] = vals
+        params["explorer"] = clean
+    else:
+        raise ToolError(f"unknown action {action!r}")
+    label = str(args.get("label") or "").strip()[:80] or "Open"
+    event = {"event": "proposal", "data": {"action": action, "label": label, "params": params}}
+    return ToolOutput(
+        notes=["Shown to the user as a button; nothing opens until they click it."],
+        events=[event],
+    )
+
+
+def highlight_params(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    fields = [f for f in args.get("fields") or [] if f in FIELDS]
+    if not fields:
+        raise ToolError("no known fields to highlight")
+    nos = [int(n) for n in args.get("test_nos") or []]
+    event = {"event": "highlight", "data": {"fields": fields, "test_nos": nos}}
+    return ToolOutput(
+        notes=["Highlighted on the page where these values are visible."], events=[event]
+    )
+
+
 Handler = Callable[[duckdb.DuckDBPyConnection, dict[str, Any]], ToolOutput]
 
 HANDLERS: dict[str, Handler] = {
@@ -301,6 +408,8 @@ HANDLERS: dict[str, Handler] = {
     "find_similar_tests": find_similar_tests,
     "get_timeseries_summary": get_timeseries_summary,
     "search_docs": search_docs,
+    "propose_action": propose_action,
+    "highlight_params": highlight_params,
 }
 
 
@@ -321,4 +430,8 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return f"Reading {args.get('signal')} data…"
         case "search_docs":
             return f"Searching documents: “{args.get('query', '')}”…"
+        case "propose_action":
+            return "Preparing a link…"
+        case "highlight_params":
+            return "Highlighting values on the page…"
     return "Working…"
