@@ -4,6 +4,8 @@
 const RAMP = " .:-=+*#%@";
 const ORBIT_S = 26; // seconds per satellite orbit
 const WIDE_PX = 860;
+/** Share of cells without a star (hash threshold). */
+const STAR_SHARE = 0.993;
 
 export type SkyPalette = { ink: string; flame: string; bg: string; font: string };
 
@@ -209,8 +211,8 @@ export function drawSky(canvas: HTMLCanvasElement, text: HTMLElement, t: number,
         g.fillStyle = pal.bg;
         g.fillRect(x - cw / 2, y - chh / 2, cw + 0.5, chh + 0.5);
       }
+      // stars live on the fixed cosmos layer (drawCosmos), so they continue below the hero
       const h = hash(Math.round(x), Math.round(y));
-      if (v < 0.05 && h > 0.993) v = 0.22 + 0.18 * Math.sin(t * 1.7 + h * 60);
       const i = glyph(v, h);
       if (i > 0) {
         const dim = x > tx0 && x < tx1 && y > ty0 && y < ty1 ? 0.28 : 1;
@@ -223,7 +225,7 @@ export function drawSky(canvas: HTMLCanvasElement, text: HTMLElement, t: number,
   g.globalAlpha = 1;
 }
 
-/** Comets on a viewport-sized layer; only cells near each comet are computed. */
+/** Twinkling stars + comets on a fixed viewport-sized layer behind the whole landing page. */
 export function drawCosmos(canvas: HTMLCanvasElement, t: number, pal: SkyPalette): void {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -236,6 +238,19 @@ export function drawCosmos(canvas: HTMLCanvasElement, t: number, pal: SkyPalette
   g.font = `${cell * 1.15}px ${pal.font}`;
   g.textAlign = "center";
   g.textBaseline = "middle";
+  g.fillStyle = pal.ink;
+  for (let y = cell / 2; y < H; y += chh) {
+    for (let x = cell / 2; x < W; x += cw) {
+      const h = hash(Math.round(x), Math.round(y));
+      if (h <= STAR_SHARE) continue;
+      const v = 0.22 + 0.18 * Math.sin(t * 1.7 + h * 60);
+      const i = glyph(v, h);
+      if (i > 0) {
+        g.globalAlpha = 0.35 + 0.65 * v;
+        g.fillText(RAMP[i], x, y);
+      }
+    }
+  }
   for (const c of COMETS) {
     const k = (t + c.ph) % c.P;
     const hx = (c.fx + c.vx * k) * W;

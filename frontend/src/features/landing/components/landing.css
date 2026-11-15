@@ -44,7 +44,7 @@
 @keyframes land-bob { 50% { transform: translateY(4px); } }
 
 /* study picker */
-.land-studies { background: var(--void); border-top: var(--rule); scroll-margin-top: 0; }
+.land-studies { border-top: var(--rule); scroll-margin-top: 0; } /* transparent: stars and comets show through */
 .land-cards {
   list-style: none;
   margin: 0;
@@ -53,7 +53,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
-.land-card { border: 1px dashed var(--line); padding: 20px; display: grid; gap: 10px; align-content: start; }
+.land-card { border: 1px dashed var(--line); padding: 20px; display: grid; gap: 10px; align-content: start; background: var(--void); }
 .land-card h3 { font-family: var(--display); font-weight: 400; font-size: calc(22px * var(--dz)); margin: 0; }
 .land-card h3 .muted { font-family: var(--sans); font-size: 15px; }
 .land-card p { margin: 0; }
@@ -64,6 +64,11 @@
 .land-card-link .btn { justify-self: start; margin-left: -6px; }
 .land-card.on .land-obj { max-width: 75ch; }
 .land-facts { grid-template-columns: repeat(3, minmax(0, max-content)); gap: 12px 48px; }
+.land-facts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; }
+.land-facts-row > .land-facts { flex: 1 1 360px; }
+.land-mini { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.land-mini canvas { width: 200px; height: 120px; display: block; }
+.land-mini figcaption { font-size: 11px; color: var(--ash); max-width: 200px; text-align: center; }
 .land-card.soon .tag { font-size: 11px; padding: 1px 6px; }
 
 @media (max-width: 960px) {
