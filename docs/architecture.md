@@ -32,7 +32,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `db/duckdb.py` | read-only підключення; FastAPI-dependency `get_cursor` |
 | `api/router.py` | префікс `/api`, збирає роутери модулів; `api/routes/` — службові (health) |
 | `studies/flex/` | домен FLEX: `schemas` → `repository` (SQL) → `service` (логіка) → `router` (HTTP) |
-| `media/` | віддача файлів тесту з Volume |
+| `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md). План: віддача файлів тесту з Volume |
 | `rag/` | чанкінг, ембеддинги, векторний пошук по таблиці `chunks` |
 | `agent/` | LLM-агент та інструменти (`query_tests`, `compare_tests`, `search_docs`, `get_timeseries`, `open_view`) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
@@ -46,7 +46,10 @@ docker-compose.yml  локальний запуск прод-образів
 | GET | `/api/studies/flex/tests?filters` | план |
 | GET | `/api/studies/flex/tests/{id}` (+ `/timeseries/{signal}`, `/neighbors`) | план |
 | GET | `/api/studies/flex/compare?ids=` | план |
-| GET | `/api/media/flex/{test_no}/{path}` | план |
+| GET | `/api/media/flex/{test_no}/cameras` | ✅ камери з кадрами в PSI (`A` HiBMS, `B` LLL-UV, `D` колір), лише БД |
+| GET | `/api/media/flex/{test_no}/cameras/{camera}/frames` | ✅ `{n_frames, fps, start_time, t_ms[], frame_url}`, перший виклик ~3–6 с |
+| GET | `/api/media/flex/{test_no}/cameras/{camera}/frames/{i}.jpg?max_side=` | ✅ JPEG одного кадру, ~1–2 с без кешу |
+| GET | `/api/media/flex/{test_no}/{path}` | план (файли з Volume) |
 | POST | `/api/agent` (stream) | план |
 
 ## Дані — `flame.duckdb`

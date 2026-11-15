@@ -31,7 +31,7 @@ curl -L -o "$NAME" "$URL"
 -- усі файли тесту 31
 SELECT kind, camera, name, version, bytes/1e6 AS mb FROM test_files WHERE test_no = '31' ORDER BY kind;
 
--- архіви кадрів (camera: A = HiBMS 1024², B ≈ LLL-UV 512², D ≈ кольорова 640×480)
+-- архіви кадрів (camera: A = HiBMS 1024², B = LLL-UV 512², D = кольорова 640×480)
 SELECT test_no, camera, name, version, bytes/1e9 AS gb FROM test_files WHERE kind = 'camera_images_zip' AND test_no = '31';
 
 -- усі відео, від найменших
@@ -85,7 +85,15 @@ def media(test_no: int, name: str):
     return RedirectResponse(signed_url(name, row[0]))  # або стрімити й одночасно класти в кеш
 ```
 
-Великі zip (1–2 ГБ) **не віддаємо в браузер**. Розпаковуємо на бекенді кілька кадрів у `data/derived/frames/{test}/` і віддаємо їх.
+Великі zip (1–2 ГБ) **не віддаємо в браузер**.
+
+### Кадри камер: реалізовано (`flame.media`, ADR 0005)
+S3 за підписаним посиланням підтримує `Range` (відповідь `206`). Тому бекенд **не качає zip**:
+1. читає кінець файлу з центральним каталогом zip (3 Range-запити, ~2 с; розмір файлу береться з `test_files.bytes`);
+2. читає вкладений індекс `<CIR><cam>.txt` (час кожного кадру);
+3. для кадру `i` бере одним Range-запитом лише його запис (~0.1–1.5 МБ), розпаковує, конвертує 16-біт TIFF / BMP → JPEG.
+
+Каталоги, індекси й останні відрендерені кадри кешуються в пам'яті процесу, а підписане посилання — до його `Expires`. Ендпоінти описано в `docs/architecture.md`.
 
 ## Інші ендпоінти (якщо знадобиться)
 

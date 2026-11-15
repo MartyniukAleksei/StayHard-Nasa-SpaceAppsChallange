@@ -3,8 +3,9 @@
 from fastapi import APIRouter
 
 from flame.api.routes import health
+from flame.media.router import router as media_router
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
-# TODO: studies.flex.router (/api/studies/flex/...), media.router (/api/media/...),
-#       agent.router (/api/agent, streaming)
+api_router.include_router(media_router)
+# TODO: studies.flex.router (/api/studies/flex/...), agent.router (/api/agent, streaming)
