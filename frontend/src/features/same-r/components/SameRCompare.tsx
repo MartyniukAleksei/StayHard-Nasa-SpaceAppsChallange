@@ -1,5 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { particlesFirst, PTRAK_LIMIT, sameRSeriesQuery, sameRTestQuery, type TimeSeries } from "@/features/same-r-3d";
 import { TimeChart } from "@/shared/ui/chart/TimeChart";
@@ -41,7 +41,7 @@ export function SameRCompare() {
           above.
         </p>
       ) : (
-        <div className="sr-cmp-cols" style={{ "--n": ids.length } as CSSProperties}>
+        <div className="sr-cmp-cols">
           {ids.map((id, i) => (
             <Column
               key={id}

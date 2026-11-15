@@ -59,11 +59,13 @@ function useTourSpec(testNo: number): [TourSpec | null, () => void] {
 }
 
 /** 3D replay of one FLEX test, drawn from its measured series, next to the real onboard frames. */
-/** startAt: open paused at this moment (s after ignition), e.g. from ?t= in the URL. */
-export function Experiment3D({ testNo, startAt }: { testNo: number; startAt?: number }) {
+/** startAt: open paused at this moment (s after ignition), e.g. from ?t= in the URL.
+ *  compact: only the scene and the timeline (columns of the compare page). */
+export function Experiment3D({ testNo, startAt, compact = false }: { testNo: number; startAt?: number; compact?: boolean }) {
   const state = useExperiment(testNo);
   const webgl = useMemo(hasWebGL, []);
-  const [tour, exitTour] = useTourSpec(testNo);
+  const [spec, exitTour] = useTourSpec(testNo);
+  const tour = compact ? null : spec; // compare columns show several scenes: no walkthrough there
 
   if (!webgl) return <Fallback testNo={testNo} tour={tour} reason="This browser has no WebGL, so the 3D scene cannot be drawn." />;
   if (state.status === "pending") return <div className="x3d-empty">Loading measured series…</div>;
@@ -71,7 +73,7 @@ export function Experiment3D({ testNo, startAt }: { testNo: number; startAt?: nu
   if (state.status === "empty") return <div className="x3d-empty">No droplet series for test #{testNo}.</div>;
   return (
     <SceneBoundary fallback={<Fallback testNo={testNo} tour={tour} reason="The 3D scene failed to start on this device." />}>
-      <Replay experiment={state.experiment} startAt={startAt} tour={tour} onExitTour={exitTour} />
+      <Replay experiment={state.experiment} startAt={startAt} compact={compact} tour={tour} onExitTour={exitTour} />
     </SceneBoundary>
   );
 }
@@ -104,6 +106,7 @@ class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode
 interface ReplayProps {
   experiment: Experiment;
   startAt?: number;
+  compact?: boolean;
   tour: TourSpec | null;
   onExitTour: () => void;
 }
@@ -111,7 +114,7 @@ interface ReplayProps {
 const noSubscribe = () => () => {};
 const zero = () => 0;
 
-function Replay({ experiment, startAt, tour, onExitTour }: ReplayProps) {
+function Replay({ experiment, startAt, compact = false, tour, onExitTour }: ReplayProps) {
   const reduced = useMemo(prefersReducedMotion, []);
   // a replay opened for a walkthrough waits at the start instead of playing on its own
   const opensWithTour = useRef(tour != null).current;
@@ -170,7 +173,7 @@ function Replay({ experiment, startAt, tour, onExitTour }: ReplayProps) {
 
   const t = experiment.test;
   return (
-    <div className="x3d" ref={root}>
+    <div className={compact ? "x3d compact" : "x3d"} ref={root}>
       <figure className="x3d-stage">
         <Suspense fallback={<div className="x3d-empty">Starting 3D…</div>}>
           <Scene
@@ -195,11 +198,16 @@ function Replay({ experiment, startAt, tour, onExitTour }: ReplayProps) {
           <Phase experiment={experiment} playback={playback} />
         </figcaption>
       </figure>
-      <FramesPanel experiment={experiment} playback={playback} tourTimes={tourTimes} onPrimed={onPrimed} mark={frameMark} />
+      {!compact && (
+        <FramesPanel experiment={experiment} playback={playback} tourTimes={tourTimes} onPrimed={onPrimed} mark={frameMark} />
+      )}
       {runner && <TourDirector tour={runner} onExit={onExitTour} />}
       <div className="x3d-under">
         <Timeline experiment={experiment} playback={playback} />
-        <Readouts experiment={experiment} playback={playback} layers={layers} onLayers={setLayers} />
+        {!compact && <Readouts experiment={experiment} playback={playback} layers={layers} onLayers={setLayers} />}
+        {compact ? (
+          <p className="x3d-note">3D replay from measured data, not a recording · test #{t.test_no} · drag to rotate</p>
+        ) : (
         <p className="x3d-note">
           3D replay drawn from measured data, not a recording · test #{t.test_no}. From the data: droplet and flame
           diameters, droplet position, all timing (needles and igniters from the test log). Estimate: the 3D position
@@ -209,6 +217,7 @@ function Replay({ experiment, startAt, tour, onExitTour }: ReplayProps) {
           {runner &&
             " Walkthrough: the assistant chose the moments, views and wording; every number in a label is filled in from the data, and the camera views are illustrative."}
         </p>
+        )}
       </div>
     </div>
   );

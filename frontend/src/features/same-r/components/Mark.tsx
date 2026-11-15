@@ -2,6 +2,9 @@
 // shortcut: 8 distinct marks, more materials than that repeat from the start.
 export const MARK_COUNT = 8;
 
+/** Colour of mark i (tokens --cat-1…5); the shape still tells materials apart without it. */
+export const markColor = (i: number) => `var(--cat-${(i % 5) + 1})`;
+
 export function Shape({ i }: { i: number }) {
   const hollow = Math.floor(i / 4) % 2 === 1;
   const p = hollow ? { fill: "none", stroke: "currentColor", strokeWidth: 1.5 } : { fill: "currentColor" };
@@ -20,7 +23,7 @@ export function Shape({ i }: { i: number }) {
 /** Inline mark for legends and filter tags. */
 export function Mark({ i }: { i: number }) {
   return (
-    <svg className="sr-mark" width={14} height={14} viewBox="-7 -7 14 14" aria-hidden="true">
+    <svg className="sr-mark" width={14} height={14} viewBox="-7 -7 14 14" aria-hidden="true" style={{ color: markColor(i) }}>
       <Shape i={i} />
     </svg>
   );

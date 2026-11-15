@@ -165,7 +165,7 @@ function Welcome({ context, onPick, empty, busy }: { context: PageContext; onPic
       <div className="ag-welcome-box">
         <div className="ag-welcome-text">
           <p className="ag-welcome-title">
-            <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>Flame in Freefall</b> agent
+            <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>StayHard</b> agent
           </p>
           <p className="muted">Answers only from NASA FLEX data (PSI-69); every number links to its source.</p>
           <p className="muted">

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { FindTest } from "./FindTest";
 import { Link, useSearchParams } from "react-router";
 import { compareHref, MAX_COMPARE, parseIds, useTests } from "@/features/flex-tests";
 import { applyFilters, fromParams, toParams, type Filters } from "../lib/filter";
@@ -42,16 +43,19 @@ export function Explorer() {
   return (
     <div className="wrap ex">
       <header className="ex-head">
-        <p className="ov-kicker mono">
-          <Link to="/studies/flex">FLEX</Link> / Tests
-        </p>
-        <h1 className="h-display">Test explorer</h1>
-        <p className="lede">
-          {tests.length} FLEX tests. Narrow them down with the filters; every number below is counted
-          from the data.
-        </p>
+        <div className="ex-head-text">
+          <p className="ov-kicker mono">
+            <Link to="/studies/flex">FLEX</Link> / Tests
+          </p>
+          <h1 className="h-display">Test explorer</h1>
+          <p className="lede">
+            {tests.length} FLEX tests. Narrow them down with the filters; every number below is counted
+            from the data.
+          </p>
+        </div>
+        <FindTest tests={tests} />
       </header>
-      <div className={current ? "ex-grid with-preview" : "ex-grid"}>
+      <div className="ex-grid">
         <Facets tests={tests} filters={filters} onChange={setFilters} />
         <div className="ex-main">
           <AnswerCard all={tests} rows={rows} filters={filters} />
