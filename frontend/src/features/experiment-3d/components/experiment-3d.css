@@ -6,6 +6,10 @@
   gap: 12px 16px;
   align-items: stretch;
 }
+/* compact (compare columns): the scene alone, then the timeline */
+.x3d.compact { grid-template-columns: minmax(0, 1fr); }
+.x3d.compact .x3d-stage { min-height: 280px; }
+.x3d.compact .x3d-timeline { grid-template-columns: minmax(0, 1fr); }
 /* the stage is as tall as the frames column next to it */
 .x3d-stage { margin: 0; position: relative; min-height: 420px; background: var(--void); border: var(--rule); overflow: hidden; }
 .x3d-stage > div:first-child { position: absolute !important; inset: 0; }
