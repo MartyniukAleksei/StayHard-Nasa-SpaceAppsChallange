@@ -30,6 +30,13 @@
   --series-1: #b9b8b0;
   --series-2: #6f6f6a;
   --series-uv: #a99bf0;
+  /* Categories (e.g. SAME-R materials on its map): muted, distinct from the end colours and
+     --flame; always paired with a shape, colour never stands alone. */
+  --cat-1: #a99bf0;
+  --cat-2: #62b6c9;
+  --cat-3: #d98aa8;
+  --cat-4: #e3d35b;
+  --cat-5: #f1f0ea;
   --chart-grid: var(--line);
   --chart-font: 11px var(--mono);
 

@@ -20,7 +20,7 @@
 .sr-map svg text { font: 11px var(--mono); fill: var(--ash); }
 .sr-map .sr-map-grid { stroke: var(--line); }
 .sr-map .sr-map-limit { stroke: var(--ash); stroke-dasharray: 2 3; }
-.sr-map .sr-map-pt { color: var(--ink); cursor: pointer; }
+.sr-map .sr-map-pt { color: var(--c, var(--ink)); cursor: pointer; }
 .sr-map .sr-map-pt:hover, .sr-map .sr-map-pt:focus { color: var(--flame); }
 .sr-map .sr-map-pt.off { color: var(--line); }
 .sr-map p { margin: 0; padding: 0 12px 10px; }
