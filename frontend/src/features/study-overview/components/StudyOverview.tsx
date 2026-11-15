@@ -4,6 +4,7 @@ import { Example3D } from "./Example3D";
 import { BrowseTests, Findings, HowItWorked, Traps } from "./Explainers";
 import { Hero } from "./Hero";
 import { PresetGrid } from "./PresetGrid";
+import { TestCards } from "./TestCards";
 import "./overview.css";
 
 /** FLEX overview, layout 1A "long story" (docs/tasks/0002-pages-1a-2b-3a-4a-5b.md). */
@@ -31,6 +32,7 @@ export function StudyOverview() {
     <div className="ov">
       <Hero about={data.about} facts={data.facts} />
       <Example3D />
+      <TestCards />
       <HowItWorked />
       <Findings />
       <PresetGrid presets={data.presets} />

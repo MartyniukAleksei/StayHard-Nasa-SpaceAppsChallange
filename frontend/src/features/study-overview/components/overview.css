@@ -84,3 +84,25 @@
   .ov-preset h3 { min-height: 0; }
   .ov-hero .stats { gap: 18px 32px; }
 }
+
+/* Tests to read first: chart left, explanation right (layout C) */
+.tc-list { display: grid; gap: 0; border-top: var(--rule); margin-top: 8px; }
+.tc { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; border-bottom: var(--rule); }
+.tc-left { padding: 20px 24px 20px 0; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.tc-right { padding: 20px 0 20px 24px; border-left: var(--rule); min-width: 0; }
+.tc-kicker { margin: 0; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; }
+.tc-title { margin: 0; font-size: 1.25rem; }
+.tc-head { margin: 0; color: var(--ash); }
+.tc-head a, .tc-refs a { color: var(--ink); }
+.tc-head .end-mark { font-size: 13px; }
+.tc-cap { margin: 0; color: var(--ash); }
+.tc-wait { display: grid; place-items: center; min-height: 230px; border: 1px dashed var(--line); color: var(--ash); }
+.tc-sub { margin: 0 0 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+.tc-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.tc-notes p { margin: 0; max-width: 62ch; font-size: 14.5px; }
+.tc-refs { margin-top: 4px !important; color: var(--ash); }
+@media (max-width: 900px) {
+  .tc { grid-template-columns: 1fr; }
+  .tc-left { padding-right: 0; }
+  .tc-right { padding-left: 0; border-left: 0; border-top: var(--rule); }
+}
