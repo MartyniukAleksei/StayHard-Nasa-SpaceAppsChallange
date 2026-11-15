@@ -4,12 +4,14 @@
 from pathlib import Path
 
 from flame.core.config import settings
+from flame.core.studies import PSI_STUDIES
 
 ALLOWED_DIRS = ("raw", "docs", "media")  # що з каталогу знімка можна віддавать
 
 
 def study_dirs() -> dict[str, Path]:
-    return {"flex": settings.flex_dir}
+    """Знімки, файли яких можна віддавати: FLEX і інші дослідження з реєстру."""
+    return {"flex": settings.flex_dir, **{s: settings.study_dir(s) for s in PSI_STUDIES}}
 
 
 def resolve(study: str, path: str) -> Path | None:

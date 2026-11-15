@@ -39,3 +39,27 @@ def test_missing_sources_yield_nothing(tmp_path: Path) -> None:
     with duckdb.connect(str(tmp_path / "flex.duckdb")) as con:
         con.execute("CREATE TABLE tests AS SELECT 1 AS test_no")  # мінімальний знімок
     assert list(flex.iter_documents(tmp_path)) == []
+
+
+def test_other_studies_about_and_publications(tmp_path: Path) -> None:
+    from flame.rag.chunking import chunk_document
+    from flame.rag.sources import psi_studies
+
+    d = tmp_path / "cfi"
+    d.mkdir()
+    about = {
+        "doi": "10.60555/m6pj-a914",
+        "title": "Cool Flames Investigation",
+        "objective": "Study cool flames of droplets.",
+        "publications": [{"title": "Cool flame paper", "authorList": "A. B.", "doi": "10.1/x"}],
+    }
+    (d / "about.json").write_text(json.dumps(about))
+    docs = list(psi_studies.iter_documents(tmp_path))
+    assert [(x.study, x.source_type) for x in docs] == [
+        ("PSI-39", "about"),
+        ("PSI-39", "publication"),
+    ]
+    chunk = chunk_document(docs[0])[0]
+    assert chunk.citation == "CFI investigation objective (about.json, DOI 10.60555/m6pj-a914)"
+    assert chunk.url == "https://doi.org/10.60555/m6pj-a914"
+    assert chunk.embed_text.startswith("[PSI-39 CFI]")

@@ -1,4 +1,4 @@
-"""Інструменти даних агента: тонкі обгортки над сервісами `studies.flex` і `rag`.
+"""Інструменти даних агента: тонкі обгортки над сервісами `studies.flex`, `studies.psi` і `rag`.
 
 Кожен інструмент повертає `ToolOutput`: вміст `tool_result` для Claude API (блоки
 `search_result` з цитатами — ADR 0006, плюс службовий текст без чисел, які треба цитувати)
@@ -22,6 +22,7 @@ from flame.core.citations import (
     test_url,
     to_search_result,
 )
+from flame.core.studies import ALL_STUDIES, PSI_STUDIES
 from flame.media import psi
 from flame.media import service as media_service
 from flame.media import timing as media_timing
@@ -32,10 +33,14 @@ from flame.studies.flex import repository as flex_repository
 from flame.studies.flex import service as flex
 from flame.studies.flex.fields import FIELDS, SIGNALS
 from flame.studies.flex.schemas import Filter
+from flame.studies.psi import repository as psi_repository
+from flame.studies.psi import service as psi_service
+from flame.studies.psi.schemas import Filter as StudyFilter
 
 STUDY = "PSI-69"
 OPS = ["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "not_null"]
 DOC_TYPES = ["testsheet", "doc_pdf", "doc_docx", "about", "publication"]
+STUDY_OPS = [*OPS[:7], "contains", *OPS[7:]]
 
 
 class ToolError(Exception):
@@ -153,14 +158,18 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "search_docs",
         "description": (
-            "Search FLEX texts: researcher TestSheet comments, NASA engineering and science "
-            "documents, presentations, the investigation description and publication list. Use "
-            "it for why/how questions, procedures, definitions and what happened in a test. "
-            "Write the query in English. Optionally restrict to tests or source types."
+            "Search study texts. study=flex (FLEX): researcher TestSheet comments, NASA "
+            "engineering and science documents, presentations, the investigation description "
+            "and publication list. Other studies (cfi, cfig, bass2, samer, saffire2): the "
+            "investigation description (objective, hypothesis, approach, impacts) and "
+            "publication list only. study=any searches all. Use it for why/how questions, "
+            "procedures, definitions and what happened in a FLEX test. Write the query in "
+            "English. Optionally restrict to FLEX tests or source types."
         ),
         "input_schema": _obj(
             {
                 "query": {"type": "string"},
+                "study": {"type": "string", "enum": [*ALL_STUDIES, "any"]},
                 "test_nos": {"type": "array", "items": TEST_NO},
                 "source_types": {"type": "array", "items": {"type": "string", "enum": DOC_TYPES}},
             }
@@ -292,6 +301,89 @@ FRAME_TOOLS: list[dict[str, Any]] = [
     },
 ]
 
+STUDY_PARAM = {"type": "string", "enum": list(PSI_STUDIES), "description": "study slug"}
+TEST_ID = {"type": "string", "description": "test key as in the study table, e.g. 1206, 2-5, 51a"}
+STUDY_FILTERS = {
+    "type": "array",
+    "items": _obj(
+        {
+            "field": {"type": "string", "description": "column of the study test table"},
+            "op": {"type": "string", "enum": STUDY_OPS},
+            "value": {"type": "string"},
+        }
+    ),
+}
+STUDY_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "describe_study",
+        "description": (
+            "Overview of one of the other NASA PSI studies in the database: title and DOI, the "
+            "columns of its test table with value ranges and categories, its time series, and "
+            "notes on how to read the data. Call it first for any question about that study, "
+            "before filtering. Studies: "
+            + "; ".join(f"{s.slug} = {s.acronym} ({s.accession})" for s in PSI_STUDIES.values())
+            + ". FLEX (PSI-69) uses the other tools."
+        ),
+        "input_schema": _obj({"study": STUDY_PARAM}),
+    },
+    {
+        "name": "query_study_tests",
+        "description": (
+            "Find tests of a study by conditions in its test table (column names from "
+            "describe_study). Returns how many match and the rows (default key columns, or the "
+            "columns you list; filtered columns are always included). Ops: eq, ne, lt, lte, gt, "
+            "gte (numbers/dates), in (comma-separated), contains (substring of text), is_null / "
+            "not_null (empty value). Text compares ignoring case. sort: a column or empty."
+        ),
+        "input_schema": _obj(
+            {
+                "study": STUDY_PARAM,
+                "filters": STUDY_FILTERS,
+                "columns": {"type": "array", "items": {"type": "string"}},
+                "sort": {"type": "string"},
+                "descending": {"type": "boolean"},
+                "limit": {"type": "integer", "description": "1-50"},
+            }
+        ),
+    },
+    {
+        "name": "aggregate_study_tests",
+        "description": (
+            "Counts of tests matching filters, optionally grouped by a column (group_by), and "
+            "count/mean/min/max of a numeric column (metric). Values are computed from the "
+            "table; say that means are computed. Leave group_by or metric empty if not needed."
+        ),
+        "input_schema": _obj(
+            {
+                "study": STUDY_PARAM,
+                "filters": STUDY_FILTERS,
+                "group_by": {"type": "string"},
+                "metric": {"type": "string"},
+            }
+        ),
+    },
+    {
+        "name": "get_study_test",
+        "description": (
+            "All recorded columns of one test of a study, which time series it has, and the "
+            "kinds of files NASA PSI lists for it."
+        ),
+        "input_schema": _obj({"study": STUDY_PARAM, "test_id": TEST_ID}),
+    },
+    {
+        "name": "get_study_timeseries_summary",
+        "description": (
+            "Summary of a measured time series of one test of a study: number of rows and the "
+            "range of each column. series is the name from describe_study (e.g. droplet, "
+            "cool_flame, radiometer, chamber, telemetry, sensors)."
+        ),
+        "input_schema": _obj(
+            {"study": STUDY_PARAM, "test_id": TEST_ID, "series": {"type": "string"}}
+        ),
+    },
+]
+
+TOOLS.extend(STUDY_TOOLS)
 TOOLS.extend(UI_TOOLS)
 TOOLS.append(CHART_TOOL)
 TOOLS.extend(FRAME_TOOLS)
@@ -300,7 +392,8 @@ TOOLS.extend(FRAME_TOOLS)
 # а переліки полів у query_tests / propose_action / highlight_params / make_chart її
 # переповнюють. Їхній ввід і так повністю перевіряє код (помилка → is_error моделі).
 STRICT = {"get_test", "compare_tests", "find_similar_tests", "get_timeseries_summary",
-          "search_docs", "find_frame", "look_at_frames"}  # fmt: skip
+          "search_docs", "find_frame", "look_at_frames", "describe_study", "get_study_test",
+          "get_study_timeseries_summary"}  # fmt: skip
 
 
 def _clamp(v: int, lo: int, hi: int) -> int:
@@ -424,14 +517,16 @@ def search_docs(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOut
     query = str(args.get("query") or "").strip()
     if len(query) < 2:
         raise ToolError("query is empty")
+    slug = str(args.get("study") or "flex")
     filters = SearchFilters(
-        study=STUDY,
+        study=ALL_STUDIES[slug].accession if slug in ALL_STUDIES else None,
         test_nos=[int(n) for n in args.get("test_nos") or []] or None,
         source_types=list(args.get("source_types") or []) or None,
     )
     hits = rag_service.search(cur, query, 6, filters)
     if not hits:
-        return ToolOutput(notes=["No matching passages in the FLEX texts."])
+        where = ALL_STUDIES[slug].acronym if slug in ALL_STUDIES else "study"
+        return ToolOutput(notes=[f"No matching passages in the {where} texts."])
     return ToolOutput(sources=[h.to_source() for h in hits])
 
 
@@ -622,6 +717,76 @@ def look_at_frames(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> Tool
     return out
 
 
+def _study_filters(args: dict[str, Any]) -> list[StudyFilter]:
+    out = []
+    for f in args.get("filters") or []:
+        flt = StudyFilter(**f)
+        if flt.op in ("is_null", "not_null"):
+            flt.value = None
+        out.append(flt)
+    return out
+
+
+def _study_call(fn: Callable[..., Any], *a: Any) -> Any:
+    try:
+        return fn(*a)
+    except (psi_service.NotFound, psi_repository.InvalidQuery) as e:
+        raise ToolError(str(e)) from e
+
+
+def describe_study(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(psi_service.overview, cur, str(args.get("study")))
+    return ToolOutput(sources=res.sources)
+
+
+def query_study_tests(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    slug = str(args.get("study"))
+    res = _study_call(
+        psi_service.query_tests,
+        cur,
+        slug,
+        _study_filters(args),
+        [str(c) for c in args.get("columns") or []] or None,
+        str(args.get("sort") or "") or None,
+        bool(args.get("descending")),
+        _clamp(args.get("limit") or 20, 1, 50),
+    )
+    if res.total > len(res.tests):
+        res.sources[0].text += " Narrow the filters or raise the limit to see the rest."
+    return ToolOutput(sources=res.sources)
+
+
+def aggregate_study_tests(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(
+        psi_service.aggregate,
+        cur,
+        str(args.get("study")),
+        _study_filters(args),
+        str(args.get("group_by") or "") or None,
+        str(args.get("metric") or "") or None,
+    )
+    return ToolOutput(sources=res.sources)
+
+
+def get_study_test(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(psi_service.get_test, cur, str(args.get("study")), str(args.get("test_id")))
+    return ToolOutput(sources=res.sources)
+
+
+def get_study_timeseries_summary(
+    cur: duckdb.DuckDBPyConnection, args: dict[str, Any]
+) -> ToolOutput:
+    res = _study_call(
+        psi_service.timeseries,
+        cur,
+        str(args.get("study")),
+        str(args.get("test_id")),
+        str(args.get("series") or "").removeprefix("ts_"),
+        10,
+    )
+    return ToolOutput(sources=res.sources)
+
+
 Handler = Callable[[duckdb.DuckDBPyConnection, dict[str, Any]], ToolOutput]
 
 HANDLERS: dict[str, Handler] = {
@@ -631,6 +796,11 @@ HANDLERS: dict[str, Handler] = {
     "find_similar_tests": find_similar_tests,
     "get_timeseries_summary": get_timeseries_summary,
     "search_docs": search_docs,
+    "describe_study": describe_study,
+    "query_study_tests": query_study_tests,
+    "aggregate_study_tests": aggregate_study_tests,
+    "get_study_test": get_study_test,
+    "get_study_timeseries_summary": get_study_timeseries_summary,
     "propose_action": propose_action,
     "highlight_params": highlight_params,
     "make_chart": make_chart,
@@ -662,6 +832,15 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return "Highlighting values on the page…"
         case "make_chart":
             return "Drawing a chart from the data…"
+        case "describe_study" | "query_study_tests" | "aggregate_study_tests":
+            study = PSI_STUDIES.get(str(args.get("study")))
+            return f"Reading the {study.acronym if study else 'study'} test table…"
+        case "get_study_test":
+            study = PSI_STUDIES.get(str(args.get("study")))
+            name = study.test_label if study else "study"
+            return f"Reading {name} test {args.get('test_id', '')}…"
+        case "get_study_timeseries_summary":
+            return f"Reading {args.get('series')} data…"
         case "find_frame" | "look_at_frames":
             return "Fetching camera frames from NASA PSI…"
     return "Working…"
