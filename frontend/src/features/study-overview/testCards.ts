@@ -56,11 +56,11 @@ export const CARD_117: { id: string; phenomenon: string; title: string; notes: N
   notes: [
     {
       text: "In this simulation of a burning droplet the peak gas temperature rises to a hot-flame peak, then settles on a low-temperature branch. That branch is a cool flame: reactions continue after the visible flame is gone.",
-      refs: ["farouk", "ahmed"],
+      refs: ["farouk", "ahmed", "psi117"],
     },
     {
       text: "The two cases differ in how the cool flame behaves: one holds steady, the other oscillates. The droplet is consumed in both.",
-      refs: ["ahmed"],
+      refs: ["ahmed", "psi117"],
     },
     {
       text: "In FLEX, heptane droplets showed this after visible extinction, so “the flame went out” is not the same as “burning stopped”. See test #35 and the cool-flame papers.",

@@ -66,8 +66,14 @@ export const REFS: Record<string, Ref> = {
   },
   ahmed: {
     id: "ahmed",
-    short: "PSI-117 data (Ahmed 2024)",
-    full: "Ahmed, E. (2024). Multidimensional simulation of cool diffusion flame. PhD dissertation, University of South Carolina. Data: NASA PSI-117.",
+    short: "Ahmed 2024",
+    full: "Ahmed, E. (2024). Multidimensional simulation of cool diffusion flame. Master's thesis, University of South Carolina.",
+    href: "https://scholarcommons.sc.edu/etd/7944",
+  },
+  psi117: {
+    id: "psi117",
+    short: "PSI-117 data",
+    full: "Farouk, T., Hicks, M. (2025). Effect of external thermo-convective perturbation on cool flame dynamics: a multidimensional multi-physics CFD analysis. NASA Physical Sciences Informatics, PSI-117.",
     href: "https://doi.org/10.60555/gz0q-b577",
   },
 };

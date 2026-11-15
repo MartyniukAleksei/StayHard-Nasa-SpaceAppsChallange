@@ -143,7 +143,7 @@ function Card117() {
       head={
         <>
           {CARD_117.id} · simulation, not a measurement ·{" "}
-          <a href={REFS.ahmed.href} target="_blank" rel="noreferrer">
+          <a href={REFS.psi117.href} target="_blank" rel="noreferrer">
             doi:10.60555/gz0q-b577
           </a>
         </>
