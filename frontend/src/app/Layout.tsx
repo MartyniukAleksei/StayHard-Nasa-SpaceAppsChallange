@@ -3,6 +3,7 @@ import { AgentLauncher, AgentPanel, AgentProvider } from "@/features/agent";
 import { useSameROverview } from "@/features/same-r";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
+import { ScrollToTop } from "./ScrollToTop";
 import "./shell.css";
 
 const FLEX_NAV = [
@@ -31,6 +32,7 @@ export function Layout() {
   return (
     <AgentProvider>
       <a className="skip" href="#main">Skip to content</a>
+      <ScrollToTop />
       <Header />
       <main id="main">
         <Outlet />
