@@ -1,0 +1,129 @@
+/* PSI-159 page (feature cfig-cool). Tokens only; prefix cf-. Real camera frames are shown unframed by design. */
+.cf { padding-block: clamp(24px, 3vw, 48px) 96px; }
+.cf-head .h-display { font-size: calc(clamp(26px, 3.4vw, 40px) * var(--dz)); }
+.cf-kicker { color: var(--ash); font-size: 13px; margin: 0 0 14px; font-family: var(--mono); }
+.cf-stats { margin: 24px 0 0; }
+.cf-stats dt, .cf-stats dd { margin: 0; }
+.cf-band .h-section { margin: 0 0 12px; }
+.cf-h3 { font: 500 14px var(--mono); margin: 32px 0 10px; color: var(--ink); }
+.cf-note { max-width: 78ch; margin: 8px 0 0; }
+
+/* imaging passport */
+.cf-passport { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 1px; background: var(--line); border: var(--rule); margin: 0 0 24px; }
+.cf-passport > div { background: var(--void); padding: 12px 14px; min-width: 0; }
+.cf-passport dt { font: 12px var(--mono); color: var(--ash); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.cf-passport > div:last-child { grid-column: 1 / -1; }
+.cf-passport dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.cf-nowrap { white-space: nowrap; }
+
+/* stage + side */
+.cf-v1 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.cf-stage { margin: 0; }
+.cf-stage figcaption { margin-top: 8px; color: var(--ash); }
+.cf-stage figcaption b { color: var(--ink); font-weight: 500; }
+.cf-canvas { position: relative; background: var(--void); border: var(--rule); aspect-ratio: 680 / 512; }
+.cf-canvas canvas { display: block; width: 100%; height: 100%; }
+.cf-canvas-msg { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--ash); }
+.cf-side { display: grid; gap: 20px; min-width: 0; }
+.cf-slider { display: grid; gap: 8px; }
+.cf-slider label b { color: var(--ink); font-weight: 500; }
+.cf-slider input[type="range"] { width: 100%; }
+.cf-slider-ends { display: flex; justify-content: space-between; gap: 12px; color: var(--ash); }
+.cf-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.cf-read { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 13px; }
+.cf-read dt { color: var(--ash); }
+.cf-read dd { margin: 0; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+/* filmstrip */
+.cf-film { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin-top: 16px; }
+.cf-thumb { background: none; border: var(--rule); border-radius: 0; padding: 6px; display: grid; gap: 4px; color: var(--ash); cursor: pointer; min-height: var(--hit); text-align: center; }
+.cf-thumb.on { border-color: var(--flame); color: var(--ink); }
+.cf-thumb:focus-visible { outline: 1px dashed var(--ink); outline-offset: 2px; }
+.cf-thumb .cf-canvas { border: 0; }
+
+/* frame-size chart */
+.cf-tl { position: relative; border: var(--rule); padding: 8px 0 8px; overflow: hidden; }
+.cf-tl svg { display: block; overflow: visible; }
+.cf-archive-dot { fill: var(--ash); }
+.cf-ign { stroke: var(--chart-grid); stroke-dasharray: 3 3; }
+.cf-ign-label { fill: var(--ash); font: var(--chart-font); }
+.cf-shown { cursor: pointer; }
+.cf-shown .cf-ring { fill: var(--void); stroke: var(--ink); stroke-width: 1.5; }
+.cf-shown.on .cf-ring { stroke: var(--flame); stroke-width: 2; }
+.cf-shown:focus { outline: none; }
+.cf-shown:focus-visible .cf-ring { stroke-dasharray: 2 2; }
+.cf-hit { fill: transparent; }
+
+/* stages */
+.cf-stages { list-style: none; padding: 0; margin: 0 0 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.cf-stages h4 { margin: 4px 0 6px; font: 500 16px var(--sans); }
+.cf-stages p { margin: 0; }
+
+/* callouts */
+.cf-callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; margin-top: 24px; }
+.cf-pitfalls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.cf-callout { border: var(--rule); padding: 16px 18px; min-width: 0; }
+.cf-callout-label { margin: 0 0 6px; font-size: 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .04em; }
+.cf-callout-title { margin: 0 0 10px; font: 500 16px/1.35 var(--sans); }
+.cf-callout p { margin: 0 0 10px; }
+.cf-check { color: var(--ash); border-top: var(--rule); padding-top: 10px; margin-top: 12px; }
+.cf-cite { color: var(--flame); text-decoration: none; font: 11.5px var(--mono); white-space: nowrap; }
+.cf-cite:hover { text-decoration: underline; }
+
+/* reference image */
+.cf-ref { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin: 32px 0 16px; }
+.cf-ref img { display: block; border: var(--rule); max-width: 100%; height: auto; }
+.cf-ref figcaption { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+
+/* regime map */
+.cf-controls { display: flex; flex-wrap: wrap; gap: 14px 28px; margin: 8px 0 12px; }
+.cf-set { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.cf-set legend { font: 12px var(--mono); color: var(--ash); text-transform: uppercase; letter-spacing: .04em; padding: 0; margin-bottom: 6px; width: 100%; }
+.cf-set .tag, .cf-quick .tag { min-height: 36px; cursor: pointer; background: transparent; border-radius: 0; }
+.cf-set .tag[disabled] { opacity: .35; cursor: default; }
+.cf-count { margin: 0 0 8px; color: var(--ash); }
+.cf-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 16px; }
+.cf-panel { margin: 0; min-width: 0; border: var(--rule); }
+.cf-panel-title { margin: 0; padding: 8px 12px; border-bottom: var(--rule); font-size: 13px; }
+.cf-plot { position: relative; padding: 6px 0 0; overflow: hidden; }
+.cf-plot svg { display: block; overflow: visible; }
+.cf-legend { margin-top: 12px; }
+
+/* marks: fill = how it ended, shape = flame type, blue + larger = cool flame noted */
+.cf-mk { cursor: pointer; --c: var(--ink); }
+.cf-mk.cool { --c: var(--flame); }
+.cf-mk:focus { outline: none; }
+.cf-mk circle:not(.cf-hit), .cf-mk rect { fill: var(--c); stroke: var(--c); stroke-width: 1.2; }
+.cf-mk.e-FT circle:not(.cf-hit), .cf-mk.e-FT rect { fill: var(--void); }
+.cf-mk path { fill: none; stroke: var(--c); stroke-width: 1.4; }
+.cf-mk.off { opacity: .14; }
+.cf-mk.hot:not(.off) circle:not(.cf-hit), .cf-mk.hot:not(.off) rect, .cf-mk.hot:not(.off) path,
+.cf-mk:focus-visible circle:not(.cf-hit), .cf-mk:focus-visible rect { stroke: #fff; stroke-width: 2; }
+.cf-mk.sel circle:not(.cf-hit), .cf-mk.sel rect, .cf-mk.sel path { stroke: var(--flame); stroke-width: 2.4; }
+.legend-swatch .cf-mk { cursor: default; }
+
+/* detail + table */
+.cf-detail { border: var(--rule); padding: 16px 18px; margin-top: 16px; }
+.cf-detail h3 { margin: 0 0 10px; font-size: 16px; }
+.cf-detail .cf-read { grid-template-columns: repeat(2, auto minmax(0, 1fr)); gap: 6px 14px; }
+.cf-detail-empty { margin-top: 16px; }
+.cf-table { margin-top: 16px; }
+.cf-table-wrap { overflow: auto; max-height: 460px; border: var(--rule); }
+.cf-table table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.cf-table th { position: sticky; top: 0; background: var(--deep); text-align: left; font: 500 12px var(--mono); color: var(--ash); padding: 8px; border-bottom: var(--rule); white-space: nowrap; }
+.cf-table td { padding: 5px 8px; border-bottom: 1px solid #161615; white-space: nowrap; }
+.cf-table tr.sel td { background: var(--deep); }
+.cf-rowbtn { background: none; border: 0; color: var(--ink); font: 13px var(--mono); padding: 0; cursor: pointer; min-height: 28px; }
+
+/* sources */
+.cf-sources { padding-left: 22px; font-size: 14px; display: grid; gap: 8px; }
+.cf-sources li { overflow-wrap: anywhere; }
+.cf-sources .placeholder { margin: 6px 0 0; padding: 8px 10px; }
+
+@media (max-width: 860px) {
+  .cf-v1 { grid-template-columns: minmax(0, 1fr); }
+  .cf-detail .cf-read { grid-template-columns: auto minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .cf-film { grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); }
+}

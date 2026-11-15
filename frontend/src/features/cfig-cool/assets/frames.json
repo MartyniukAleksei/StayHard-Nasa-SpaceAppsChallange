@@ -1,0 +1,456 @@
+{
+ "test_id": "21291C1",
+ "archive_file": "PSI-159_Raw Data_Images_Converted 21291C1.zip",
+ "t_zero": "tests.ignition_gmt = 2021-10-18 18:34:58 (1 s resolution)",
+ "first_frame_gmt": "2021-10-18T18:34:36.335",
+ "encoding": "jpeg_value = round(255 * sqrt(counts / 65519)); counts = (jpeg_value / 255)^2 * 65519",
+ "source_size_px": [
+  1360,
+  1024
+ ],
+ "stored_size_px": [
+  680,
+  512
+ ],
+ "frames": [
+  {
+   "i": 39,
+   "file": "frame-00039.jpg",
+   "member": "20211018_183627.332_ACME_21291C1_00039.tif",
+   "camera_time_gmt": "2021-10-18T18:36:27.332",
+   "t_s": 89.3,
+   "source_tiff_sha256": "cfa9eb9f5389877e599d438c5c75b26a88c233787a93e2202bbe118fe10a6a59",
+   "jpeg_bytes": 122738,
+   "saturated_pct": 15.79,
+   "mean_counts_of_4095": 1232.4
+  },
+  {
+   "i": 40,
+   "file": "frame-00040.jpg",
+   "member": "20211018_183632.332_ACME_21291C1_00040.tif",
+   "camera_time_gmt": "2021-10-18T18:36:32.332",
+   "t_s": 94.3,
+   "source_tiff_sha256": "a533c50c9310ef99b57fcee063eaab65928b440b42953967b31c4312d5ce1f82",
+   "jpeg_bytes": 137382,
+   "saturated_pct": 2.35,
+   "mean_counts_of_4095": 801.3
+  },
+  {
+   "i": 41,
+   "file": "frame-00041.jpg",
+   "member": "20211018_183637.332_ACME_21291C1_00041.tif",
+   "camera_time_gmt": "2021-10-18T18:36:37.332",
+   "t_s": 99.3,
+   "source_tiff_sha256": "5ca6492d1a65f4a381fb430ff96d91ce772ceb6430da809feb6932738667f82d",
+   "jpeg_bytes": 2348,
+   "saturated_pct": 100.0,
+   "mean_counts_of_4095": 4095.0
+  },
+  {
+   "i": 42,
+   "file": "frame-00042.jpg",
+   "member": "20211018_183642.332_ACME_21291C1_00042.tif",
+   "camera_time_gmt": "2021-10-18T18:36:42.332",
+   "t_s": 104.3,
+   "source_tiff_sha256": "512d67b1daec5c1ad8661f04b7d59d6fcc2f7e8ebf56a6458027914bea9f038b",
+   "jpeg_bytes": 17780,
+   "saturated_pct": 72.05,
+   "mean_counts_of_4095": 3749.6
+  },
+  {
+   "i": 44,
+   "file": "frame-00044.jpg",
+   "member": "20211018_183652.331_ACME_21291C1_00044.tif",
+   "camera_time_gmt": "2021-10-18T18:36:52.331",
+   "t_s": 114.3,
+   "source_tiff_sha256": "026447bc0a639ca61c968558493879d1c4bd1a4bdafb2e04c320a6bee3a63088",
+   "jpeg_bytes": 92577,
+   "saturated_pct": 21.96,
+   "mean_counts_of_4095": 1647.2
+  },
+  {
+   "i": 46,
+   "file": "frame-00046.jpg",
+   "member": "20211018_183702.332_ACME_21291C1_00046.tif",
+   "camera_time_gmt": "2021-10-18T18:37:02.332",
+   "t_s": 124.3,
+   "source_tiff_sha256": "a3aad86b3fd3010015967d573e9289aac7917df9706e23ece17a346a6768fac2",
+   "jpeg_bytes": 110214,
+   "saturated_pct": 21.51,
+   "mean_counts_of_4095": 1404.0
+  },
+  {
+   "i": 48,
+   "file": "frame-00048.jpg",
+   "member": "20211018_183712.331_ACME_21291C1_00048.tif",
+   "camera_time_gmt": "2021-10-18T18:37:12.331",
+   "t_s": 134.3,
+   "source_tiff_sha256": "cf4a46677423772dcaad4225f1d2eba69ac75ec96650e40357b2f70819898baf",
+   "jpeg_bytes": 157575,
+   "saturated_pct": 1.18,
+   "mean_counts_of_4095": 365.0
+  }
+ ],
+ "archive": [
+  {
+   "i": 0,
+   "t_s": -21.7,
+   "compressed_bytes": 29109
+  },
+  {
+   "i": 1,
+   "t_s": -20.7,
+   "compressed_bytes": 29022
+  },
+  {
+   "i": 2,
+   "t_s": -19.7,
+   "compressed_bytes": 29217
+  },
+  {
+   "i": 3,
+   "t_s": -18.7,
+   "compressed_bytes": 29173
+  },
+  {
+   "i": 4,
+   "t_s": -17.7,
+   "compressed_bytes": 28814
+  },
+  {
+   "i": 5,
+   "t_s": -16.7,
+   "compressed_bytes": 29071
+  },
+  {
+   "i": 6,
+   "t_s": -15.7,
+   "compressed_bytes": 29035
+  },
+  {
+   "i": 7,
+   "t_s": -14.7,
+   "compressed_bytes": 29506
+  },
+  {
+   "i": 8,
+   "t_s": -13.7,
+   "compressed_bytes": 29028
+  },
+  {
+   "i": 9,
+   "t_s": -12.7,
+   "compressed_bytes": 29226
+  },
+  {
+   "i": 10,
+   "t_s": -11.7,
+   "compressed_bytes": 29191
+  },
+  {
+   "i": 11,
+   "t_s": -10.7,
+   "compressed_bytes": 28692
+  },
+  {
+   "i": 12,
+   "t_s": -9.7,
+   "compressed_bytes": 28705
+  },
+  {
+   "i": 13,
+   "t_s": -8.7,
+   "compressed_bytes": 28823
+  },
+  {
+   "i": 14,
+   "t_s": -7.7,
+   "compressed_bytes": 28959
+  },
+  {
+   "i": 15,
+   "t_s": -6.7,
+   "compressed_bytes": 29043
+  },
+  {
+   "i": 16,
+   "t_s": -5.7,
+   "compressed_bytes": 28708
+  },
+  {
+   "i": 17,
+   "t_s": -4.7,
+   "compressed_bytes": 29035
+  },
+  {
+   "i": 18,
+   "t_s": -3.7,
+   "compressed_bytes": 29124
+  },
+  {
+   "i": 19,
+   "t_s": -2.7,
+   "compressed_bytes": 29233
+  },
+  {
+   "i": 20,
+   "t_s": -1.7,
+   "compressed_bytes": 36414
+  },
+  {
+   "i": 21,
+   "t_s": -0.7,
+   "compressed_bytes": 5717243
+  },
+  {
+   "i": 22,
+   "t_s": 4.3,
+   "compressed_bytes": 16017
+  },
+  {
+   "i": 23,
+   "t_s": 9.3,
+   "compressed_bytes": 164815
+  },
+  {
+   "i": 24,
+   "t_s": 14.3,
+   "compressed_bytes": 484628
+  },
+  {
+   "i": 25,
+   "t_s": 19.3,
+   "compressed_bytes": 2220420
+  },
+  {
+   "i": 26,
+   "t_s": 24.3,
+   "compressed_bytes": 4063789
+  },
+  {
+   "i": 27,
+   "t_s": 29.3,
+   "compressed_bytes": 5326629
+  },
+  {
+   "i": 28,
+   "t_s": 34.3,
+   "compressed_bytes": 5953482
+  },
+  {
+   "i": 29,
+   "t_s": 39.3,
+   "compressed_bytes": 6053272
+  },
+  {
+   "i": 30,
+   "t_s": 44.3,
+   "compressed_bytes": 5957308
+  },
+  {
+   "i": 31,
+   "t_s": 49.3,
+   "compressed_bytes": 5840067
+  },
+  {
+   "i": 32,
+   "t_s": 54.3,
+   "compressed_bytes": 5731762
+  },
+  {
+   "i": 33,
+   "t_s": 59.3,
+   "compressed_bytes": 5662606
+  },
+  {
+   "i": 34,
+   "t_s": 64.3,
+   "compressed_bytes": 5711779
+  },
+  {
+   "i": 35,
+   "t_s": 69.3,
+   "compressed_bytes": 5874518
+  },
+  {
+   "i": 36,
+   "t_s": 74.3,
+   "compressed_bytes": 6001125
+  },
+  {
+   "i": 37,
+   "t_s": 79.3,
+   "compressed_bytes": 6082435
+  },
+  {
+   "i": 38,
+   "t_s": 84.3,
+   "compressed_bytes": 6124185
+  },
+  {
+   "i": 39,
+   "t_s": 89.3,
+   "compressed_bytes": 6227176
+  },
+  {
+   "i": 40,
+   "t_s": 94.3,
+   "compressed_bytes": 6977593
+  },
+  {
+   "i": 41,
+   "t_s": 99.3,
+   "compressed_bytes": 13184
+  },
+  {
+   "i": 42,
+   "t_s": 104.3,
+   "compressed_bytes": 2653323
+  },
+  {
+   "i": 43,
+   "t_s": 109.3,
+   "compressed_bytes": 5858031
+  },
+  {
+   "i": 44,
+   "t_s": 114.3,
+   "compressed_bytes": 5846537
+  },
+  {
+   "i": 45,
+   "t_s": 119.3,
+   "compressed_bytes": 5747810
+  },
+  {
+   "i": 46,
+   "t_s": 124.3,
+   "compressed_bytes": 5781600
+  },
+  {
+   "i": 47,
+   "t_s": 129.3,
+   "compressed_bytes": 6454318
+  },
+  {
+   "i": 48,
+   "t_s": 134.3,
+   "compressed_bytes": 6508779
+  },
+  {
+   "i": 49,
+   "t_s": 139.3,
+   "compressed_bytes": 13184
+  },
+  {
+   "i": 50,
+   "t_s": 144.3,
+   "compressed_bytes": 5777354
+  },
+  {
+   "i": 51,
+   "t_s": 149.3,
+   "compressed_bytes": 5894963
+  },
+  {
+   "i": 52,
+   "t_s": 154.3,
+   "compressed_bytes": 5744539
+  },
+  {
+   "i": 53,
+   "t_s": 159.3,
+   "compressed_bytes": 5709926
+  },
+  {
+   "i": 54,
+   "t_s": 164.3,
+   "compressed_bytes": 5680315
+  },
+  {
+   "i": 55,
+   "t_s": 169.3,
+   "compressed_bytes": 6834707
+  },
+  {
+   "i": 56,
+   "t_s": 174.3,
+   "compressed_bytes": 13184
+  },
+  {
+   "i": 57,
+   "t_s": 179.3,
+   "compressed_bytes": 5068750
+  },
+  {
+   "i": 58,
+   "t_s": 184.3,
+   "compressed_bytes": 5936012
+  },
+  {
+   "i": 59,
+   "t_s": 189.3,
+   "compressed_bytes": 5768021
+  },
+  {
+   "i": 60,
+   "t_s": 194.3,
+   "compressed_bytes": 5696016
+  },
+  {
+   "i": 61,
+   "t_s": 199.3,
+   "compressed_bytes": 5910843
+  },
+  {
+   "i": 62,
+   "t_s": 204.3,
+   "compressed_bytes": 6497222
+  },
+  {
+   "i": 63,
+   "t_s": 209.3,
+   "compressed_bytes": 13184
+  },
+  {
+   "i": 64,
+   "t_s": 214.3,
+   "compressed_bytes": 5631120
+  },
+  {
+   "i": 65,
+   "t_s": 219.3,
+   "compressed_bytes": 5910222
+  },
+  {
+   "i": 66,
+   "t_s": 224.3,
+   "compressed_bytes": 5751066
+  },
+  {
+   "i": 67,
+   "t_s": 229.3,
+   "compressed_bytes": 5717565
+  },
+  {
+   "i": 68,
+   "t_s": 234.3,
+   "compressed_bytes": 5873260
+  },
+  {
+   "i": 69,
+   "t_s": 239.3,
+   "compressed_bytes": 6504351
+  },
+  {
+   "i": 70,
+   "t_s": 244.3,
+   "compressed_bytes": 13184
+  },
+  {
+   "i": 71,
+   "t_s": 249.3,
+   "compressed_bytes": 5989867
+  }
+ ]
+}

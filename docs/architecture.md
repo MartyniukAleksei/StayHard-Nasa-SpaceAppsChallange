@@ -100,6 +100,7 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | `/studies/flex/tests/:id` | Тест 3A | `features/test-page` (+ `replay`, `experiment-3d`: вкладка «3D replay» у блоці Watch) |
 | `/studies/flex/compare?ids=` | Порівняння 4A | `features/compare` (≤ 3 тести) |
 | `/studies/flex/library` | Бібліотека 5B | `features/library` |
+| `/studies/cfig` | ACME CFI-G (PSI-159): «The dark pause» (реальні кадри тесту 21291C1 + повзунок експозиції) і карта режимів усіх 333 тестів | `features/cfig-cool` (сторінка вантажиться окремим чанком; дані — `/api/studies/cfig/regime`; кадри — статичні ассети, походження в [data/cfig-cool-flame-frames](data/cfig-cool-flame-frames/README.md)) |
 
 Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`.
 `features/experiment-3d` — 3D-відтворення тесту з виміряних рядів (React Three Fiber) поруч із реальними кадрами камер; three.js вантажиться окремим чанком лише при відкритті вкладки ([ADR 0007](decisions/0007-3d-replay.md)). Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
