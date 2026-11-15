@@ -16,6 +16,8 @@
   gap: 8px 16px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-height: var(--hit); }
+.brand-icon { display: block; flex: none; }
+.tag.top-study { border-style: solid; border-color: var(--flame); color: var(--flame); }
 .top-nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .top-nav a {
   color: var(--ash);
@@ -48,7 +50,6 @@
 
 @media (max-width: 600px) {
   /* brand · agent on one line, then the nav */
-  .top-actions > .btn { display: none; } /* cart is a stub; no room next to the brand */
   .top-nav { order: 4; width: 100%; flex-wrap: nowrap; margin-left: -8px; }
   .top-nav a { font-size: 13px; padding: 0 6px; }
   .top-nav a:not([aria-current])::before, .top-nav a:not([aria-current])::after { display: none; }

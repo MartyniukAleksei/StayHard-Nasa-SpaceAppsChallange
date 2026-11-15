@@ -27,7 +27,7 @@
 | `propose_action(action, study, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст; `study=samer` — кнопки на сторінки SAME-R (`open_test`, `open_compare`, `open_tests`) |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 | `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |
-| `make_study_chart(study, column, test_nos)` | `studies/same_r/service.chart` | SAME-R: один сенсор у часі (t = 0 — увімкнення нагрівача, без кодів приладів) для 1–3 тестів; подія `chart` з `study`, `test_ids`, `doi` (кнопка «Open on page» і CSV ведуть на SAME-R); моделі — мінімум і максимум з часом кожного |
+| `make_study_chart(study, column, test_nos)` | `studies/same_r/service.chart` | SAME-R: один сенсор у часі (t = 0 — увімкнення нагрівача, без кодів приладів) для 1–3 тестів (маса диму — DustTrak B; ряд з < 20 % валідних значень або плаский не малюється — агент отримує причину); подія `chart` з `study`, `test_ids`, `doi` (кнопка «Open on page» і CSV ведуть на SAME-R); моделі — мінімум і максимум з часом кожного |
 | `find_frame(test_no, event, t_s, camera)` | `media.service` + `media/timing.py` | подія `frame`; джерело — URL кадру з часом від запалювання |
 | `look_at_frames(test_no, camera, t_s[≤4])` | те саме + `frame_jpeg(…, 512)` | зображення для зору моделі (без `search_result`), події `frame` для UI |
 | `describe_study(study)` | `studies.psi.service.overview` | DOI, профіль колонок `tests` (діапазони, категорії), часові ряди, примітки до даних (`studies/psi/notes.py`) |

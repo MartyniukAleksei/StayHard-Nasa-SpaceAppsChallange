@@ -20,7 +20,7 @@
 .sr-map svg text { font: 11px var(--mono); fill: var(--ash); }
 .sr-map .sr-map-grid { stroke: var(--line); }
 .sr-map .sr-map-limit { stroke: var(--ash); stroke-dasharray: 2 3; }
-.sr-map .sr-map-pt { color: var(--ink); cursor: pointer; }
+.sr-map .sr-map-pt { color: var(--c, var(--ink)); cursor: pointer; }
 .sr-map .sr-map-pt:hover, .sr-map .sr-map-pt:focus { color: var(--flame); }
 .sr-map .sr-map-pt.off { color: var(--line); }
 .sr-map p { margin: 0; padding: 0 12px 10px; }
@@ -104,7 +104,8 @@
 .sr-pick input { margin: 0; accent-color: var(--ink); }
 
 .sr-cmp-add { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 24px; }
-.sr-cmp-cols { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 24px; }
+/* always 3 slots: one or two tests keep the column width (no full-width TEM image), columns do not jump */
+.sr-cmp-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .sr-cmp-col { display: grid; gap: 12px; align-content: start; border-top: var(--rule); padding-top: 12px; min-width: 0; }
 .sr-cmp-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .sr-cmp-head .h-section { margin: 0; }
