@@ -36,7 +36,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `studies/flex/` | домен FLEX: `fields` (whitelist полів і сигналів) → `schemas` → `repository` (SQL) → `service` (логіка, `sources` у кожному результаті) → `router` (HTTP) — агентне API з фільтрами; `pages/` — відповіді під сторінки UI (огляд, дослідник, звіт тесту, replay, CSV, бібліотека) |
 | `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела; там же переліки файлів тесту, відео й NASA-документів для UI |
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
-| `agent/` | LLM-агент та інструменти (`query_tests`, `compare_tests`, `search_docs`, `get_timeseries`, `open_view`) |
+| `agent/` | LLM-агент (Claude Sonnet 5.5): інструменти даних над `studies/flex` і `rag`, цикл зі стрімінгом SSE, цитати й «No source», ліміти, eval ([docs/agent/](agent/README.md), [ADR 0007](decisions/0007-agent-architecture.md)) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
 
 Залежності між шарами: `router → service → repository → db`. `agent` викликає `service`-и доменів і `rag`, а не SQL напряму.
@@ -66,7 +66,7 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/studies/flex/tests/{n}/replay` | ✅ UI: `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок |
 | GET | `/api/studies/flex/tests/{n}/series.csv` | ✅ усі точки рядів (`signal,t_s,value`), у першому рядку — цитата з DOI |
 | GET | `/api/studies/flex/library` | ✅ UI: цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
-| POST | `/api/agent` (stream) | план |
+| POST | `/api/agent` | ✅ SSE: `text_delta`, `status`, `limit`, `done` (відповідь із сегментами й джерелами) — [docs/agent](agent/README.md) |
 
 ## Дані — `flame.duckdb`
 Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)), а також `study_about(study, about JSON)` — вміст `about.json`. Нормалізація при збірці: `tests.test_date` з дворозрядним роком (у джерелі змішані `11/27/09` і `11/27/2009`, тож 50 рядків читались як рік 9–11) переноситься в 20xx. Також таблиця `chunks` (RAG): тексти з метаданими й цитатою, `embedding FLOAT[384]` (`bge-small-en-v1.5`) і FTS-індекс; пошук `array_cosine_similarity` + BM25 зі злиттям RRF ([rag/techstack.md](rag/techstack.md), [ADR 0004](decisions/0004-rag-local-embeddings.md)). Ембеддинги перевикористовуються зі старої БД за хешем тексту.

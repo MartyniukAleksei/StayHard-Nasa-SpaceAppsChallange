@@ -21,6 +21,18 @@ class Settings(BaseSettings):
     # кеш моделей ембеддингів (fastembed); у Docker-образі модель запечена в /app/models
     models_dir: Path | None = None
 
+    # Агент (flame.agent). Ключ — лише в env / .env, ніколи в коді.
+    anthropic_api_key: str | None = None
+    agent_model: str = "claude-sonnet-5-5"
+    agent_effort: str = "medium"  # low | medium | high — глибина міркувань і витрати
+    agent_max_steps: int = 8  # кроків «модель → інструменти» на одну відповідь
+    agent_max_tokens: int = 8000  # вихідних токенів на один крок
+    agent_history_turns: int = 10  # скільки останніх реплік історії приймаємо
+    agent_max_message_chars: int = 2000
+    agent_rate_per_minute: int = 5  # запитів з одного IP
+    agent_rate_per_day: int = 50
+    agent_budget_usd: float = 10.0  # стеля витрат процесу; жорсткий ліміт — в Anthropic Console
+
     @cached_property
     def flex_dir(self) -> Path:
         """Джерельний знімок FLEX (read-only), який збирає flame.ingest.psi_flex."""

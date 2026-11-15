@@ -1,6 +1,11 @@
-"""LLM-агент. Відповідає лише з даних інструментів, кожне твердження з посиланням.
+"""LLM-агент (Claude Sonnet 5.5). Відповідає лише з даних інструментів, кожне твердження з
+посиланням (ADR 0006); архітектура — ADR 0007, docs/agent/.
 
-Плановані інструменти (див. docs/product/mission.md §9):
-query_tests(filters), compare_tests(ids), search_docs(query),
-get_timeseries(id, signal), open_view(ids) — керує UI.
+- tools.py     — інструменти даних над studies.flex і rag (повертають search_result)
+- prompt.py    — системний промпт і правила домену
+- loop.py      — цикл модель → інструменти → відповідь, події для SSE
+- citations.py — сегменти відповіді з номерами джерел, перевірка тверджень без цитат
+- limits.py    — ліміт запитів з IP і стеля витрат
+- router.py    — POST /api/agent (SSE)
+- eval.py      — автоматичні перевірки на evalsets/agent_psi69.jsonl з бюджетом
 """
