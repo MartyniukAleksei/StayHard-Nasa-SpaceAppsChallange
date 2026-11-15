@@ -10,9 +10,11 @@ import { useReplay } from "@/features/replay";
 import { chem, fiberLabel, num, pct } from "@/shared/lib/format";
 import { TimeChart } from "@/shared/ui/chart/TimeChart";
 import { EndMark } from "@/shared/ui/EndMark";
-import { Placeholder } from "@/shared/ui/Placeholder";
+import { fitD2, fitLine, findGaps } from "../lib/d2fit";
+import { D2Explainer } from "./D2Explainer";
 import { FileList } from "./FileList";
 import { MediaBlock } from "./MediaBlock";
+import { WhatHappened } from "./WhatHappened";
 import "./test.css";
 
 /** 3A: a long report, top to bottom, like Summary.pdf but in the browser. */
@@ -34,20 +36,13 @@ export function TestReport({ testNo }: { testNo: number }) {
   return (
     <article className="wrap tp">
       <Header t={t} />
-      <section className="tp-sec" aria-labelledby="tp-what">
-        <h2 id="tp-what" className="h-section">What happened</h2>
-        <Placeholder>a short, sourced summary of this test (derived from the data and the researcher comment).</Placeholder>
-      </section>
+      <WhatHappened comment={t.comment} files={t.files} />
       <section className="tp-sec" aria-labelledby="tp-media">
         <h2 id="tp-media" className="h-section">Watch</h2>
         <MediaBlock t={t} />
       </section>
       {t.has_series ? <Charts t={t} /> : <NoSeries />}
       <Params t={t} />
-      <section className="tp-sec" aria-labelledby="tp-comment">
-        <h2 id="tp-comment" className="h-section">Researcher comment</h2>
-        {t.comment ? <blockquote className="tp-comment">{t.comment}</blockquote> : <p className="muted">No comment in the data.</p>}
-      </section>
       <Neighbors t={t} />
       <section className="tp-sec" aria-labelledby="tp-files">
         <h2 id="tp-files" className="h-section">Files</h2>
@@ -61,7 +56,7 @@ function Header({ t }: { t: TestDetail }) {
   return (
     <header className="tp-head">
       <p className="ov-kicker mono">
-        <Link to="/studies/flex/tests">Tests</Link> / #{t.test_no}
+        <Link to="/studies/flex">FLEX</Link> / <Link to="/studies/flex/tests">Tests</Link> / #{t.test_no}
       </p>
       <h1 className="h-display">
         Test #{t.test_no}: {t.fuel}, {pct(t.x_o2)} O₂ in {chem(t.diluent)} at {num(t.p_atm, 2, "atm")}
@@ -93,22 +88,26 @@ function Charts({ t }: { t: TestDetail }) {
   if (!data) return <p className="muted mono">Loading series…</p>;
   const d2 = data.droplet.map(([s, d]) => [s, d * d] as [number, number]);
   const flameOut = t.burn_time_s ? [{ x: t.burn_time_s, label: "flame out" }] : [];
+  const fit = fitD2(d2, t.burn_time_s);
+  const gaps = findGaps(data.droplet.map(([s]) => s));
   return (
     <>
       <section className="tp-sec" aria-labelledby="tp-d2">
         <h2 id="tp-d2" className="h-section">Droplet: the d² law</h2>
-        <p className="lede">
-          With d² = d₀² − K·t the points should fall on a straight line; its slope is K. NASA reports K ={" "}
-          {num(t.k_mm2_s, 2, "mm²/s")}.
-        </p>
+        <p className="lede">While the droplet burns steadily, its squared diameter falls on a straight line.</p>
         <TimeChart
-          series={[{ id: "d2", label: "d² measured", points: d2 }]}
+          series={[
+            { id: "d2", label: "d² measured", points: d2 },
+            ...(fit ? [{ id: "fit", label: "linear fit (our estimate)", points: fitLine(fit), kind: "dashed" as const }] : []),
+          ]}
           xLabel="time, s"
           yLabel="d², mm²"
           ariaLabel={`Droplet diameter squared over time for test ${t.test_no}`}
           markers={flameOut}
+          gaps={gaps}
+          legendExtra={gaps.length ? [{ id: "gap", label: "no measurements", swatch: "band" }] : []}
         />
-        <Placeholder>our own linear fit of K from these points, labelled as an estimate next to NASA’s K.</Placeholder>
+        <D2Explainer fit={fit} nasaK={t.k_mm2_s} d0={t.d0_mm} gaps={gaps} />
       </section>
       <section className="tp-sec" aria-labelledby="tp-flame">
         <h2 id="tp-flame" className="h-section">Flame and droplet diameter</h2>
@@ -176,19 +175,36 @@ function Neighbors({ t }: { t: TestDetail }) {
       {t.neighbors.length === 0 ? (
         <p className="muted">No other test shares these conditions.</p>
       ) : (
-        <ul className="tp-nb">
-          {t.neighbors.map((n) => (
-            <li key={n.test_no}>
-              <Link to={testHref(n.test_no)} className="mono">
-                #{n.test_no}
-              </Link>
-              <span className="mono small">
-                {pct(n.x_o2)} O₂ · {num(n.p_atm, 2, "atm")} · d₀ {num(n.d0_mm, 2, "mm")}
-              </span>
-              <EndMark type={n.end_type} short />
-            </li>
-          ))}
-        </ul>
+        <div className="tp-nb-wrap">
+          <table className="tp-nb">
+            <thead>
+              <tr>
+                <th scope="col">Test</th>
+                <th scope="col">O₂</th>
+                <th scope="col">Pressure</th>
+                <th scope="col">Initial diameter</th>
+                <th scope="col">Outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              {t.neighbors.map((n) => (
+                <tr key={n.test_no}>
+                  <td>
+                    <Link to={testHref(n.test_no)} className="mono">
+                      #{n.test_no}
+                    </Link>
+                  </td>
+                  <td className="mono">{pct(n.x_o2)}</td>
+                  <td className="mono">{num(n.p_atm, 2, "atm")}</td>
+                  <td className="mono">{num(n.d0_mm, 2, "mm")}</td>
+                  <td>
+                    <EndMark type={n.end_type} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );
