@@ -1,9 +1,11 @@
 import { useOverview } from "../api";
-import { AboutDetails } from "./AboutDetails";
 import { Example3D } from "./Example3D";
-import { BrowseTests, Findings, HowItWorked, Traps } from "./Explainers";
+import { BrowseTests } from "./Explainers";
+import { Findings } from "./Findings";
 import { Hero } from "./Hero";
+import { HowItWorked } from "./HowItWorked";
 import { PresetGrid } from "./PresetGrid";
+import { References } from "./References";
 import { TestCards } from "./TestCards";
 import "./overview.css";
 
@@ -36,9 +38,8 @@ export function StudyOverview() {
       <HowItWorked />
       <Findings />
       <PresetGrid presets={data.presets} />
-      <Traps />
-      <AboutDetails about={data.about} />
       <BrowseTests />
+      <References about={data.about} />
     </div>
   );
 }

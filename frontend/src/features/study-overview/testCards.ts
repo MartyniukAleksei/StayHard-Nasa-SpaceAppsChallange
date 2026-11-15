@@ -1,20 +1,6 @@
 // Curated copy for the "Tests to read first" cards on the FLEX overview. Every number that appears next to a
 // chart is computed from the data on the page; the text below only says what to look for and cites a source.
 
-export type Ref = { id: string; label: string; href: string };
-
-export const REFS: Record<string, Ref> = {
-  godsave: { id: "godsave", label: "Godsave 1953", href: "https://doi.org/10.1016/S0082-0784(53)80107-4" },
-  spalding: { id: "spalding", label: "Spalding 1953", href: "https://doi.org/10.1016/S0082-0784(53)80110-4" },
-  dietrich: { id: "dietrich", label: "Dietrich et al. 2014", href: "https://doi.org/10.1007/s12217-014-9372-2" },
-  psi69: { id: "psi69", label: "PSI-69 dataset", href: "https://doi.org/10.60555/mbq8-0451" },
-  rasul: { id: "rasul", label: "Rasul et al. 2023", href: "https://doi.org/10.1109/TPAMI.2022.3170926" },
-  nayagam12: { id: "nayagam12", label: "Nayagam et al. 2012", href: "https://doi.org/10.1016/j.combustflame.2012.07.012" },
-  nayagam14: { id: "nayagam14", label: "Nayagam et al. 2014 (NTRS)", href: "https://ntrs.nasa.gov/citations/20140006750" },
-  farouk: { id: "farouk", label: "Farouk & Dryer 2014", href: "https://doi.org/10.1016/j.combustflame.2013.09.011" },
-  ahmed: { id: "ahmed", label: "PSI-117 data (Ahmed 2024)", href: "https://doi.org/10.60555/gz0q-b577" },
-};
-
 export type Note = { text: string; refs: string[] };
 
 /** The d² fit window of test 107, s. Chosen by us and labelled as an estimate on the card. */

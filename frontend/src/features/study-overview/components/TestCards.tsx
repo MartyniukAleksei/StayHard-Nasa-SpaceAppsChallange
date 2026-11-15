@@ -1,51 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router";
+import { useMemo } from "react";
 import { useTest } from "@/features/flex-tests";
-import { chem, num, pct } from "@/shared/lib/format";
+import { num } from "@/shared/lib/format";
 import { TimeChart, type Series } from "@/shared/ui/chart/TimeChart";
-import { EndMark } from "@/shared/ui/EndMark";
 import { useSignal } from "../api";
 import { COOL_FLAME_OSCILLATORY, COOL_FLAME_STABLE } from "../coolFlameData";
 import { column, findGaps, fitWindow, type Pt } from "../lib/cardData";
-import { CARD_107, CARD_117, CARD_13, FIT_WINDOW_107, GAP_MIN_S, REFS, type Note } from "../testCards";
-
-/** True once the element is within `margin` of the viewport; stays true after that. */
-function useNear<T extends Element>(margin = "300px") {
-  const ref = useRef<T>(null);
-  const [near, setNear] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || near) return;
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: margin });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [near, margin]);
-  return [ref, near] as const;
-}
-
-function Notes({ notes }: { notes: Note[] }) {
-  return (
-    <>
-      <ul className="tc-notes">
-        {notes.map((n) => (
-          <li key={n.text}>
-            <p>{n.text}</p>
-            <p className="tc-refs mono small">
-              {n.refs.map((id, i) => (
-                <span key={id}>
-                  {i > 0 && <span className="muted"> · </span>}
-                  <a href={REFS[id].href} target="_blank" rel="noreferrer">
-                    {REFS[id].label}
-                  </a>
-                </span>
-              ))}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
+import { CARD_107, CARD_117, CARD_13, FIT_WINDOW_107, GAP_MIN_S, type Note } from "../testCards";
+import { REFS } from "../refs";
+import { Notes, Pending, TestHead, useNear } from "./cardParts";
 
 function CardShell(props: {
   phenomenon: string;
@@ -71,19 +33,18 @@ function CardShell(props: {
   );
 }
 
-function Pending({ text }: { text: string }) {
-  return <p className="tc-wait mono small">{text}</p>;
-}
+const SEGMENT_TONES = ["ink", "uv", "s1"] as const;
 
-function TestHead({ testNo }: { testNo: number }) {
-  const { data: t } = useTest(testNo);
-  if (!t) return <span>#{testNo}</span>;
-  return (
-    <>
-      <Link to={`/studies/flex/tests/${t.test_no}`}>#{t.test_no}</Link> · {t.fuel} · {pct(t.x_o2)} O₂ in {chem(t.diluent)} ·{" "}
-      {num(t.p_atm, 2, "atm")} · {t.fiber ? "on a fiber" : "free-floating"} · <EndMark type={t.end_type} />
-    </>
-  );
+/** One series per stretch between gaps, in different tones, so the jump across a gap is visible. */
+function splitAtGaps(points: Pt[], gaps: [number, number][]): Series[] {
+  const cuts = [-Infinity, ...gaps.map(([, b]) => b), Infinity];
+  return cuts.slice(0, -1).map((from, i) => ({
+    id: `seg${i}`,
+    label: gaps.length ? `d² measured, ${i === 0 ? "before" : "after"} the gap` : "d² measured",
+    points: points.filter(([x]) => x >= from && x < cuts[i + 1]),
+    kind: "dots" as const,
+    tone: SEGMENT_TONES[i % SEGMENT_TONES.length],
+  }));
 }
 
 /** d² of test 107 with our fit, and the flame standoff ratio underneath. */
@@ -97,7 +58,11 @@ function Card107() {
   const fsr = useMemo(() => column(flame.data, "standoff").filter(([x]) => x >= 0), [flame.data]);
   const fit = useMemo(() => fitWindow(d2, ...FIT_WINDOW_107), [d2]);
 
-  const series: Series[] = [{ id: "d2", label: "d² measured", points: d2, kind: "dots" }];
+  // points after the fit window are the disruption stretch: ochre like the Disruption end mark, named in the legend
+  const body = d2.filter(([x]) => x <= FIT_WINDOW_107[1]);
+  const tail = d2.filter(([x]) => x > FIT_WINDOW_107[1]);
+  const series: Series[] = [{ id: "d2", label: "d² measured", points: body, kind: "dots" }];
+  if (tail.length) series.push({ id: "tail", label: "after the window: disruption, not rate data", points: tail, kind: "dots", tone: "dis" });
   if (fit) {
     const line: Pt[] = FIT_WINDOW_107.map((x) => [x, fit.intercept + fit.slope * x]);
     series.push({ id: "fit", label: `our fit, ${FIT_WINDOW_107[0]}–${FIT_WINDOW_107[1]} s: K ≈ ${(-fit.slope).toFixed(2)} mm²/s (estimate)`, points: line, kind: "dashed", tone: "flame" });
@@ -115,7 +80,7 @@ function Card107() {
             <TimeChart series={series} xLabel="time, s" yLabel="d², mm²" height={230} ariaLabel={`Squared droplet diameter of test ${CARD_107.test} against time, with a straight-line fit`} />
             {t?.k_mm2_s != null && <p className="tc-cap mono small">NASA K for this test: {num(t.k_mm2_s, 2, "mm²/s")}</p>}
             {fsr.length > 0 && (
-              <TimeChart series={[{ id: "fsr", label: "FSR = D_flame / d", points: fsr, kind: "dots" }]} xLabel="time, s" yLabel="FSR" height={170} ariaLabel={`Flame standoff ratio of test ${CARD_107.test} against time`} />
+              <TimeChart series={[{ id: "fsr", label: "FSR = D_flame / d (colour camera)", points: fsr, kind: "dots", tone: "uv" }]} xLabel="time, s" yLabel="FSR" height={170} ariaLabel={`Flame standoff ratio of test ${CARD_107.test} against time`} />
             )}
           </>
         ) : (
@@ -143,7 +108,7 @@ function Card13() {
         d2.length ? (
           <>
             <TimeChart
-              series={[{ id: "d2", label: "d² measured", points: d2, kind: "dots" }]}
+              series={splitAtGaps(d2, gaps)}
               gaps={gaps}
               legendExtra={gaps.length ? [{ id: "gap", label: "no measurements", swatch: "band" }] : []}
               xLabel="time, s"
@@ -188,7 +153,7 @@ function Card117() {
         <TimeChart
           series={[
             { id: "stable", label: "stable cool flame", points: stable, kind: "line", tone: "ink" },
-            { id: "osc", label: "oscillatory cool flame", points: osc, kind: "line", tone: "s2" },
+            { id: "osc", label: "oscillatory cool flame", points: osc, kind: "line", tone: "uv" },
           ]}
           xLabel="time, s"
           yLabel="T_max, K"
