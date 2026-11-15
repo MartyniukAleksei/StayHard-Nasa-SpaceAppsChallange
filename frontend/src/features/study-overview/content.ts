@@ -34,5 +34,21 @@ export const TRAPS: Trap[] = [
 
 export type Finding = { text: string; test: number; doi: string };
 
-/** TODO (team): fill with 3 findings, each citing a test № and a publication DOI. */
-export const FINDINGS: Finding[] = [];
+/** Three findings, each with a test to look at and the publication behind it (team-approved 2026-11-15). */
+export const FINDINGS: Finding[] = [
+  {
+    text: "After the visible flame goes out, a heptane droplet can keep burning as an invisible, low-temperature cool flame: a second burning stage.",
+    test: 35,
+    doi: "10.1016/j.combustflame.2012.07.012",
+  },
+  {
+    text: "A support fiber changes the burning rate and the shape of the flame, so droplets held on a fiber and free-floating droplets are not compared directly.",
+    test: 49,
+    doi: "10.1080/13647830.2010.547601",
+  },
+  {
+    text: "A methanol flame in ISS air can go out by itself long before the droplet has burned away.",
+    test: 34,
+    doi: "10.1016/j.combustflame.2013.05.011",
+  },
+];

@@ -158,19 +158,11 @@ function suggestions(ctx: PageContext): string[] {
   ];
 }
 
-/** Like Claude Code on start: the mascot, who the agent is, where it is looking, how to begin. */
+/** Like Claude Code on start: who the agent is, where it is looking, how to begin. */
 function Welcome({ context, onPick, empty, busy }: { context: PageContext; onPick: (q: string) => void; empty: boolean; busy: boolean }) {
   return (
     <section className="ag-welcome" aria-label="About the agent">
       <div className="ag-welcome-box">
-        <iframe
-          className="ag-mascot"
-          src="/mascot-cat.html?embed"
-          title="StayHard ASCII cat"
-          aria-hidden="true"
-          tabIndex={-1}
-          loading="lazy"
-        />
         <div className="ag-welcome-text">
           <p className="ag-welcome-title">
             <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>Flame in Freefall</b> agent

@@ -59,10 +59,12 @@ export function VideoGallery() {
 function Caption({ v }: { v: VideoItem }) {
   return (
     <span className="ov-video-cap">
-      <b className="mono">#{v.test_no}</b> · {v.fuel} · {pct(v.x_o2)} O₂ in {chem(v.diluent)} · {num(v.p_atm, 2, "atm")} ·{" "}
-      <EndMark type={v.end_type} />{" "}
-      <Link to={testHref(v.test_no)} className="btn ghost">
-        Open test
+      <span>
+        <b className="mono">#{v.test_no}</b> · {v.fuel} · {pct(v.x_o2)} O₂ in {chem(v.diluent)} · {num(v.p_atm, 2, "atm")} ·{" "}
+        <EndMark type={v.end_type} />
+      </span>
+      <Link to={testHref(v.test_no)} className="btn ov-open-test">
+        Open test #{v.test_no} →
       </Link>
     </span>
   );
