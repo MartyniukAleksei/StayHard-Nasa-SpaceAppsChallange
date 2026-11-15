@@ -16,8 +16,7 @@
       "Bash(railway service delete:*)",
       "Bash(railway service source:*)",
       "Bash(railway up:*)",
-      "Edit(data/**)",
-      "Write(data/**)"
+      "Edit(/data/**)"
     ],
     "ask": [
       "Bash(gh pr merge:*)",
