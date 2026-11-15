@@ -6,7 +6,7 @@ from flame.core.config import settings
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Flame in Freefall API", version="0.1.0")
+    app = FastAPI(title="StayHard API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
