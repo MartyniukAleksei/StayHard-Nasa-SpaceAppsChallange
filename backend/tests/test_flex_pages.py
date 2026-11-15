@@ -41,7 +41,8 @@ def test_studies_catalog_has_active_studies_first() -> None:
     assert cards[0]["route"] == "/studies/flex"
     assert cards[1]["acronym"] == "SAME-R" and cards[1]["route"] == "/studies/same-r"
     assert cards[1]["facts"] is None  # факти з БД лише у FLEX
-    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[2:])
+    assert cards[2]["acronym"] == "SAFFIRE-II" and cards[2]["route"] == "/studies/saffire2"
+    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[3:])
     assert all(c["doi"] for c in cards)
 
 

@@ -15,7 +15,11 @@ from flame.studies.flex.pages.schemas import Facts
 CATALOG = Path(__file__).with_name("catalog.json")
 
 # Дослідження, які вже мають сторінки й дані: accession → маршрут фронтенду.
-ACTIVE: dict[str, str] = {"PSI-69": "/studies/flex", "PSI-101": "/studies/same-r"}
+ACTIVE: dict[str, str] = {
+    "PSI-69": "/studies/flex",
+    "PSI-101": "/studies/same-r",
+    "PSI-99": "/studies/saffire2",
+}
 
 
 class StudyCard(BaseModel):
@@ -52,4 +56,5 @@ def list_studies(cur: DuckDBPyConnection | None) -> list[StudyCard]:
                 facts=facts,
             )
         )
-    return cards
+    # відкриті дослідження першими: їхні картки на всю ширину, і сітка «скоро» не рветься
+    return sorted(cards, key=lambda c: c.status != "active")
