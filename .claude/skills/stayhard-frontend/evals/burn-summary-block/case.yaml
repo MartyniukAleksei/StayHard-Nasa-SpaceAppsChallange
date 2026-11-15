@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: burn-summary-block
+expected_outcome: |
+  A new component in features/test-page renders four stats (d0, d_ext, K, burn time) with
+  units from the TestDetail API data, shows the end type through EndMark, is placed right
+  after the header in TestReport, uses existing DS classes and tokens, and handles missing
+  values with a dash instead of inventing numbers.

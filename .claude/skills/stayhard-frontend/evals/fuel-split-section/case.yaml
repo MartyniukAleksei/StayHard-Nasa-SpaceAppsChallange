@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: fuel-split-section
+expected_outcome: |
+  A new overview section counts end types per fuel from API data (no hard-coded counts),
+  keeps fiber-supported tests out by default or says how many were excluded, renders a
+  small SVG bar chart without a chart library, uses EndMark / end-type tokens with glyphs,
+  and wires the section into StudyOverview in the StayHard style.
