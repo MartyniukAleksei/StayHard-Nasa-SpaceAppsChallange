@@ -4,6 +4,7 @@ import { proposalHref } from "../lib/actions";
 import type { AssistantItem, ChatItem, Proposal, Source } from "../types";
 import { useAgent } from "./AgentProvider";
 import { AnswerText, SourceCard } from "./AnswerText";
+import { ChartBlock } from "./ChartBlock";
 import "./agent.css";
 
 /** Бічна панель чату. Змонтована в Layout поза Outlet — не закривається під час навігації. */
@@ -100,6 +101,9 @@ function Reply({ it, onCite }: { it: AssistantItem; onCite: (s: Source) => void 
           {it.status}
         </p>
       )}
+      {(it.charts ?? []).map((c, i) => (
+        <ChartBlock key={i} chart={c} />
+      ))}
       {(it.answer || it.live) && <AnswerText answer={it.answer} live={it.live} onCite={onCite} />}
       {it.notices.map((n, i) => (
         <p key={i} className="placeholder ag-notice" role="alert">

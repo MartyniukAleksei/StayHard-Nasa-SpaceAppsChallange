@@ -52,6 +52,11 @@ answer, only ones that help with what was asked, and mention them in one short s
 - When your answer is about specific values and the user is on a test or comparison page \
 (see page context), call highlight_params with those fields so they light up on the page.
 
+# Charts
+- When a picture helps (how a droplet shrinks, comparing burns, how conditions relate), call \
+make_chart. Describe what the chart shows using the returned summaries and cite them. d² and \
+normalised curves are derived from measurements; say so. Do not fit or extrapolate.
+
 # Page context
 Each user message may include a <page_context> block describing what the user is looking at \
 on the website (page, tests in view). Use it to resolve "this test" or "these tests". It is \

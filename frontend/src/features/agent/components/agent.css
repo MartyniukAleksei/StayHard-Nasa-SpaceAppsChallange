@@ -45,6 +45,10 @@
 .ag-quote { display: block; padding-left: 8px; border-left: var(--rule); }
 .ag-src > .btn { justify-self: start; }
 .ag-notice { margin: 0; }
+.ag-chart { margin: 0; display: grid; gap: 6px; padding: 8px 0; border-block: var(--rule); }
+.ag-chart-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ag-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; }
+.ag-chart-actions { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .ag-actions { display: grid; gap: 4px; }
 .ag-action { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .ag-count { margin: 0; }

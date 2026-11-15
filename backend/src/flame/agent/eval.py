@@ -73,6 +73,10 @@ def check(case: dict[str, Any], done: dict[str, Any], ui: dict[str, list]) -> li
             fails.append(f"no {case['expect_proposal']} proposal (got {acts})")
     if case.get("expect_highlight") and not ui["highlight"]:
         fails.append("no highlight")
+    if case.get("expect_chart"):
+        kinds = [c["kind"] for c in ui["chart"]]
+        if case["expect_chart"] not in kinds:
+            fails.append(f"no {case['expect_chart']} chart (got {kinds})")
     if case.get("off_topic"):
         if srcs:
             fails.append("off-topic answer has sources")
@@ -123,7 +127,7 @@ def main() -> None:
         turn = HistoryTurn(role="user", text=case["q"], page_context=case.get("page_context"))
         t0 = time.time()
         try:
-            ui: dict[str, list] = {"proposal": [], "highlight": []}
+            ui: dict[str, list] = {"proposal": [], "highlight": [], "chart": []}
             done = None
             for e in loop.run_turn(client(), cur, [turn], settings):
                 if e["event"] in ui:
