@@ -36,6 +36,8 @@ html { scroll-padding-top: var(--top-h); }
 .top-nav a[aria-current] { color: var(--ink); }
 .top-nav a[aria-current]::before, .top-nav a[aria-current]::after { color: var(--ink); }
 .top-actions { margin-left: auto; display: flex; align-items: center; gap: 4px 12px; }
+.top-gh { display: inline-flex; padding: 6px; color: inherit; }
+.top-gh:hover, .top-gh:focus-visible { color: var(--flame); }
 
 .foot { border-top: var(--rule); }
 .foot-row {
