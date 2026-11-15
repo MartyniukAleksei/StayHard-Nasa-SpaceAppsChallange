@@ -28,6 +28,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run python -m flame.ingest.psi_flex --verify # check data/flex against manifest.json
 uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb (force rebuild)
 uv run python -m flame.ingest.bootstrap         # rebuild only if build version changed
+uv run python -m flame.rag.eval --k 5           # RAG recall@k on rag/evalsets/psi69.jsonl
 ```
 
 Frontend (run from `frontend/`):
@@ -43,7 +44,7 @@ Both production images together: `docker compose up --build` (backend :8000, fro
 
 Data flow: PSI API → `flame.ingest.psi_flex` (offline) → `data/flex/` (snapshot, read-only source) → `flame.ingest.build_db` → `data/build/flame.duckdb` → FastAPI → React SPA.
 
-- **The data is static and there is no server database.** The API opens a single DuckDB file `read_only` (`flame/db/duckdb.py`, dependency `get_cursor`). RAG chunks and their embeddings will go into the same file (a `chunks` table, searched with `array_cosine_similarity` or `vss`), and they are built offline, never at runtime. Chat history is not stored. Rationale: `docs/decisions/0001-*`.
+- **The data is static and there is no server database.** The API opens a single DuckDB file `read_only` (`flame/db/duckdb.py`, dependency `get_cursor`). RAG chunks and their embeddings live in the same file (a `chunks` table with a local `bge-small-en-v1.5` embedding and an FTS index, hybrid vector + BM25 search; see `docs/rag/`), and they are built offline, never at runtime. Chat history is not stored. Rationale: `docs/decisions/0001-*`.
 - **`data/` is gitignored.** It holds `flex/` (~540 MB: CSV tables, time series, raw txt/pdf, mp4) and `build/`. In production it lives on a Railway Volume mounted at `/data` (`DATA_DIR`). Never edit `data/flex` by hand; derived data is produced only by `flame/ingest` scripts. Data schema and quirks: `docs/data/flex.md`.
 - **The DB is never edited, only rebuilt.** Data processing lives in `flame/ingest/build_db.py` (plus modules listed in its `BUILD_SOURCES`, currently `flame/rag/`). `BUILD_VERSION` is a hash of that code, stored in the DB's `meta` table. `flame.ingest.bootstrap` runs before uvicorn in the container and rebuilds the DB when the version or `DATA_ARCHIVE_URL` changes, so merged processing changes reach production automatically. If you add a module that affects DB contents, add it to `BUILD_SOURCES`. The raw snapshot changes only through a new `data-flex-vN` GitHub Release.
 - **All data paths come from `flame.core.config.settings`** (`data_dir`, `flex_dir`, `duckdb_path`; env vars via pydantic-settings, listed in `.env.example`). The local default is `<repo>/data`.

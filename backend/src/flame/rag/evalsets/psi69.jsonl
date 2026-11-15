@@ -1,0 +1,2 @@
+{"example": true, "q": "Why is the LLUV flame data unreliable in the calibration run?", "expected": [{"test_no": 2}], "note": "приклад формату: очікуваний коментар TestSheet тесту 2"}
+{"example": true, "q": "How was the limiting oxygen index determined?", "expected": [{"source_path": "about.json"}, {"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 2}], "note": "приклад формату: достатньо, щоб у top-k був будь-який з очікуваних"}
