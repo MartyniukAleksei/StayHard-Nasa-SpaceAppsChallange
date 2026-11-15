@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     # zip зі знімком FLEX (містить flex/…); якщо задано і data_dir порожній — качається при старті
     data_archive_url: str | None = None
+    # кеш моделей ембеддингів (fastembed); у Docker-образі модель запечена в /app/models
+    models_dir: Path | None = None
 
     @cached_property
     def flex_dir(self) -> Path:
@@ -28,6 +30,11 @@ class Settings(BaseSettings):
     def duckdb_path(self) -> Path:
         """Зібрана БД застосунку (flame.ingest.build_db)."""
         return self.db_path or self.data_dir / "build" / "flame.duckdb"
+
+    @cached_property
+    def embed_cache_dir(self) -> Path:
+        """Куди fastembed кладе/звідки читає ONNX-модель RAG."""
+        return self.models_dir or self.data_dir / "models"
 
 
 settings = Settings()
