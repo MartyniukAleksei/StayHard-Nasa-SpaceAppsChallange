@@ -8,13 +8,13 @@ type Tab = { id: string; label: string; video?: FileItem };
 
 const TAB_3D = "3d";
 
-/** G: real camera video when the dataset has it, otherwise the replay drawn from measured data.
- *  The 3D replay is one more tab on the full test page; it is not offered in the compact (compare) block. */
+/** G: what opens first — the NASA camera video when the dataset has one, otherwise the 3D replay
+ *  rebuilt from the measured data, then the 2D replay. The compact (compare) block has no 3D. */
 export function MediaBlock({ t, compact = false }: { t: Pick<TestDetail, "test_no" | "has_series" | "has_3d" | "videos">; compact?: boolean }) {
   const tabs: Tab[] = [
     ...t.videos.map((v) => ({ id: v.path, label: v.name.replace(/\.mp4$/i, ""), video: v })),
-    ...(t.has_series ? [{ id: "replay", label: "Replay from data" }] : []),
     ...(t.has_3d && !compact ? [{ id: TAB_3D, label: "3D replay" }] : []),
+    ...(t.has_series ? [{ id: "replay", label: "Replay from data" }] : []),
   ];
   // ?view=video|replay|3d&t=<s>: the assistant's "open video / replay at t" links (docs/agent/ui-actions.md)
   const [params] = useSearchParams();
