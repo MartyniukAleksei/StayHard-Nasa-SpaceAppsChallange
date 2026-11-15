@@ -9,11 +9,13 @@ type Tab = { id: string; label: string; video?: FileItem };
 const TAB_3D = "3d";
 
 /** G: what opens first — the NASA camera video when the dataset has one, otherwise the 3D replay
- *  rebuilt from the measured data, then the 2D replay. The compact (compare) block has no 3D. */
+ *  rebuilt from the measured data, then the 2D replay. The compact (compare) block opens the 3D
+ *  replay first, as a smaller scene without the frames column. */
 export function MediaBlock({ t, compact = false }: { t: Pick<TestDetail, "test_no" | "has_series" | "has_3d" | "videos">; compact?: boolean }) {
+  const videos: Tab[] = t.videos.map((v) => ({ id: v.path, label: v.name.replace(/\.mp4$/i, ""), video: v }));
+  const three: Tab[] = t.has_3d ? [{ id: TAB_3D, label: "3D replay" }] : [];
   const tabs: Tab[] = [
-    ...t.videos.map((v) => ({ id: v.path, label: v.name.replace(/\.mp4$/i, ""), video: v })),
-    ...(t.has_3d && !compact ? [{ id: TAB_3D, label: "3D replay" }] : []),
+    ...(compact ? [...three, ...videos] : [...videos, ...three]),
     ...(t.has_series ? [{ id: "replay", label: "Replay from data" }] : []),
   ];
   // ?view=video|replay|3d&t=<s>: the assistant's "open video / replay at t" links (docs/agent/ui-actions.md)
@@ -63,7 +65,7 @@ export function MediaBlock({ t, compact = false }: { t: Pick<TestDetail, "test_n
           <figcaption className="replay-note">NASA camera video · {tab.video.name}</figcaption>
         </figure>
       ) : tab.id === TAB_3D ? (
-        <Experiment3D key={startAt} testNo={t.test_no} startAt={startAt} />
+        <Experiment3D key={startAt} testNo={t.test_no} startAt={startAt} compact={compact} />
       ) : (
         <DropletReplay key={startAt} testNo={t.test_no} startAt={startAt} />
       )}
