@@ -1,0 +1,37 @@
+.tp { padding-block: clamp(24px, 3vw, 48px) 64px; max-width: 1000px; }
+.tp-head { display: grid; gap: 12px; padding-bottom: 24px; }
+.tp-head .h-display { font-size: calc(clamp(24px, 3vw, 34px) * var(--dz)); margin: 0; }
+.tp-head .ov-kicker a { color: var(--ash); }
+.tp-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-flags { margin: 0; padding-left: 18px; color: var(--end-dis); font-size: 14px; }
+.tp-flags:empty { display: none; }
+.tp-actions { display: flex; gap: 12px; margin-left: -6px; }
+.tp-sec { border-top: var(--rule); padding-block: 28px; display: grid; gap: 14px; }
+.tp-sec .h-section { margin: 0; font-size: calc(22px * var(--dz)); }
+.tp-sec .lede { margin: 0; }
+
+.tp-media { display: grid; gap: 8px; max-width: 760px; }
+.tp-media.wide { max-width: none; } /* 3D replay: scene plus the frames column */
+.tp-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: var(--rule); }
+.tp-tabs button {
+  background: none; border: 0; border-bottom: 2px solid transparent; color: var(--ash);
+  font: 13px var(--mono); padding: 10px 12px; cursor: pointer; min-height: 40px;
+}
+.tp-tabs button.on { color: var(--ink); border-bottom-color: var(--flame); }
+.tp-video { margin: 0; display: grid; gap: 4px; }
+.tp-video video { width: 100%; background: #000; border: var(--rule); display: block; }
+
+.tp-comment { margin: 0; padding-left: 14px; border-left: 2px solid var(--line); color: var(--ink); max-width: 75ch; }
+.tp-kv { grid-template-columns: 1fr; gap: 0; }
+.tp-kv-row { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 16px; padding: 6px 0; border-bottom: 1px solid #161615; }
+.tp-nb { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.tp-nb li { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #161615; }
+.tp-nb .end-mark { font-family: var(--mono); font-size: 13px; }
+.tp-files { list-style: none; margin: 0; padding: 0; }
+.tp-files li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) auto; gap: 4px 16px; padding: 8px 0; border-bottom: 1px solid #161615; align-items: baseline; }
+.tp-files a { word-break: break-word; }
+
+@media (max-width: 640px) {
+  .tp-kv-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .tp-files li { grid-template-columns: minmax(0, 1fr); }
+}

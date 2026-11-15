@@ -1,0 +1,572 @@
+<title>FLEX Layout Variants</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Plain wireframe document. No visual design on purpose: borders + labels only. */
+:root{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--line:#bbb;--box:#fafafa;--chip:#eee;--rec:#0a7d3c;--rec-bg:#e9f6ee;
+  --ext:#1f8a5b;--dis:#c47f12;--com:#c2412d;--hl:#2f5bd3;--warn-bg:#fff6e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161616;--fg:#e8e8e8;--muted:#a0a0a0;--line:#555;--box:#1f1f1f;--chip:#2c2c2c;--rec:#5fd08f;--rec-bg:#16301f;--ext:#4cc38a;--dis:#e3a93b;--com:#ef7a66;--hl:#7ea2ff;--warn-bg:#33290f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161616;--fg:#e8e8e8;--muted:#a0a0a0;--line:#555;--box:#1f1f1f;--chip:#2c2c2c;--rec:#5fd08f;--rec-bg:#16301f;--ext:#4cc38a;--dis:#e3a93b;--com:#ef7a66;--hl:#7ea2ff;--warn-bg:#33290f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+.doc{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin:0 0 6px}h2{font-size:20px;margin:48px 0 6px;padding-top:12px;border-top:2px solid var(--fg)}
+h3{font-size:16px;margin:28px 0 8px}h4{margin:0 0 4px;font-size:13px}
+p{margin:0 0 8px;max-width:80ch}
+.muted{color:var(--muted)}.small{font-size:12px}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 0;font-size:13px}
+a{color:var(--hl)}
+table.leg{border-collapse:collapse;font-size:13px;margin:8px 0}
+table.leg td,table.leg th{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.scroll{overflow-x:auto}
+/* variant frame */
+.variant{border:1px solid var(--line);margin:12px 0 4px}
+.vhead{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--box)}
+.vhead b{font-size:14px}
+.rec{color:var(--rec);background:var(--rec-bg);border:1px solid var(--rec);padding:0 6px;font-size:12px;font-weight:600}
+.verdict{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:8px 10px;border-top:1px solid var(--line);font-size:13px}
+.verdict ul{margin:0;padding-left:18px}
+@media (max-width:760px){.verdict{grid-template-columns:1fr}}
+.canvas{overflow-x:auto;padding:10px}
+.page{min-width:960px;border:1px dashed var(--line);padding:8px;display:flex;flex-direction:column;gap:8px}
+.page.mobile{min-width:0;width:375px;max-width:100%}
+/* wireframe blocks */
+.blk{border:1px solid var(--fg);padding:8px;position:relative;min-width:0;background:var(--bg)}
+.blk > .lab{display:inline-block;font:600 11px/1.4 ui-monospace,Menlo,monospace;background:var(--chip);border:1px solid var(--line);padding:0 5px;margin-bottom:6px}
+.blk.derived > .lab{border-style:dashed}
+.blk.q{background:var(--warn-bg)}
+.row{display:flex;gap:8px}.row > *{flex:1;min-width:0}
+.grid{display:grid;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--line);padding:0 6px;font-size:12px;white-space:nowrap}
+.chip.on{border-color:var(--hl);color:var(--hl);font-weight:600}
+.end-E{color:var(--ext);font-weight:600}.end-D{color:var(--dis);font-weight:600}.end-C{color:var(--com);font-weight:600}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:12.5px}
+dl.kv dt{color:var(--muted)}dl.kv dd{margin:0;font-variant-numeric:tabular-nums}
+table.t{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+table.t th,table.t td{border:1px solid var(--line);padding:2px 5px;text-align:left}
+table.t tr.sel td{outline:2px solid var(--hl);outline-offset:-2px}
+td.diff{background:var(--warn-bg);font-weight:600}
+.big{font-size:20px;font-weight:700}
+.quote{border-left:3px solid var(--line);padding-left:8px;font-size:12.5px;font-style:italic}
+.input{border:1px solid var(--fg);padding:6px 8px;color:var(--muted);font-size:13px}
+.btn{display:inline-block;border:1px solid var(--fg);padding:2px 8px;font-size:12px}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--fg)}.tabs span{border:1px solid var(--line);border-bottom:0;padding:2px 10px;font-size:12px}.tabs span.on{border-color:var(--fg);font-weight:600}
+.collapsed{border-style:dashed;color:var(--muted);font-size:12px}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--muted);font:10px system-ui,sans-serif}
+svg .ax{stroke:var(--line);fill:none}
+svg .s0{stroke:var(--hl);fill:none;stroke-width:1.5}
+svg .s1{stroke:var(--dis);fill:none;stroke-width:1.5}
+svg .s2{stroke:var(--com);fill:none;stroke-width:1.5}
+svg .fit{stroke:var(--fg);stroke-dasharray:4 3;fill:none}
+svg .vl{stroke:var(--fg);stroke-dasharray:2 2}
+svg .pE{fill:var(--ext)}svg .pD{fill:var(--dis)}svg .pC{fill:var(--com)}
+svg .faint{opacity:.18}
+svg .ring{fill:none;stroke:var(--hl);stroke-width:2}
+svg .drop{fill:var(--hl)}svg .flame{fill:none;stroke:var(--dis);stroke-width:2}
+input[type=range]{width:100%}
+.note{font-size:12px;color:var(--muted);margin-top:4px}
+</style>
+
+<div class="doc">
+<h1>FLEX: варіанти макетів сторінок</h1>
+<p>Каркаси для дизайнера. Візуального дизайну тут немає: рамка = блок, мітка над блоком = номер блоку з документа «<a href="../product/student_flow_flex.html">FLEX Student Flow</a>» (A–H, L5, Q). Усі числа, графіки і тексти — реальні дані FLEX з <code>data/flex</code>.</p>
+<p><b>Наскрізний приклад:</b> тест <b>№35</b> — крапля гептану 3.85 мм у повітрі МКС, згасла сама, після цього cool flame. Для порівняння: <b>№207</b> (те саме повітря, менша крапля, догоріла) і <b>№28</b> («місячна» атмосфера 0.7 атм / 30% O₂, обірвана).</p>
+<div class="toc"><a href="#legend">Легенда</a><a href="#shell">Каркас сайту</a><a href="#p1">1 · Огляд</a><a href="#p2">2 · Дослідник тестів</a><a href="#p3">3 · Тест №35</a><a href="#p4">4 · Порівняння</a><a href="#p5">5 · Бібліотека</a><a href="#mobile">Мобільна версія</a><a href="#summary">Підсумок</a></div>
+
+<h2 id="legend">Легенда блоків</h2>
+<div class="scroll"><table class="leg">
+<tr><th>Мітка</th><th>Блок (з документа Student Flow)</th><th>Шар</th><th>Позначення в каркасі</th></tr>
+<tr><td>A</td><td>Паспорт дослідження</td><td>L1</td><td rowspan="8">суцільна рамка — дані NASA</td></tr>
+<tr><td>B</td><td>Фізика і словник</td><td>L1·L4</td></tr>
+<tr><td>C</td><td>Фактори (що змінювали)</td><td>L2</td></tr>
+<tr><td>D</td><td>Результати (що вийшло)</td><td>L2</td></tr>
+<tr><td>E</td><td>Паспорт тесту</td><td>L3</td></tr>
+<tr><td>F</td><td>Часові ряди</td><td>L3</td></tr>
+<tr><td>G</td><td>Медіа і звіти NASA</td><td>L3</td></tr>
+<tr><td>H</td><td>Документи і публікації</td><td>L4</td></tr>
+<tr><td>L5</td><td>Похідне, яке рахуємо ми</td><td>L5</td><td>мітка з пунктирною рамкою</td></tr>
+<tr><td>Q</td><td>Якість і межі даних</td><td>наскрізний</td><td>жовтуватий фон</td></tr>
+</table></div>
+<p class="note">Варіанти оцінені за трьома критеріями: швидкість знаходження відповіді (критерій оцінювання), зручність для лабораторної, масштабування на інші дослідження. Рекомендований варіант позначено.</p>
+
+<!-- ================= SHELL ================= -->
+<h2 id="shell">0 · Каркас сайту (спільний для всіх сторінок)</h2>
+<p>Однаковий на всіх сторінках, тому окремих варіантів не робимо. Пошук у шапці — головний вхід для «швидко знайти».</p>
+<div class="variant">
+  <div class="vhead"><b>Шапка + наскрізні елементи</b></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">Шапка</span>
+      <div class="row" style="align-items:center">
+        <div style="flex:0 0 160px"><b>Flame in Freefall</b></div>
+        <div class="chips" style="flex:0 0 auto"><span class="chip on">FLEX ▾</span><span class="chip">Огляд</span><span class="chip">Тести</span><span class="chip">Порівняння</span><span class="chip">Бібліотека</span></div>
+        <div class="input">🔍 Запитай: «гептан у повітрі МКС, що гасне саме?»</div>
+        <div style="flex:0 0 130px;text-align:right"><span class="btn">Кошик лабораторної · 3</span></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="blk"><span class="lab">B · тултип словника</span><div class="small">Будь-який термін з пунктиром (<u style="text-decoration-style:dotted">K</u>, <u style="text-decoration-style:dotted">standoff</u>) показує визначення при наведенні. Окремої сторінки словника немає.</div></div>
+      <div class="blk q"><span class="lab">Q · інлайн-прапорець</span><div class="small">Прапорці якості стоять біля числа, якого стосуються: «Disruption: самозгасання не спостерігалось», «нитка».</div></div>
+      <div class="blk derived"><span class="lab">L5 · кошик</span><div class="small">Висувна панель справа: тести №35, №207, №28 → «Порівняти» або «ZIP для лабораторної».</div></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- ================= PAGE 1 ================= -->
+<h2 id="p1">1 · Огляд дослідження <span class="muted small">/studies/flex</span></h2>
+<p>Задача сторінки: за 30 секунд пояснити, що це, і одразу дати вхід у питання. Блоки: A, B, D, G, Q.</p>
+
+<div class="variant">
+  <div class="vhead"><b>1A · Довга сторінка-розповідь</b><span class="muted">усе вертикально, як стаття</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">A · hero</span><div class="big">Коли вогонь у космосі гасне сам — і що потрібно, щоб його загасити?</div><div class="small">FLEX · PSI-69 · МКС, CIR/MDCA · 2009–2011 · 274 тести · DOI 10.60555/mbq8-0451</div></div>
+    <div class="blk"><span class="lab">G · відео / replay</span><div data-replay="35" data-h="120"></div></div>
+    <div class="blk"><span class="lab">B · як працював експеримент</span><div class="small">Крапля 1–5 мм → запалювання → кулясте полум'я → <code>d² = d₀² − K·t</code> → один з трьох фіналів.</div></div>
+    <div class="blk"><span class="lab">D · що знайшли (3 висновки)</span><div class="small">Межа займистості в 0g нижча · cool flames у гептану · метанол гасне при більших краплях.</div></div>
+    <div class="blk"><span class="lab">D + L5 · питання, на які відповідають дані</span><div class="presets grid" style="grid-template-columns:repeat(6,1fr)"></div></div>
+    <div class="blk q"><span class="lab">Q · пастки</span><div class="small">Disruption ≠ «горіло б вічно» · «згасло» ≠ «безпечно» (cool flames)</div></div>
+    <div class="blk"><span class="lab">A · як цитувати</span><div class="small">NASA PSI, FLEX (PSI-69), DOI 10.60555/mbq8-0451, CC0 · <span class="btn">Скопіювати</span></div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Природний порядок читання для новачка</li><li>Найпростіше масштабувати: секції = блоки</li></ul></div><div><h4>Мінуси</h4><ul><li>Пресети-питання лише на 5-му екрані</li><li>Студент з лабораторною мусить скролити теорію</li></ul></div><div><h4>Коли брати</h4>Якщо сторінку відкривають переважно з посилання «що таке FLEX».</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>1B · Хаб: питання на першому екрані, теорія нижче</b><span class="rec">Рекомендовано</span></div>
+  <div class="canvas"><div class="page">
+    <div class="row">
+      <div class="blk" style="flex:1.3"><span class="lab">A · hero</span><div class="big">Коли вогонь у космосі гасне сам — і що потрібно, щоб його загасити?</div><div class="small">274 тести: краплю палива запалювали на МКС і змінювали атмосферу навколо (O₂, тиск, CO₂, He).</div>
+        <div class="chips" style="margin-top:6px"><span class="chip">274 тести</span><span class="chip">2 палива</span><span class="chip">3 розбавники</span><span class="chip">МКС 2009–2011</span></div></div>
+      <div class="blk"><span class="lab">G · replay №35 (відео немає)</span><div data-replay="35" data-h="110"></div></div>
+    </div>
+    <div class="blk"><span class="lab">D + L5 · питання, на які відповідають дані → перехід у Дослідник / Порівняння</span><div class="presets grid" style="grid-template-columns:repeat(3,1fr)"></div></div>
+    <div class="row">
+      <div class="blk"><span class="lab">B · як працював</span><div class="small">Схема краплі + <code>d² = d₀² − K·t</code> + 3 фінали: <span class="end-E">Extinction</span> / <span class="end-C">Completion</span> / <span class="end-D">Disruption</span></div></div>
+      <div class="blk"><span class="lab">D · що знайшли</span><div class="small">3 висновки, кожен з посиланням на тест і публікацію</div></div>
+      <div class="blk q"><span class="lab">Q · 2 пастки</span><div class="small">Disruption ≠ «горіло б вічно»; «згасло» ≠ «безпечно»</div></div>
+    </div>
+    <div class="row"><div class="blk collapsed"><span class="lab">A · мета, гіпотеза, автори</span> згорнуто ▸</div><div class="blk collapsed"><span class="lab">A · як цитувати</span> DOI 10.60555/mbq8-0451 · Скопіювати</div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Відповідь-цифра видна без скролу (критерій «швидко знайти»)</li><li>Теорія не заважає тим, хто прийшов з задачею</li></ul></div><div><h4>Мінуси</h4><ul><li>Потрібні добре підібрані пресети для кожного дослідження</li></ul></div><div><h4>Коли брати</h4>За замовчуванням. Пресети описуються в конфігу <code>presets</code>, тож для нових досліджень макет не змінюється.</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>1C · Пошук-first</b><span class="muted">як пошукова система</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">A · одна фраза</span><div class="small">FLEX: 274 тести горіння крапель на МКС</div></div>
+    <div class="blk"><span class="lab">Пошук / агент</span><div class="input" style="font-size:16px;padding:12px">🔍 Що ти хочеш дізнатись про вогонь у невагомості?</div><div class="chips" style="margin-top:6px" id="c1chips"></div></div>
+    <div class="row"><div class="blk collapsed"><span class="lab">B</span> Як працював експеримент ▸</div><div class="blk collapsed"><span class="lab">D</span> Що знайшли ▸</div><div class="blk collapsed"><span class="lab">Q</span> Пастки ▸</div><div class="blk collapsed"><span class="lab">A</span> Цитата ▸</div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Найкоротший шлях до відповіді для того, хто знає, що питати</li></ul></div><div><h4>Мінуси</h4><ul><li>Порожній екран для новачка: не видно, що в даних є</li><li>Все залежить від якості агента</li></ul></div><div><h4>Коли брати</h4>Як режим для повторних візитів, не як перший екран.</div></div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<h2 id="p2">2 · Дослідник тестів <span class="muted small">/studies/flex/tests</span></h2>
+<p>Задача: від питання до набору тестів і загальної відповіді. Блоки: C, D, Q, L5. Приклад запиту: <b>«гептан у повітрі МКС»</b> (фільтри: Heptane · N₂ · O₂ 0.21 · ≈1 атм).</p>
+
+<div class="variant">
+  <div class="vhead"><b>2A · Мапа зверху, таблиця знизу</b><span class="muted">фільтри — горизонтальні чипи</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">Пошук</span><div class="input">гептан у повітрі МКС</div></div>
+    <div class="blk"><span class="lab">C · фільтри-чипи з лічильниками</span><div class="facets-inline"></div></div>
+    <div class="blk derived"><span class="lab">D + L5 · answer card</span><div class="answer"></div></div>
+    <div class="blk"><span class="lab">D · мапа 274 тестів (O₂ × розбавник), знайдені яскраві</span><div data-map="q" data-h="190"></div></div>
+    <div class="blk"><span class="lab">C + D + E-теги · таблиця</span><div class="restable"></div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Мапа — найсильніший «загальний» вигляд, видно одразу</li><li>Проста реалізація</li></ul></div><div><h4>Мінуси</h4><ul><li>Таблиця за межами першого екрана</li><li>Чипи погано вміщують 7 фасетів</li><li>Відкриття тесту = перехід на іншу сторінку</li></ul></div><div><h4>Коли брати</h4>Для досліджень з малою кількістю фасетів (SAFFIRE, SAME).</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>2B · Master–detail: фільтри | результати | прев'ю тесту</b><span class="rec">Рекомендовано</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">Пошук</span><div class="input">гептан у повітрі МКС</div></div>
+    <div class="grid" style="grid-template-columns:200px 1fr 260px">
+      <div class="blk"><span class="lab">C · фасети</span><div class="facets"></div><div class="blk q" style="margin-top:6px"><span class="lab">Q</span><div class="small">За замовчуванням лише вільні краплі (212). Тести з ниткою — окремий клас.</div></div></div>
+      <div class="grid" style="align-content:start">
+        <div class="blk derived"><span class="lab">D + L5 · answer card</span><div class="answer"></div></div>
+        <div class="blk"><span class="lab">D · мапа</span><div data-map="q" data-h="170"></div></div>
+        <div class="blk"><span class="lab">таблиця · клік = прев'ю справа</span><div class="restable"></div></div>
+      </div>
+      <div class="blk"><span class="lab">E + F · прев'ю №35</span>
+        <div class="small"><b>№35</b> · Heptane · 1.011 атм · 21% O₂ · N₂ · <span class="end-E">Extinction</span></div>
+        <div data-chart="d2" data-tests="35" data-h="110"></div>
+        <dl class="kv"><dt>d₀</dt><dd>3.85 мм</dd><dt>d_ext</dt><dd>3.34 мм</dd><dt>K</dt><dd>0.43 мм²/с</dd><dt>час</dt><dd>8.9 с</dd></dl>
+        <div class="chips" style="margin:4px 0"><span class="chip">cool flame</span><span class="chip">oscillation</span></div>
+        <div><span class="btn">Відкрити тест</span> <span class="btn">+ Порівняти</span> <span class="btn">+ Кошик</span></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Питання → відповідь → конкретний тест без зміни сторінки</li><li>Лічильники біля фасетів показують, що є в даних, до кліку</li><li>Легко додати/прибрати фасети з конфігу</li></ul></div><div><h4>Мінуси</h4><ul><li>Три колонки потребують ширини ≥1100 px; на мобільному прев'ю стає нижньою шторкою</li></ul></div><div><h4>Коли брати</h4>За замовчуванням для FLEX і досліджень з багатьма тестами (CFI, SPICE 469, CFI-G 1194).</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>2C · Таблиця-first, мапа як мінікарта</b><span class="muted">як Excel / база даних</span></div>
+  <div class="canvas"><div class="page">
+    <div class="grid" style="grid-template-columns:200px 1fr">
+      <div class="grid" style="align-content:start"><div class="blk"><span class="lab">C · фасети</span><div class="facets"></div></div><div class="blk"><span class="lab">D · мінікарта</span><div data-map="q" data-h="120"></div></div></div>
+      <div class="blk"><span class="lab">C + D · таблиця з усіма колонками, сортування, вибір колонок</span><div class="restable" data-wide="1"></div></div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Максимум даних на екрані — подобається дослідникам</li></ul></div><div><h4>Мінуси</h4><ul><li>Немає «відповіді», студент робить висновок сам</li><li>Мінікарта надто мала для розуміння розподілу</li></ul></div><div><h4>Коли брати</h4>Як перемикач «режим таблиці» всередині 2B для лабораторної.</div></div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<h2 id="p3">3 · Сторінка тесту <span class="muted small">/studies/flex/tests/35</span></h2>
+<p>Задача: що сталося в цьому тесті і чи можна вірити числам. Блоки: E, F, G, Q, L5. Повзунок часу в replay — живий, з реальних рядів №35.</p>
+
+<div class="variant">
+  <div class="vhead"><b>3A · Довгий звіт</b><span class="muted">як Summary.pdf, але в браузері</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">E · заголовок</span><div class="t35head"></div></div>
+    <div class="blk derived"><span class="lab">L5 · що сталося</span><div class="what35"></div></div>
+    <div class="blk"><span class="lab">G + F · replay</span><div data-replay="35" data-h="130"></div></div>
+    <div class="blk"><span class="lab">F · d²(t)</span><div data-chart="d2" data-tests="35" data-fit="1" data-h="150"></div></div>
+    <div class="blk"><span class="lab">F · діаметр полум'я</span><div data-chart="flame" data-tests="35" data-h="130"></div></div>
+    <div class="blk"><span class="lab">E · параметри</span><div class="params35"></div></div>
+    <div class="blk"><span class="lab">E · коментар дослідника</span><div class="comment35 quote"></div></div>
+    <div class="blk derived"><span class="lab">L5 · схожі тести</span><div class="nb35"></div></div>
+    <div class="blk"><span class="lab">G · файли</span><div class="files35 small"></div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Просто зверстати і масштабувати</li><li>Добре друкується як додаток до лабораторної</li></ul></div><div><h4>Мінуси</h4><ul><li>Replay і графіки на різних екранах: курсор часу не видно разом</li><li>Коментар дослідника (головне про якість) — внизу</li></ul></div><div><h4>Коли брати</h4>Для тестів без часових рядів (~20 у FLEX, більшість у SAFFIRE).</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>3B · Інструмент: replay закріплений зліва, графіки синхронні справа</b><span class="rec">Рекомендовано</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">E · заголовок + Q-теги</span><div class="t35head"></div></div>
+    <div class="row">
+      <div class="blk derived" style="flex:2"><span class="lab">L5 · що сталося (з даних)</span><div class="what35"></div></div>
+      <div class="blk" style="flex:3"><span class="lab">E · коментар дослідника (згорнутий до 2 рядків)</span><div class="comment35 quote" style="max-height:3.2em;overflow:hidden"></div><span class="small muted">Показати повністю ▾</span></div>
+    </div>
+    <div class="grid" style="grid-template-columns:320px 1fr">
+      <div class="grid" style="align-content:start">
+        <div class="blk"><span class="lab">G + F · replay (sticky) · відео немає → анімація з даних</span><div data-replay="35" data-h="170" data-sync="b3"></div></div>
+        <div class="blk"><span class="lab">E · параметри (тултипи B)</span><div class="params35"></div></div>
+      </div>
+      <div class="grid" style="align-content:start">
+        <div class="tabs"><span class="on">Графіки</span><span>Камера</span><span>Файли</span><span>Схожі</span></div>
+        <div class="blk"><span class="lab">F + L5 · d²(t), фіт K: наш vs NASA</span><div data-chart="d2" data-tests="35" data-fit="1" data-h="160" data-sync="b3"></div></div>
+        <div class="blk"><span class="lab">F · діаметр полум'я і standoff</span><div data-chart="flame" data-tests="35" data-h="130" data-sync="b3"></div></div>
+        <div class="blk derived"><span class="lab">L5 · що це означає для безпеки</span><div class="small">Видиме полум'я в повітрі МКС згасло саме, але після цього крапля далі швидко випаровувалась (≈0.39 мм²/с проти K 0.43 до згасання). Дослідник пояснює це cool flame: «згасло» не означає «безпечно».</div></div>
+        <div class="row"><span class="btn">⬇ CSV №35</span><span class="btn">Summary.pdf</span><span class="btn">+ Порівняти</span><span class="btn">+ Кошик</span><span class="btn">Цитата</span></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Один курсор часу: на replay видно, що відбувається в точці графіка</li><li>Коментар дослідника видно до графіків (Q перед висновками)</li><li>Вкладки ховають рідше потрібне (камера, файли)</li></ul></div><div><h4>Мінуси</h4><ul><li>Складніше в реалізації (синхронізація)</li><li>Вкладки ховають сусідів — потрібно дублювати «Схожі» внизу</li></ul></div><div><h4>Коли брати</h4>За замовчуванням для тестів з часовими рядами. Це основний екран для лабораторної.</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>3C · Дашборд-сітка 2×3</b><span class="muted">усе видно одночасно</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">E · заголовок</span><div class="t35head"></div></div>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="blk"><span class="lab">G · replay</span><div data-replay="35" data-h="120" data-sync="c3"></div></div>
+      <div class="blk"><span class="lab">F · d²(t)</span><div data-chart="d2" data-tests="35" data-fit="1" data-h="120" data-sync="c3"></div></div>
+      <div class="blk"><span class="lab">F · полум'я</span><div data-chart="flame" data-tests="35" data-h="120" data-sync="c3"></div></div>
+      <div class="blk"><span class="lab">F · камера: тиск і T</span><div data-chart="chamber" data-h="120"></div></div>
+      <div class="blk"><span class="lab">E · параметри</span><div class="params35"></div></div>
+      <div class="blk"><span class="lab">E · коментар</span><div class="comment35 quote" style="max-height:9em;overflow:auto"></div></div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Весь тест на одному екрані — зручно порівнювати сигнали</li></ul></div><div><h4>Мінуси</h4><ul><li>Немає ієрархії: студент не знає, з чого почати</li><li>Графіки дрібні, d² — головний — не виділений</li></ul></div><div><h4>Коли брати</h4>Як «експертний режим» для дослідника, не за замовчуванням.</div></div>
+</div>
+
+<!-- ================= PAGE 4 ================= -->
+<h2 id="p4">4 · Порівняння <span class="muted small">/studies/flex/compare?ids=35,207,28</span></h2>
+<p>Задача: чим відрізняються тести і що з цього випливає. Блоки: D, F, L5. Тести: №35 і №207 (повітря МКС, різний d₀), №28 («місячна» атмосфера).</p>
+
+<div class="variant">
+  <div class="vhead"><b>4A · Картки поруч</b><span class="muted">кожен тест — колонка</span></div>
+  <div class="canvas"><div class="page">
+    <div class="grid cmpcards" style="grid-template-columns:repeat(3,1fr)"></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Знайомо (як порівняння товарів)</li><li>Кожен тест цілісний</li></ul></div><div><h4>Мінуси</h4><ul><li>Графіки окремо — порівнювати нахили d² очима важко</li><li>Відмінності треба шукати самому</li><li>Більше 3 тестів не вміщується</li></ul></div><div><h4>Коли брати</h4>Для 2 тестів на мобільному (свайп між картками).</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>4B · Висновок зверху → накладені графіки → таблиця відмінностей</b><span class="rec">Рекомендовано</span></div>
+  <div class="canvas"><div class="page">
+    <div class="blk"><span class="lab">обрані тести (чипи, + додати)</span><div class="chips cmpchips"></div></div>
+    <div class="blk derived"><span class="lab">L5 · чим відрізняються (детермінований diff + пояснення з посиланнями)</span><div class="small">
+      <b>№35 vs №207:</b> умови однакові (повітря МКС), різниться лише d₀ (3.85 vs 2.72 мм). Велика крапля згасла сама при 3.34 мм, менша догоріла до кінця (Completion).<br>
+      <b>№35 vs №28:</b> у «місячній» атмосфері (0.71 атм, 30% O₂) K більший (0.64 vs 0.43 мм²/с), полум'я горіло 17.3 с і не згасло саме (Disruption: крапля вийшла з поля зору).</div></div>
+    <div class="blk q"><span class="lab">Q · що з порівняння не випливає</span><div class="small">№28 обірвано (Disruption): не можна сказати, що полум'я горіло б вічно. Лише «самозгасання не спостерігалось».</div></div>
+    <div class="row">
+      <div class="blk"><span class="lab">F · d²(t), накладені (нахил = K)</span><div data-chart="d2" data-tests="35,207,28" data-h="170"></div></div>
+      <div class="blk"><span class="lab">F · діаметр полум'я, накладені</span><div data-chart="flame" data-tests="35,207,28" data-h="170"></div></div>
+    </div>
+    <div class="row">
+      <div class="blk" style="flex:2"><span class="lab">C + D · таблиця відмінностей (підсвічено те, що різниться)</span><div class="difftable"></div></div>
+      <div class="blk"><span class="lab">D · де вони на загальній мапі</span><div data-map="cmp" data-h="160"></div></div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Відповідь у першому блоці, докази під нею</li><li>Накладені графіки — одразу видно різні нахили</li><li>Таблиця масштабується до 4+ тестів</li></ul></div><div><h4>Мінуси</h4><ul><li>Потрібна якісна генерація висновку (з посиланнями)</li></ul></div><div><h4>Коли брати</h4>За замовчуванням. Розділ «аналіз» курсової береться звідси майже готовим.</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>4C · Replay поруч на одному таймлайні</b><span class="muted">демо-режим</span></div>
+  <div class="canvas"><div class="page">
+    <div class="row">
+      <div class="blk"><span class="lab">G · №35 повітря МКС</span><div data-replay="35" data-h="130" data-sync="c4" data-noslider="1"></div></div>
+      <div class="blk"><span class="lab">G · №207 повітря МКС, менша крапля</span><div data-replay="207" data-h="130" data-sync="c4" data-noslider="1"></div></div>
+      <div class="blk"><span class="lab">G · №28 «місячна»</span><div data-replay="28" data-h="130" data-sync="c4"></div></div>
+    </div>
+    <div class="blk collapsed"><span class="lab">F + D</span> Графіки й таблиця під спойлером ▸</div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Найсильніше емоційно: видно, хто гасне першим</li><li>Ідеально для пітчу</li></ul></div><div><h4>Мінуси</h4><ul><li>Мало кількісної інформації</li></ul></div><div><h4>Коли брати</h4>Як верхній блок усередині 4B (замість графіків на першому екрані) для демо.</div></div>
+</div>
+
+<!-- ================= PAGE 5 ================= -->
+<h2 id="p5">5 · Бібліотека і дані <span class="muted small">/studies/flex/library</span></h2>
+<p>Задача: джерела, словник даних, цитування, вивантаження для лабораторної. Блоки: H, A, Q.</p>
+
+<div class="variant">
+  <div class="vhead"><b>5A · Вкладки</b></div>
+  <div class="canvas"><div class="page">
+    <div class="tabs"><span class="on">Публікації (51)</span><span>Документи NASA</span><span>Словник даних</span><span>Обмеження</span><span>Цитування</span><span>Кошик (3)</span></div>
+    <div class="blk"><span class="lab">H · публікації</span><div class="pubs"></div></div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>Компактно</li></ul></div><div><h4>Мінуси</h4><ul><li>Пошук по сторінці (Ctrl+F) не бачить інших вкладок</li><li>На вкладку не можна дати посилання з тексту відповіді агента, якщо не робити якорі</li></ul></div><div><h4>Коли брати</h4>Якщо розділів стане більше 6.</div></div>
+</div>
+
+<div class="variant">
+  <div class="vhead"><b>5B · Документація: меню-якорі зліва, один скрол</b><span class="rec">Рекомендовано</span></div>
+  <div class="canvas"><div class="page">
+    <div class="grid" style="grid-template-columns:180px 1fr">
+      <div class="blk"><span class="lab">навігація (sticky)</span><div class="small">Як цитувати<br>Кошик лабораторної<br>Словник даних<br>Обмеження (Q)<br>Публікації<br>Документи NASA</div></div>
+      <div class="grid" style="align-content:start">
+        <div class="blk"><span class="lab">A · як цитувати</span><div class="small">NASA Physical Sciences Informatics. Flame Extinguishment Experiment (FLEX), PSI-69, v5. DOI 10.60555/mbq8-0451. CC0-1.0. <span class="btn">Скопіювати</span></div></div>
+        <div class="blk derived"><span class="lab">L5 · кошик лабораторної</span><div class="small">№35, №207, №28 → <span class="btn">ZIP: tests.csv + 3 × часові ряди + README з цитатою</span></div></div>
+        <div class="blk"><span class="lab">A + Q · словник даних</span><div class="dict"></div></div>
+        <div class="blk q"><span class="lab">Q · відомі обмеження</span><div class="small">Нитка 54 / вільні 212 / невідомо 8 · Disruption 61 · пропуски d₀ 12, K 16 · немає тестів ≥30% O₂ з CO₂/He · відео лише для 14 тестів · у частини тестів TestSheet не збігається з таблицею (напр. №273: тиск 1.006 атм у таблиці і 0.69 атм у TestSheet).</div></div>
+        <div class="blk"><span class="lab">H · публікації (фільтр за темою)</span><div class="chips" style="margin-bottom:4px"><span class="chip on">усі 51</span><span class="chip">cool flames</span><span class="chip">extinction</span><span class="chip">CO₂ / He</span></div><div class="pubs"></div></div>
+        <div class="blk"><span class="lab">H · документи NASA</span><div class="small">Science: FLEX Test Plan, FLEX DoD · Engineering: ERD, EIRD, Overall Ext File · Presentations: 4, зокрема «Cool Flames in Space, a Hot Prospect on Earth!»</div></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="verdict"><div><h4>Плюси</h4><ul><li>На кожен розділ є пряме посилання (#dictionary) — агент і прапорці Q можуть вести сюди</li><li>Працює Ctrl+F</li></ul></div><div><h4>Мінуси</h4><ul><li>Довга сторінка</li></ul></div><div><h4>Коли брати</h4>За замовчуванням.</div></div>
+</div>
+
+<!-- ================= MOBILE ================= -->
+<h2 id="mobile">Мобільна версія рекомендованих варіантів</h2>
+<p>Як складаються колонки на ширині 375 px. Порядок блоків — за пріоритетом для студента.</p>
+<div class="row" style="flex-wrap:wrap;align-items:flex-start;gap:16px">
+  <div><h4>2B → мобільний</h4><div class="page mobile">
+    <div class="blk"><span class="lab">Пошук</span><div class="input">гептан у повітрі МКС</div></div>
+    <div class="blk"><span class="lab">C · фільтри → кнопка-шторка</span><span class="btn">Фільтри · 4</span></div>
+    <div class="blk derived"><span class="lab">D + L5 · answer card</span><div class="answer"></div></div>
+    <div class="blk"><span class="lab">D · мапа</span><div data-map="q" data-h="150"></div></div>
+    <div class="blk"><span class="lab">список карток замість таблиці</span><div class="small"><b>№35</b> · Heptane · 21% · <span class="end-E">Ext</span> · d₀ 3.85<br><b>№204</b> · Heptane · 21% · <span class="end-D">Dis</span> · d₀ 3.56<br>…</div></div>
+    <div class="blk"><span class="lab">E + F · прев'ю → нижня шторка</span></div>
+  </div></div>
+  <div><h4>3B → мобільний</h4><div class="page mobile">
+    <div class="blk"><span class="lab">E · заголовок</span><div class="small"><b>№35</b> · Heptane · повітря МКС · <span class="end-E">Extinction</span></div></div>
+    <div class="blk derived"><span class="lab">L5 · що сталося</span><div class="what35 small"></div></div>
+    <div class="blk"><span class="lab">G + F · replay (sticky зверху при скролі графіків)</span><div data-replay="35" data-h="120" data-sync="m3"></div></div>
+    <div class="blk"><span class="lab">F · d²(t)</span><div data-chart="d2" data-tests="35" data-fit="1" data-h="140" data-sync="m3"></div></div>
+    <div class="blk collapsed"><span class="lab">E</span> Коментар дослідника ▸</div>
+    <div class="blk collapsed"><span class="lab">E</span> Параметри ▸</div>
+    <div class="blk collapsed"><span class="lab">G</span> Файли і CSV ▸</div>
+  </div></div>
+  <div><h4>4B → мобільний</h4><div class="page mobile">
+    <div class="blk"><span class="lab">тести</span><div class="chips cmpchips"></div></div>
+    <div class="blk derived"><span class="lab">L5 · висновок</span><div class="small">№35 vs №28: у «місячній» атмосфері K більший (0.64 vs 0.43), самозгасання не спостерігалось.</div></div>
+    <div class="blk"><span class="lab">F · d²(t)</span><div data-chart="d2" data-tests="35,207,28" data-h="150"></div></div>
+    <div class="blk"><span class="lab">C + D · відмінності (тільки рядки, що різняться)</span><div class="difftable" data-onlydiff="1"></div></div>
+  </div></div>
+</div>
+
+<!-- ================= SUMMARY ================= -->
+<h2 id="summary">Підсумок рекомендацій</h2>
+<div class="scroll"><table class="leg">
+<tr><th>Сторінка</th><th>Рекомендовано</th><th>Чому</th><th>Що взяти з інших варіантів</th></tr>
+<tr><td>1 · Огляд</td><td>1B Хаб</td><td>відповідь-цифра на першому екрані</td><td>з 1C — великий пошук для повторних візитів</td></tr>
+<tr><td>2 · Дослідник</td><td>2B Master–detail</td><td>питання → відповідь → тест без переходу</td><td>з 2C — перемикач «режим таблиці» для лабораторної</td></tr>
+<tr><td>3 · Тест</td><td>3B Інструмент</td><td>один курсор часу для replay і графіків; Q перед висновками</td><td>3A — запасний макет для тестів без рядів; 3C — «експертний режим»</td></tr>
+<tr><td>4 · Порівняння</td><td>4B Висновок → графіки → diff</td><td>відповідь зверху, докази нижче, до 4+ тестів</td><td>з 4C — replay поруч як верхній блок для демо</td></tr>
+<tr><td>5 · Бібліотека</td><td>5B Документація</td><td>пряме посилання на кожен розділ</td><td>—</td></tr>
+</table></div>
+<p class="note">Правило для масштабування: макети не залежать від FLEX. Від дослідження змінюються лише вміст блоків (конфіг <code>schema.ts</code>): фасети C, осі мапи D, сигнали F, пресети, обмеження Q. Якщо блоку немає даних (немає часових рядів, немає фіналу), блок ховається, а сітка не ламається.</p>
+</div>
+
+<script>
+const DATA = {"tests":{"35":{"id":35,"cir":"181F001","date":"11/27/09","gmt":"13:01:24","fuel":"Heptane","p":1.011,"o2":0.21,"n2":0.79,"co2":0.0,"he":0.0,"dil":"N2","d0":3.85,"dext":3.34,"k":0.43,"bt":8.9,"end":"Extinction","fiber":"No","T":300.31,"comment":"Free-floating heptane droplet in a nominally air (0.21/0.79 O2/N2, 1.0 atm) ambient environment.  The droplet stays in the HiBMS FOV for the entire test including a long time after visible flame extinction.  The flame oscillates before visible flame extinction, apparent in both the LLUV and color camera views.  After flame extinction, the droplet vaporizes very vigorously with a nearly perfectly linear D^2 vs. time behavior.  The vaporization rate is only slightly lower than the burning rate constant before flame extinction.  The droplet vaporization rate then plateaus and this is coincident with the formation of a very large vapor cloud.  This behavior is indicative of cool flame burning and extinction.","files":19,"zips":2.37,"has":{"drop":true,"uv":true,"col":true,"ch":true,"pdf":true,"vid":false}},"207":{"id":207,"cir":"N01H202","date":"8/29/2011","gmt":"21:54:40","fuel":"Heptane","p":1.004,"o2":0.21,"n2":0.79,"co2":0.0,"he":0.0,"dil":"N2","d0":2.72,"dext":1.13,"k":0.54,"bt":11.5,"end":"Completion","fiber":"No","T":297.36,"comment":"Free-floating heptane droplet burning in a nominally air, 0.21/0.79 O2/N2, 1.0 atm ambient environment.  The droplet drifts SE in the HiBMS FOV after deployment, hits the igniter and begins to drift N.  The drift velocity is relatively high and it drifts out of the HiBMS FOV relatively quickly after ignition.  It also drifts out of the LLUV and Color Camera FOVs before the end of the test.  The flame oscillates briefly in the middle of the burn and then becomes steady and burns to a disruptive extinction.  The flame is very dim in the Color Camera FOV with the leading edge of the flame (in the direction of the droplet drift) much brighter than the trailing edge.","files":19,"zips":2.18,"has":{"drop":true,"uv":true,"col":true,"ch":true,"pdf":true,"vid":true}},"28":{"id":28,"cir":"195F002","date":"11/9/2009","gmt":"14:56:05","fuel":"Heptane","p":0.71,"o2":0.3,"n2":0.7,"co2":0.0,"he":0.0,"dil":"N2","d0":3.36,"dext":null,"k":0.64,"bt":17.3,"end":"Disruption","fiber":"No","T":300.47,"comment":"Freely-floating heptane droplet burning in a 0.30/0.70 O2/N2, 0.7 atm ambient environment.  The droplet drifts N in the HiBMS FOV after deployment and ignition and out of the FOV after approximately 2/3 of the burn is complete.  There is a bright luminous flame that persists throughout the droplet lifetime.  There is significant sooting with large soot agglomerates present throughout the burn.  There is a disruption that is coincident with flame extinction.","files":18,"zips":1.38,"has":{"drop":true,"uv":true,"col":true,"ch":true,"pdf":true,"vid":false}}},"ts":{"35":{"drop":[[-1.3,3.812],[-1.067,3.884],[-0.833,3.931],[-0.6,3.897],[-0.333,3.863],[-0.1,3.846],[0.133,3.84],[0.367,3.819],[0.633,3.811],[0.867,3.793],[1.1,3.785],[1.333,3.78],[1.6,3.77],[1.833,3.766],[2.067,3.747],[2.3,3.727],[2.567,3.717],[2.8,3.709],[3.033,3.688],[3.267,3.675],[3.533,3.661],[3.767,3.646],[4.0,3.635],[4.233,3.618],[4.5,3.605],[4.733,3.588],[4.967,3.574],[5.2,3.559],[5.467,3.543],[5.7,3.527],[5.933,3.515],[6.167,3.502],[6.4,3.484],[6.667,3.47],[6.9,3.462],[7.133,3.454],[7.367,3.431],[7.633,3.423],[7.867,3.422],[8.1,3.376],[8.333,3.364],[8.6,3.335],[8.833,3.345],[9.067,3.327],[9.3,3.307],[9.567,3.292],[9.8,3.283],[10.033,3.247],[10.267,3.232],[10.533,3.212],[10.767,3.2],[11.0,3.187],[11.233,3.169],[11.5,3.154],[11.733,3.138],[11.967,3.12],[12.2,3.109],[12.467,3.091],[12.7,3.076],[12.933,3.06],[13.167,3.044],[13.4,3.027],[13.667,3.011],[13.9,3.002],[14.133,2.987],[14.367,2.97],[14.633,2.951],[14.867,2.936],[15.1,2.918],[15.333,2.907],[15.6,2.885],[15.833,2.874],[16.067,2.856],[16.3,2.844],[16.567,2.823],[16.8,2.806],[17.033,2.787],[17.267,2.772],[17.533,2.757],[17.767,2.736],[18.0,2.723],[18.233,2.706],[18.5,2.69],[18.733,2.674],[18.967,2.657],[19.2,2.637],[19.467,2.621],[19.7,2.607],[19.933,2.589],[20.167,2.573],[20.4,2.553],[20.667,2.533],[20.9,2.515],[21.133,2.5],[21.367,2.484],[21.633,2.462],[21.867,2.446],[22.1,2.428],[22.333,2.409],[22.6,2.391],[22.833,2.37],[23.067,2.354],[23.3,2.334],[23.567,2.314],[23.8,2.297],[24.033,2.274],[24.267,2.254],[24.533,2.234],[24.767,2.217],[25.0,2.194],[25.233,2.18],[25.5,2.154],[25.733,2.135],[25.967,2.114],[26.2,2.093],[26.433,2.073],[26.7,2.052],[26.933,2.032],[27.167,2.014],[27.4,1.992],[27.667,1.969],[27.9,1.947],[28.133,1.927],[28.367,1.906],[28.633,1.877],[28.867,1.855],[29.1,1.837],[29.333,1.816],[29.6,1.792],[29.833,1.769],[30.067,1.747],[30.3,1.725],[30.567,1.698],[30.8,1.674],[31.033,1.647],[31.267,1.62],[31.533,1.597],[31.767,1.577],[32.0,1.548],[32.233,1.521],[32.5,1.494],[32.733,1.468],[32.967,1.446],[33.2,1.412],[33.433,1.385],[33.7,1.359],[33.933,1.337],[34.167,1.334],[34.4,1.32],[34.667,1.312],[34.9,1.301],[35.133,1.292],[35.367,1.287],[35.633,1.28],[35.867,1.276],[36.1,1.269],[36.333,1.273],[36.6,1.266],[36.833,1.267],[37.067,1.261],[37.3,1.266],[37.567,1.266],[37.8,1.272],[38.033,1.275],[38.267,1.671],[38.533,3.187],[38.767,4.747]],"uv":[[-0.567,14.371,3.7],[-0.533,13.954,3.606],[-0.5,13.645,3.556],[-0.467,13.387,3.519],[-0.433,14.261,3.763],[-0.4,14.079,3.699],[-0.367,14.35,3.741],[-0.333,14.726,3.812],[-0.3,14.501,3.739],[-0.267,13.828,3.58],[-0.233,14.356,3.748],[-0.2,14.351,3.77],[-0.167,14.084,3.705],[-0.133,14.348,3.757],[-0.1,3.073,0.799],[-0.067,3.195,0.826],[-0.033,2.927,0.756],[0.0,2.993,0.777],[0.033,3.136,0.82],[0.067,5.843,1.532],[0.1,7.311,1.914],[0.133,9.802,2.552],[0.167,11.361,2.944],[0.2,13.025,3.368],[0.233,14.674,3.804],[0.267,16.391,4.273],[0.3,17.786,4.663],[0.333,17.933,4.708],[0.367,19.494,5.105],[0.433,19.58,5.095],[0.467,19.163,4.978],[0.5,19.069,4.976],[0.533,19.587,5.129],[0.567,19.373,5.088],[0.6,20.512,5.39],[0.633,20.935,5.493],[0.667,20.75,5.426],[0.7,21.615,5.638],[0.733,22.116,5.771],[0.767,21.406,5.606],[0.8,22.624,5.95],[0.833,22.072,5.818],[0.867,22.654,5.973],[0.9,22.36,5.883],[0.933,22.993,6.026],[0.967,22.455,5.878],[1.0,23.118,6.063],[1.033,22.755,5.986],[1.067,23.049,6.08],[1.1,24.261,6.41],[1.133,24.403,6.451],[1.167,24.286,6.41],[1.2,24.216,6.377],[1.233,24.663,6.49],[1.267,24.543,6.46],[1.3,24.413,6.443],[1.333,24.821,6.566],[1.367,24.911,6.602],[1.433,24.785,6.566],[1.467,25.121,6.647],[1.5,25.178,6.654],[1.533,25.463,6.728],[1.567,25.463,6.735],[1.6,24.658,6.54],[1.633,25.67,6.826],[1.667,25.698,6.84],[1.7,25.455,6.78],[1.733,25.666,6.826],[1.767,25.759,6.845],[1.8,25.987,6.899],[1.833,25.902,6.877],[1.867,26.085,6.93],[1.9,26.184,6.972],[1.933,26.146,6.979],[1.967,26.128,6.979],[2.0,26.013,6.954],[2.033,26.247,7.009],[2.067,26.366,7.037],[2.1,26.718,7.129],[2.133,26.264,7.012],[2.167,26.763,7.146],[2.2,26.688,7.137],[2.233,26.795,7.178],[2.267,26.668,7.151],[2.3,26.885,7.213],[2.333,27.086,7.272],[2.367,26.999,7.241],[2.433,27.144,7.28],[2.467,27.16,7.287],[2.5,27.228,7.313],[2.533,27.274,7.33],[2.567,27.337,7.355],[2.6,27.369,7.377],[2.633,27.331,7.37],[2.667,27.408,7.388],[2.7,27.463,7.408],[2.733,27.552,7.426],[2.767,27.514,7.421],[2.8,27.524,7.421],[2.833,27.644,7.458],[2.867,27.64,7.467],[2.9,27.765,7.507],[2.933,27.727,7.508],[2.967,27.784,7.527],[3.0,27.81,7.538],[3.033,27.98,7.586],[3.067,28.001,7.59],[3.1,27.908,7.571],[3.133,27.95,7.583],[3.167,28.026,7.603],[3.2,28.055,7.614],[3.233,28.133,7.648],[3.267,28.268,7.692],[3.3,28.15,7.666],[3.333,28.334,7.722],[3.367,28.483,7.765],[3.433,28.365,7.738],[3.467,28.469,7.767],[3.5,28.285,7.719],[3.533,28.43,7.766],[3.567,28.438,7.771],[3.6,28.712,7.846],[3.633,18.762,5.13],[3.667,18.296,5.007],[3.7,22.942,6.287],[3.733,25.468,6.982],[3.767,28.571,7.837],[3.8,28.9,7.924],[3.833,28.784,7.898],[3.867,28.786,7.907],[3.9,28.874,7.941],[3.933,28.93,7.956],[3.967,28.984,7.972],[4.0,28.991,7.975],[4.033,28.941,7.963],[4.067,29.031,7.994],[4.1,29.166,8.039],[4.133,29.446,8.126],[4.167,29.451,8.135],[4.2,29.47,8.142],[4.233,29.499,8.153],[4.267,29.5,8.16],[4.3,29.258,8.101],[4.333,29.534,8.185],[4.367,29.408,8.152],[4.433,29.569,8.2],[4.467,29.535,8.192],[4.5,29.643,8.223],[4.533,29.672,8.239],[4.567,29.579,8.22],[4.6,29.711,8.262],[4.633,29.64,8.246],[4.667,29.66,8.259],[4.7,29.701,8.276],[4.733,29.774,8.298],[4.767,29.847,8.321],[4.8,29.911,8.342],[4.833,29.907,8.346],[4.867,29.93,8.362],[4.9,29.858,8.348],[4.933,29.794,8.332],[4.967,30.009,8.397],[5.0,29.969,8.384],[5.033,30.453,8.528],[5.067,30.315,8.488],[5.1,30.344,8.505],[5.133,30.45,8.544],[5.167,30.476,8.551],[5.2,30.561,8.587],[5.233,30.509,8.572],[5.267,30.486,8.565],[5.3,30.508,8.578],[5.333,30.492,8.582],[5.367,30.674,8.641],[5.433,30.484,8.596],[5.467,30.509,8.61],[5.5,30.66,8.653],[5.533,30.544,8.62],[5.567,30.558,8.628],[5.6,30.493,8.619],[5.633,30.626,8.666],[5.667,31.183,8.827],[5.7,30.656,8.692],[5.733,30.604,8.684],[5.767,30.382,8.62],[5.8,31.285,8.883],[5.833,31.249,8.868],[5.867,31.222,8.866],[5.9,31.346,8.903],[5.933,31.342,8.917],[5.967,31.254,8.895],[6.0,31.5,8.97],[6.033,31.422,8.956],[6.067,31.281,8.917],[6.1,31.436,8.966],[6.133,31.54,9.003],[6.167,31.291,8.936],[6.2,31.42,8.973],[6.233,31.505,9.015],[6.267,31.422,8.991],[6.3,31.299,8.959],[6.333,31.401,8.995],[6.367,31.372,8.995],[6.433,31.426,9.02],[6.467,32.32,9.276],[6.5,32.679,9.388],[6.533,32.822,9.438],[6.567,32.727,9.408],[6.6,32.643,9.392],[6.633,32.581,9.378],[6.667,32.672,9.415],[6.7,32.807,9.463],[6.733,32.482,9.376],[6.767,32.639,9.427],[6.8,32.72,9.456],[6.833,32.382,9.368],[6.867,32.22,9.321],[6.9,32.223,9.308],[6.933,31.529,9.019],[6.967,31.3,8.841],[7.0,31.364,8.855],[7.033,30.831,8.75],[7.067,29.082,8.309],[7.1,28.71,8.26],[7.133,29.433,8.521],[7.167,28.119,8.166],[7.2,27.368,7.958],[7.233,25.096,7.301],[7.267,24.48,7.13],[7.3,25.551,7.444],[7.333,24.489,7.134],[7.367,25.34,7.386],[7.433,24.603,7.184],[7.467,24.404,7.126],[7.5,24.504,7.155],[7.533,24.72,7.22],[7.567,24.097,7.037],[7.6,24.987,7.302],[7.633,25.16,7.349],[7.667,26.046,7.601],[7.7,27.858,8.123],[7.733,29.155,8.486],[7.767,30.856,8.974],[7.8,32.326,9.396],[7.833,34.06,9.907],[7.867,35.543,10.388],[7.9,36.843,10.854],[7.933,37.53,11.039],[7.967,36.564,10.764],[8.0,35.685,10.532],[8.033,35.547,10.501],[8.067,35.319,10.445],[8.1,34.889,10.334],[8.133,34.914,10.339],[8.167,34.822,10.326],[8.2,34.74,10.307],[8.233,34.419,10.21],[8.267,34.48,10.243],[8.3,34.363,10.207],[8.333,34.129,10.145],[8.367,33.98,10.103],[8.433,33.573,9.99],[8.467,33.63,10.035],[8.5,33.409,9.997],[8.533,33.226,9.948],[8.567,32.852,9.843],[8.6,29.782,8.93],[8.633,26.354,7.883],[8.667,23.038,6.889],[8.7,20.478,6.111],[8.733,17.501,5.225],[8.767,13.166,3.931],[8.8,9.019,2.696],[8.833,5.464,1.634],[8.867,2.275,0.681],[8.9,0.0,0.0]],"chamber":[[-54.2,14.86,25.7,27.55],[-51.2,14.86,25.66,27.58],[-48.2,14.85,25.66,27.62],[-45.2,14.85,25.66,27.48],[-42.2,14.86,25.7,27.62],[-39.2,14.85,25.7,27.51],[-36.2,14.86,25.73,27.55],[-33.2,14.85,25.73,27.65],[-30.2,14.85,25.7,27.48],[-27.2,14.86,25.7,27.62],[-24.2,14.85,25.66,27.55],[-21.2,14.85,25.7,27.55],[-18.2,14.85,25.7,27.58],[-15.2,14.85,25.7,27.51],[-12.2,14.83,25.7,27.58],[-9.2,14.85,25.7,27.55],[-6.2,14.86,25.7,27.55],[-3.2,14.87,25.73,27.62],[-0.2,14.85,25.7,27.44],[2.8,14.86,25.73,27.62],[5.8,14.9,25.7,27.58],[8.8,14.92,25.73,27.51],[11.8,14.93,25.76,27.58],[14.8,14.92,25.73,27.62],[17.8,14.92,25.76,27.58],[20.8,14.9,25.76,27.55],[23.8,14.9,25.73,27.62],[26.8,14.91,25.73,27.58],[29.8,14.89,25.66,27.55],[32.8,14.91,25.7,27.58],[35.8,14.9,25.7,27.58],[38.8,14.88,25.7,27.58],[41.8,14.88,25.66,27.69],[44.8,14.89,25.73,27.62],[47.8,14.88,25.7,27.44],[50.8,14.88,25.7,27.65],[53.8,14.88,25.7,27.58],[56.8,14.86,25.66,27.65],[59.8,14.87,25.73,27.58],[62.8,14.87,25.7,27.58],[65.8,14.87,25.7,27.58],[68.8,14.87,25.7,27.55],[71.8,14.89,25.7,27.55],[74.8,14.86,25.66,27.55],[77.8,14.88,25.73,27.58],[80.8,14.87,25.7,27.51],[83.8,14.87,25.7,27.69],[86.8,14.87,25.7,27.62],[89.8,14.87,25.7,27.58],[92.8,14.86,25.66,27.55],[95.8,14.88,25.7,27.62],[98.8,14.87,25.73,27.58],[101.8,14.88,25.7,27.55],[104.8,14.86,25.7,27.55],[107.8,14.85,25.7,27.55],[110.8,14.87,25.7,27.58],[113.8,14.86,25.73,27.51],[116.8,14.86,25.66,27.62],[119.8,14.87,25.7,27.55]]},"207":{"drop":[[-1.4,3.564],[-1.367,3.607],[-1.333,3.635],[-1.3,3.659],[-1.233,3.688],[-1.2,3.663],[-1.167,3.633],[-1.133,3.606],[-1.1,3.582],[-1.067,3.563],[-1.033,3.572],[-1.0,3.592],[-0.967,3.619],[-0.933,3.643],[-0.9,3.661],[-0.867,3.662],[-0.833,3.65],[-0.8,3.627],[-0.767,3.605],[-0.733,3.585],[-0.7,3.574],[-0.667,3.575],[-0.633,3.585],[-0.6,3.518],[-0.567,3.515],[-0.533,3.509],[-0.5,3.501],[-0.467,3.497],[-0.433,3.486],[-0.4,3.491],[-0.367,3.493],[-0.333,3.503],[-0.267,3.511],[-0.233,3.519],[-0.2,3.529],[-0.167,3.537],[-0.133,3.541],[-0.1,3.551],[-0.067,3.583],[-0.033,3.577],[0.0,3.576],[0.033,3.575],[0.067,3.592],[0.1,3.588],[0.133,3.589],[0.167,3.583],[0.2,3.578],[0.233,3.574],[0.267,3.566],[0.3,3.556],[0.333,3.553],[0.367,3.548],[0.4,3.535],[0.433,3.535],[0.467,3.528],[0.5,3.519],[0.533,3.513],[0.567,3.511],[0.6,3.508],[0.633,3.505],[0.667,3.501],[0.7,3.493],[0.767,3.501],[0.8,3.497],[0.833,3.499],[0.867,3.507],[0.9,3.508],[0.933,3.502],[0.967,3.504],[1.0,3.505],[1.033,3.503],[1.067,3.502],[1.1,3.505],[1.133,3.501],[1.167,3.497],[1.2,3.494],[1.233,3.495],[1.267,3.493],[1.3,3.494],[1.333,3.488],[1.367,3.486],[1.4,3.486],[1.433,3.476],[1.467,3.474],[1.5,3.471],[1.533,3.469],[1.567,3.464],[1.6,3.46],[1.633,3.457],[1.667,3.458],[1.733,3.452],[1.767,3.448],[1.8,3.448],[1.833,3.449],[1.867,3.445],[1.9,3.443],[1.933,3.436],[1.967,3.44],[2.0,3.435],[2.033,3.43],[2.067,3.428],[2.1,3.425],[2.133,3.426],[2.167,3.422],[2.2,3.419],[2.233,3.415],[2.267,3.419],[2.3,3.42],[2.333,3.413],[2.367,3.41],[2.4,3.411],[2.433,3.412],[2.467,3.405],[2.5,3.403],[2.533,3.403],[2.567,3.4],[2.6,3.397],[2.633,3.391],[2.667,3.395],[2.7,3.396],[2.767,3.389],[2.8,3.388],[2.833,3.386],[2.867,3.386],[2.9,3.385],[2.933,3.383],[2.967,3.378],[3.0,3.372],[3.033,3.373],[3.067,3.373],[3.1,3.371],[3.133,3.368],[3.167,3.368],[3.2,3.366],[3.233,3.36],[3.267,3.354],[3.3,3.356],[3.333,3.357],[3.367,3.35],[3.4,3.349],[3.433,3.342],[3.467,3.341],[3.5,3.337],[3.533,3.34],[3.567,3.345],[3.6,3.338],[3.633,3.329],[3.667,3.328],[3.7,3.328],[3.767,3.326],[3.8,3.326],[3.833,3.327],[3.867,3.321],[3.9,3.318],[3.933,3.315],[3.967,3.316],[4.0,3.316],[4.033,3.314],[4.067,3.308],[4.1,3.312],[4.133,3.307],[4.167,3.3],[4.2,3.295],[4.233,3.293],[4.267,3.296],[4.3,3.298],[4.333,3.295],[4.367,3.296],[4.4,3.291],[4.433,3.285],[4.467,3.278],[4.5,3.274],[4.533,3.276],[4.567,3.276],[4.6,3.273],[4.633,3.271],[4.667,3.271],[4.7,3.268],[4.767,3.27],[4.8,3.255],[4.833,3.255],[4.867,3.253],[4.9,3.25],[4.933,3.248],[4.967,3.243],[5.0,3.247],[5.033,3.245],[5.067,3.24],[5.1,3.238],[5.133,3.24],[5.167,3.236],[5.2,3.233],[5.233,3.229]],"uv":[[-0.633,15.923,4.441],[-0.533,14.122,4.025],[-0.433,16.241,4.659],[-0.333,17.652,5.039],[-0.2,19.292,5.467],[-0.1,20.529,5.78],[0.0,21.454,5.999],[0.1,21.92,6.108],[0.2,21.509,6.011],[0.3,21.424,6.024],[0.4,21.597,6.11],[0.5,21.854,6.211],[0.6,22.134,6.31],[0.733,22.621,6.469],[0.833,22.958,6.561],[0.933,23.349,6.667],[1.033,23.451,6.695],[1.133,23.95,6.841],[1.233,24.348,6.966],[1.333,24.539,7.035],[1.433,24.704,7.107],[1.533,25.04,7.219],[1.633,25.31,7.32],[1.767,25.458,7.383],[1.867,25.737,7.471],[1.967,25.945,7.542],[2.067,26.091,7.612],[2.167,26.292,7.682],[2.267,26.551,7.766],[2.367,26.68,7.823],[2.467,26.857,7.887],[2.567,26.967,7.932],[2.667,27.093,7.98],[2.8,27.368,8.079],[2.9,27.402,8.096],[3.0,27.532,8.166],[3.1,27.744,8.23],[3.2,27.915,8.294],[3.3,28.003,8.343],[3.4,28.222,8.428],[3.5,28.372,8.503],[3.6,28.383,8.502],[3.733,28.621,8.603],[3.833,28.644,8.611],[3.933,28.776,8.68],[4.033,28.992,8.747],[4.133,28.935,8.75],[4.233,28.936,8.788],[4.333,29.186,8.857],[4.433,29.242,8.903],[4.533,29.251,8.93],[4.633,29.392,8.984],[4.767,29.65,9.067],[4.867,29.624,9.107],[4.967,29.606,9.128],[5.067,29.746,9.181],[5.167,29.675,9.17],[5.267,29.91,null],[5.367,29.887,null],[5.467,30.07,null],[5.567,30.182,null],[5.667,30.13,null],[5.8,30.41,null],[5.9,30.426,null],[6.0,30.51,null],[6.1,30.595,null],[6.2,30.484,null],[6.3,30.519,null],[6.4,30.566,null],[6.5,30.58,null],[6.6,30.491,null],[6.733,30.672,null],[6.833,30.701,null],[6.933,30.912,null],[7.033,30.766,null],[7.133,30.932,null],[7.233,31.078,null],[7.333,31.153,null],[7.433,31.218,null],[7.533,31.174,null],[7.633,31.451,null],[7.767,31.688,null],[7.867,31.632,null],[7.967,31.735,null],[8.067,31.563,null],[8.167,31.791,null],[8.267,31.824,null],[8.367,31.608,null],[8.467,32.058,null],[8.567,31.766,null],[8.667,31.66,null],[8.8,31.867,null],[8.9,31.886,null],[9.0,31.793,null],[9.1,31.94,null],[9.2,32.108,null],[9.3,31.897,null],[9.4,31.95,null],[9.5,31.396,null],[9.6,31.671,null],[9.733,32.15,null],[9.833,31.833,null],[9.933,31.775,null],[10.033,32.065,null],[10.133,31.801,null],[10.233,32.038,null],[10.333,32.124,null],[10.433,32.192,null],[10.533,32.149,null],[10.633,32.176,null],[10.767,32.06,null],[10.867,32.055,null],[10.967,31.903,null],[11.067,32.447,null],[11.167,32.218,null],[11.267,32.139,null],[11.367,31.712,null],[11.467,31.414,null],[11.567,31.258,null],[11.667,31.301,null],[11.8,32.067,null],[11.9,32.401,null],[12.0,32.394,null],[12.1,32.104,null],[12.2,32.131,null],[12.3,31.847,null],[12.4,31.463,null],[12.5,31.054,null],[12.6,31.349,null],[12.733,31.141,null],[12.833,31.255,null],[12.933,30.492,null],[13.033,30.818,null],[13.133,31.086,null],[13.233,31.706,null],[13.333,31.748,null],[13.433,31.557,null],[13.533,31.086,null],[13.633,30.971,null],[13.767,30.61,null],[13.867,30.569,null],[13.967,30.57,null],[14.067,30.654,null],[14.167,30.049,null],[14.267,29.918,null],[14.367,29.974,null],[14.467,30.196,null],[14.567,30.069,null],[14.667,30.323,null],[14.8,30.062,null],[14.9,29.775,null],[15.0,29.597,null],[15.1,28.875,null],[15.2,29.017,null],[15.3,28.949,null],[15.4,28.875,null],[15.5,28.613,null],[15.6,28.497,null],[15.733,28.944,null],[15.833,28.428,null],[15.933,28.374,null],[16.033,27.975,null],[16.133,27.886,null],[16.233,27.842,null],[16.333,28.111,null],[16.433,27.662,null],[16.533,27.747,null],[16.633,27.557,null],[16.767,27.464,null],[16.867,27.293,null],[16.967,27.341,null],[17.067,27.252,null],[17.167,26.903,null],[17.267,26.766,null],[17.367,26.77,null],[17.467,26.639,null],[17.567,26.359,null],[17.667,26.65,null],[17.8,26.365,null],[17.9,26.182,null],[18.0,26.084,null],[18.1,25.955,null],[18.2,25.818,null],[18.3,25.435,null],[18.4,25.449,null],[18.5,25.477,null],[18.6,25.154,null],[18.733,24.88,null],[18.833,24.618,null],[18.933,24.699,null],[19.033,24.622,null],[19.133,24.108,null],[19.233,23.935,null],[19.333,23.51,null],[19.433,23.051,null],[19.533,22.634,null],[19.633,22.628,null],[19.767,22.506,null],[19.867,21.458,null],[19.967,21.208,null],[20.067,21.059,null],[20.167,20.657,null],[20.267,20.411,null],[20.367,19.672,null],[20.467,19.338,null],[20.567,18.834,null],[20.667,18.213,null]]},"28":{"drop":[[-1.3,3.381],[-1.233,3.515],[-1.167,3.392],[-1.1,3.453],[-1.033,3.463],[-0.967,3.38],[-0.9,3.49],[-0.833,3.513],[-0.767,3.496],[-0.7,3.353],[-0.633,3.385],[-0.567,3.405],[-0.5,3.407],[-0.433,3.383],[-0.367,3.319],[-0.267,3.38],[-0.2,3.356],[-0.133,3.315],[-0.067,3.315],[0.0,3.364],[0.067,3.543],[0.133,4.222],[0.2,4.46],[0.267,2.425],[0.333,3.231],[0.4,3.401],[0.467,3.403],[0.533,3.409],[0.6,3.436],[0.7,3.452],[0.767,3.461],[0.833,3.541],[0.9,3.902],[0.967,4.171],[1.033,4.264],[1.1,4.389],[1.167,4.439],[1.233,4.534],[1.3,4.558],[1.367,4.553],[1.433,3.25],[1.5,3.227],[1.567,3.231],[1.667,3.223],[1.733,3.214],[1.8,3.215],[1.867,3.206],[1.933,3.204],[2.0,3.204],[2.067,3.195],[2.133,3.194],[2.2,3.198],[2.267,3.172],[2.333,3.171],[2.4,3.164],[2.467,3.166],[2.533,3.167],[2.6,3.154],[2.7,3.15],[2.767,3.138],[2.833,3.142],[2.9,3.126],[2.967,3.118],[3.033,3.116],[3.1,3.109],[3.167,3.109],[3.233,3.083],[3.3,3.075],[3.367,3.07],[3.433,3.056],[3.5,3.047],[3.567,3.042],[3.633,3.033],[3.733,3.029],[3.8,0.238],[3.867,3.021],[3.933,3.018],[4.0,3.013],[4.067,2.989],[4.133,2.982],[4.2,2.975],[4.267,2.973],[4.333,2.978],[4.4,2.968],[4.467,2.972],[4.533,2.953],[4.6,2.942],[4.7,2.93],[4.767,2.93],[4.833,2.933],[4.9,2.916],[4.967,2.89],[5.033,2.883],[5.1,2.876],[5.167,2.867],[5.233,2.859],[5.3,2.852],[5.367,2.847],[5.433,2.841],[5.5,2.835],[5.567,2.836],[5.667,2.819],[5.733,2.813],[5.8,2.81],[5.867,2.803],[5.933,2.796],[6.0,2.778],[6.067,2.77],[6.133,2.755],[6.2,2.75],[6.267,2.743],[6.333,2.74],[6.4,2.731],[6.467,2.734],[6.533,2.713],[6.6,2.703],[6.7,2.691],[6.767,2.682],[6.833,2.677],[6.9,2.664],[6.967,2.66],[7.033,2.652],[7.1,2.641],[7.167,2.632],[7.233,2.625],[7.3,2.618],[7.367,2.612],[7.433,2.604],[7.5,2.596],[7.567,2.586],[7.633,2.586],[7.733,2.566],[7.8,2.567],[7.867,2.548],[7.933,2.538],[8.0,2.529],[8.067,2.52],[8.133,2.512],[8.2,2.506],[8.267,2.495],[8.333,2.489],[8.4,2.48],[8.467,2.472],[8.533,2.463],[8.6,2.455],[8.7,2.443],[8.767,2.431],[8.833,2.424],[8.9,2.413],[8.967,2.405],[9.033,2.395],[9.1,2.385],[9.167,2.379],[9.233,2.368],[9.3,2.361],[9.367,2.352],[9.433,2.341],[9.5,2.333],[9.567,2.323],[9.667,2.309],[9.733,2.298],[9.8,2.289],[9.867,2.279],[9.933,2.269],[10.0,2.259],[10.067,2.25],[10.133,2.244],[10.2,2.233],[10.267,2.223],[10.333,2.212],[10.4,2.202],[10.467,2.193],[10.533,2.184],[10.6,2.175],[10.7,2.17],[10.767,2.156],[10.833,2.143],[10.9,2.13],[10.967,2.12],[11.033,2.115],[11.1,2.106],[11.167,2.105],[11.233,2.089],[11.3,2.08],[11.367,2.071],[11.433,2.057],[11.5,2.052],[11.567,2.029],[11.633,2.037],[11.733,2.006],[11.8,1.995],[11.867,1.982],[11.933,1.972],[12.0,1.968],[12.067,1.949],[12.133,1.937],[12.2,1.924],[12.267,1.915],[12.333,1.904],[12.4,1.892],[12.467,1.88],[12.533,1.868],[12.6,1.859],[12.7,1.838],[12.767,1.834],[12.833,1.819],[12.9,1.808],[12.967,1.794],[13.033,1.785],[13.1,1.774]],"uv":[[-0.633,14.701,4.159],[-0.533,14.136,3.578],[-0.433,15.493,3.876],[-0.3,15.606,4.047],[-0.2,16.171,4.177],[-0.1,16.511,4.275],[0.0,16.737,4.19],[0.1,17.868,3.986],[0.2,18.094,3.486],[0.3,18.207,5.424],[0.4,18.659,4.68],[0.5,18.772,4.76],[0.633,18.998,4.968],[0.733,19.451,5.154],[0.833,19.338,5.053],[0.933,19.903,4.596],[1.033,20.129,4.235],[1.133,20.921,4.23],[1.233,20.695,4.31],[1.333,20.355,4.069],[1.433,20.469,5.923],[1.533,20.582,5.931],[1.667,21.034,5.88],[1.767,21.26,5.992],[1.867,21.147,6.154],[1.967,21.034,6.293],[2.067,21.147,6.25],[2.167,20.921,6.181],[2.267,21.26,6.42],[2.367,21.26,6.539],[2.467,21.826,6.582],[2.567,21.826,6.592],[2.7,21.826,6.757],[2.8,21.712,6.742],[2.9,21.826,6.977],[3.0,22.165,6.826],[3.1,21.599,7.001],[3.2,22.278,7.096],[3.3,22.278,7.106],[3.4,22.391,7.167],[3.5,21.826,7.087],[3.633,22.843,7.368],[3.733,22.504,7.375],[3.833,22.278,7.368],[3.933,22.165,7.381],[4.033,22.617,7.466],[4.133,22.617,7.539],[4.233,22.617,7.565],[4.333,22.504,7.624],[4.433,23.07,7.682],[4.533,22.843,7.733],[4.667,23.635,7.843],[4.767,22.617,7.787],[4.867,23.07,7.87],[4.967,23.748,8.061],[5.067,23.409,8.121],[5.167,23.296,8.128],[5.267,23.183,8.114],[5.367,23.409,8.218],[5.467,23.409,8.258],[5.567,23.183,8.326],[5.7,23.748,8.41],[5.8,23.635,8.333],[5.9,23.635,8.357],[6.0,23.861,8.515],[6.1,23.409,8.507],[6.2,23.409,8.549],[6.3,23.748,8.557],[6.4,23.635,8.511],[6.5,23.409,8.492],[6.633,23.409,8.642],[6.733,23.296,8.581],[6.833,23.974,8.35],[6.933,23.07,8.421],[7.033,23.296,8.355],[7.133,23.522,8.645],[7.233,23.296,8.519],[7.333,23.07,8.035],[7.433,23.635,8.37],[7.533,22.956,8.591],[7.667,23.07,8.107],[7.767,22.73,8.606],[7.867,22.617,8.656],[7.967,22.504,8.382],[8.067,23.07,8.213],[8.167,22.843,8.401],[8.267,22.617,8.095],[8.367,22.617,8.26],[8.467,23.07,8.504],[8.567,22.73,8.932],[8.7,22.504,8.423],[8.8,21.939,8.494],[8.9,22.73,8.003],[9.0,22.391,8.329],[9.1,22.165,8.294],[9.2,22.165,8.986],[9.3,21.826,8.655],[9.4,21.939,8.292],[9.5,22.278,8.649],[9.633,21.939,8.231],[9.733,21.26,8.353],[9.833,22.052,8.781],[9.933,22.278,9.43],[10.033,21.712,8.639],[10.133,21.147,8.866],[10.233,21.712,9.006],[10.333,21.486,8.804],[10.433,21.826,9.177],[10.533,21.373,8.347],[10.667,20.921,8.399],[10.767,20.808,8.767],[10.867,21.034,8.852],[10.967,20.808,8.447],[11.067,20.921,8.844],[11.167,20.808,8.896],[11.267,20.808,9.018],[11.367,20.469,8.436],[11.467,20.695,8.619],[11.567,20.582,8.33],[11.7,20.242,8.56],[11.8,19.677,8.198],[11.9,19.79,8.434],[12.0,19.338,7.962],[12.1,19.677,8.446],[12.2,19.451,8.333],[12.3,19.564,8.198],[12.4,19.451,8.922],[12.5,19.451,8.367],[12.633,19.451,8.5],[12.733,18.885,8.476],[12.833,18.433,8.366],[12.933,18.772,8.865],[13.033,18.998,8.905],[13.133,18.207,null],[13.233,18.433,null],[13.333,17.981,null],[13.433,18.433,null],[13.533,17.981,null],[13.667,17.754,null],[13.767,17.528,null],[13.867,17.415,null],[13.967,17.415,null],[14.067,17.076,null],[14.167,16.85,null],[14.267,17.302,null],[14.367,16.85,null],[14.467,17.302,null],[14.567,16.737,null],[14.7,16.171,null],[14.8,15.832,null],[14.9,16.058,null],[15.0,15.606,null],[15.1,16.058,null],[15.2,15.154,null],[15.3,14.701,null],[15.4,15.154,null],[15.5,14.588,null],[15.633,14.249,null],[15.733,14.588,null],[15.833,13.91,null],[15.933,14.023,null],[16.033,13.457,null],[16.133,13.231,null],[16.233,13.344,null],[16.333,13.005,null],[16.433,11.761,null],[16.533,8.708,null],[16.667,7.577,null],[16.767,7.69,null],[16.867,8.481,null],[16.967,8.368,null],[17.067,16.737,null],[17.167,6.333,null],[17.267,4.976,null]]}},"all":[[1,"M",0.997,0.21,"N2","D","N",false,1.69,0.52],[2,"M",1.003,0.21,"N2","E","N",false,1.86,0.6],[3,"M",1.006,0.21,"N2","E","N",false,1.61,0.58],[4,"M",1.0,0.21,"N2","E","N",false,2.06,0.6],[5,"M",1.0,0.21,"N2","E","N",false,1.92,0.48],[6,"M",1.0,0.21,"N2","E","N",false,2.54,0.51],[7,"H",1.002,0.21,"N2","D","N",false,1.87,0.67],[8,"H",1.003,0.21,"N2","D","N",false,2.95,0.79],[9,"H",1.0,0.21,"N2","D","?",false,null,null],[10,"M",3.052,0.21,"CO2","E","N",false,3.86,0.37],[11,"M",3.051,0.21,"CO2","E","N",false,3.03,0.4],[12,"H",3.053,0.21,"CO2","D","?",false,2.74,null],[13,"M",2.729,0.21,"CO2","E","N",false,2.59,0.49],[14,"M",2.705,0.21,"CO2","E","N",false,3.7,null],[15,"M",2.719,0.21,"CO2","E","N",false,4.42,null],[16,"M",2.726,0.21,"CO2","E","N",false,1.66,0.53],[17,"M",2.034,0.21,"CO2","D","N",false,2.67,null],[18,"H",2.044,0.21,"CO2","E","N",true,2.74,0.61],[19,"H",0.709,0.34,"N2","D","N",false,3.39,0.9],[20,"M",0.71,0.34,"N2","C","N",false,3.4,0.53],[21,"M",0.711,0.34,"N2","D","N",false,3.49,0.66],[22,"M",0.711,0.34,"N2","D","N",false,3.5,0.65],[23,"H",0.713,0.34,"N2","D","N",false,3.01,0.73],[24,"H",0.714,0.34,"N2","D","N",false,null,null],[25,"M",0.707,0.3,"N2","C","N",false,2.6,0.65],[26,"M",0.708,0.3,"N2","D","N",false,3.63,0.62],[27,"H",0.711,0.3,"N2","D","N",false,3.87,0.64],[28,"H",0.71,0.3,"N2","D","N",false,3.36,0.64],[29,"M",1.009,0.3,"N2","C","N",false,2.57,0.74],[30,"M",1.012,0.3,"N2","E","N",false,3.26,0.59],[31,"H",1.014,0.3,"N2","D","N",false,3.39,0.85],[32,"H",1.014,0.3,"N2","C","N",false,3.07,0.68],[33,"M",1.006,0.21,"N2","E","N",false,2.62,0.48],[34,"M",1.01,0.21,"N2","E","N",false,3.89,0.44],[35,"H",1.011,0.21,"N2","E","N",true,3.85,0.43],[36,"M",0.709,0.2,"N2","E","N",false,2.4,0.45],[37,"M",0.703,0.34,"N2","D","Y",false,3.31,0.72],[38,"M",0.703,0.34,"N2","D","Y",false,3.59,0.71],[39,"H",0.704,0.34,"N2","D","Y",false,2.91,0.8],[40,"M",0.704,0.3,"N2","D","N",false,3.77,0.62],[41,"M",0.703,0.3,"N2","D","N",false,3.35,0.65],[42,"H",0.704,0.3,"N2","D","Y",false,2.92,0.58],[43,"H",0.704,0.3,"N2","D","N",false,2.97,0.78],[44,"M",1.009,0.3,"N2","D","Y",false,3.49,0.63],[45,"M",1.011,0.3,"N2","E","Y",false,2.42,0.73],[46,"M",1.012,0.21,"N2","D","N",false,2.78,0.54],[47,"H",1.013,0.21,"N2","C","N",false,3.36,0.5],[48,"M",1.011,0.21,"N2","D","Y",false,3.66,0.27],[49,"H",1.006,0.21,"N2","E","Y",true,3.46,0.59],[50,"H",1.013,0.21,"N2","E","Y",true,3.57,0.52],[51,"H",1.015,0.21,"N2","C","Y",false,2.41,0.65],[52,"H",1.015,0.3,"N2","D","Y",false,3.53,0.7],[53,"H",1.013,0.21,"N2","D","N",false,null,null],[54,"M",0.712,0.2,"N2","E","N",false,3.56,0.41],[55,"M",0.714,0.2,"N2","D","Y",false,3.37,0.46],[56,"H",0.716,0.2,"N2","C","N",true,3.56,0.44],[57,"H",0.716,0.2,"N2","E","Y",true,3.1,0.54],[58,"M",1.017,0.18,"N2","E","N",false,3.69,0.42],[59,"M",1.012,0.18,"N2","E","N",false,2.93,0.43],[60,"M",1.018,0.18,"N2","E","Y",false,3.43,0.45],[61,"M",1.019,0.18,"N2","E","Y",false,3.68,0.41],[62,"H",1.002,0.18,"N2","E","N",true,3.43,0.39],[63,"H",1.01,0.18,"N2","C","N",false,2.15,0.51],[64,"H",1.006,0.18,"N2","E","Y",true,2.69,0.6],[65,"M",1.008,0.15,"N2","E","N",false,3.37,0.4],[66,"M",1.009,0.15,"N2","E","N",false,2.52,0.38],[67,"M",1.01,0.15,"N2","E","N",false,3.97,0.36],[68,"M",1.012,0.15,"N2","E","N",false,2.38,0.39],[69,"H",1.009,0.14,"N2","C","Y",false,1.1,0.94],[70,"H",1.001,0.15,"N2","E","N",true,4.67,0.41],[71,"M",1.011,0.15,"N2","E","N",false,2.25,0.4],[72,"H",1.007,0.15,"N2","C","N",false,1.13,0.52],[73,"H",1.001,0.15,"N2","E","N",true,4.64,0.56],[74,"H",1.008,0.15,"N2","C","Y",false,1.33,0.77],[75,"M",1.014,0.13,"N2","E","Y",false,2.54,0.37],[76,"M",1.012,0.13,"N2","E","Y",false,3.21,0.37],[77,"M",1.011,0.14,"N2","E","N",false,3.33,0.34],[78,"M",1.008,0.14,"N2","E","N",false,2.66,0.35],[79,"H",1.011,0.13,"N2","E","N",true,2.92,0.25],[80,"H",1.013,0.13,"N2","E","N",true,null,null],[81,"H",1.013,0.13,"N2","E","N",false,null,null],[82,"M",1.006,0.13,"N2","E","N",false,2.84,0.35],[83,"M",1.016,0.12,"N2","E","N",false,null,null],[84,"M",1.009,0.12,"N2","E","N",false,2.35,0.35],[85,"M",1.015,0.12,"N2","E","N",false,2.4,0.35],[86,"M",1.013,0.12,"N2","E","Y",false,3.07,0.35],[87,"M",1.015,0.12,"N2","E","Y",false,2.64,0.38],[88,"M",0.707,0.25,"CO2","D","N",false,3.01,0.53],[89,"M",0.707,0.25,"CO2","D","N",false,3.7,0.51],[90,"M",0.709,0.25,"CO2","D","Y",false,3.62,0.53],[91,"M",0.708,0.25,"CO2","D","Y",false,3.51,0.51],[92,"H",0.706,0.25,"CO2","D","N",false,3.41,0.55],[93,"H",0.707,0.25,"CO2","D","Y",false,2.48,0.71],[94,"H",0.702,0.24,"CO2","E","N",true,3.53,0.51],[95,"H",0.703,0.24,"CO2","E","Y",true,3.6,0.58],[96,"H",0.703,0.24,"CO2","D","N",false,null,null],[97,"M",0.703,0.23,"CO2","C","N",false,4.25,0.45],[98,"M",0.707,0.23,"CO2","E","N",false,3.64,0.47],[99,"M",0.704,0.23,"CO2","E","N",false,4.28,0.42],[100,"H",0.706,0.23,"CO2","E","N",true,4.14,0.34],[101,"H",0.709,0.23,"CO2","E","Y",true,3.88,0.5],[102,"H",0.703,0.21,"CO2","E","N",true,3.57,0.33],[103,"H",0.703,0.21,"CO2","E","Y",true,4.0,0.35],[104,"M",0.703,0.23,"CO2","E","N",false,3.6,0.49],[105,"M",0.703,0.23,"CO2","D","Y",false,4.17,0.47],[106,"M",0.708,0.23,"CO2","D","Y",false,3.08,0.51],[107,"M",0.704,0.23,"CO2","D","Y",false,3.18,0.52],[108,"M",0.708,0.23,"CO2","C","Y",false,3.75,0.47],[109,"M",0.706,0.21,"CO2","E","N",false,3.56,0.42],[110,"M",0.707,0.21,"CO2","E","N",false,2.83,0.45],[111,"M",0.706,0.21,"CO2","C","Y",false,3.37,0.45],[112,"M",0.698,0.21,"CO2","C","Y",false,3.99,0.43],[113,"M",0.703,0.2,"CO2","E","N",false,4.2,0.49],[114,"M",null,0.2,"CO2","E","N",false,3.23,0.42],[115,"M",0.705,0.2,"CO2","E","Y",false,3.97,0.41],[116,"M",0.706,0.2,"CO2","E","Y",false,3.16,0.46],[117,"H",0.699,0.2,"CO2","E","N",true,3.84,0.25],[118,"H",0.701,0.2,"CO2","E","Y",true,3.03,0.38],[119,"H",0.701,0.18,"CO2","E","Y",true,2.6,0.37],[120,"H",0.701,0.18,"CO2","E","Y",true,2.45,0.38],[121,"M",0.692,0.18,"CO2","E","N",false,4.25,0.34],[122,"M",0.699,0.18,"CO2","E","N",false,3.46,0.41],[123,"M",0.7,0.18,"CO2","E","Y",false,4.13,0.35],[124,"M",0.701,0.18,"CO2","E","N",false,2.87,0.3],[125,"M",0.707,0.17,"CO2","E","N",false,3.63,0.35],[126,"M",0.705,0.17,"CO2","E","N",false,2.8,0.4],[127,"M",0.706,0.17,"CO2","E","Y",false,3.22,0.38],[128,"M",0.707,0.17,"CO2","E","Y",false,2.91,0.39],[129,"H",0.706,0.17,"CO2","E","N",true,3.33,0.33],[130,"H",0.707,0.17,"CO2","E","Y",true,2.91,0.05],[131,"H",1.005,0.24,"CO2","D","N",false,1.72,0.61],[132,"H",1.007,0.24,"CO2","D","N",false,2.63,0.6],[133,"H",1.009,0.24,"CO2","D","N",false,3.25,0.56],[134,"H",1.009,0.24,"CO2","E","N",true,3.66,0.56],[135,"H",1.011,0.24,"CO2","C","Y",false,2.78,0.59],[136,"H",1.011,0.24,"CO2","C","N",false,3.08,0.51],[137,"H",1.011,0.24,"CO2","D","N",false,3.13,0.55],[138,"H",1.011,0.24,"CO2","D","N",false,null,null],[139,"H",1.011,0.24,"CO2","D","N",false,1.75,0.63],[140,"M",0.702,0.15,"CO2","E","N",false,3.98,0.2],[141,"M",0.703,0.15,"CO2","E","N",false,2.86,0.3],[142,"M",0.703,0.15,"CO2","E","N",false,1.86,0.39],[143,"M",0.704,0.15,"CO2","E","N",false,2.25,0.36],[144,"M",1.002,0.2,"CO2","E","N",false,3.53,0.45],[145,"M",1.005,0.2,"CO2","E","N",false,3.33,0.45],[146,"M",1.007,0.2,"CO2","E","N",false,4.35,0.41],[147,"M",0.705,0.17,"CO2","E","N",false,3.02,0.4],[148,"H",1.006,0.2,"CO2","D","N",false,2.58,0.54],[149,"H",1.008,0.2,"CO2","D","N",false,2.21,0.53],[150,"H",1.01,0.2,"CO2","E","N",true,3.18,0.46],[151,"M",1.003,0.18,"CO2","C","N",false,3.86,0.36],[152,"M",1.007,0.18,"CO2","E","N",false,3.33,0.43],[153,"M",1.007,0.18,"CO2","E","N",false,2.78,0.42],[154,"H",1.003,0.18,"CO2","E","N",true,3.7,0.34],[155,"H",1.006,0.18,"CO2","E","N",true,2.73,0.39],[156,"H",1.008,0.18,"CO2","C","?",false,1.34,0.48],[157,"M",1.003,0.16,"CO2","E","N",false,4.24,0.3],[158,"M",1.006,0.16,"CO2","E","N",false,3.7,0.37],[159,"M",1.007,0.16,"CO2","E","N",false,2.71,0.38],[160,"M",1.01,0.16,"CO2","E","N",false,2.77,0.38],[161,"M",1.004,0.15,"CO2","E","N",false,3.72,0.28],[162,"M",1.006,0.15,"CO2","E","N",false,3.05,0.37],[163,"M",1.008,0.15,"CO2","E","N",false,2.59,0.37],[164,"M",1.008,0.15,"CO2","E","N",false,2.59,0.42],[165,"H",1.007,0.18,"CO2","E","N",false,1.96,0.54],[166,"M",1.001,0.14,"CO2","E","N",false,3.22,0.28],[167,"M",1.002,0.14,"CO2","E","N",false,2.32,0.37],[168,"M",1.004,0.21,"CO2","D","N",false,3.03,0.48],[169,"M",1.008,0.21,"CO2","E","N",false,3.05,0.51],[170,"M",1.009,0.21,"CO2","E","N",false,3.53,0.46],[171,"H",1.0,0.18,"CO2","E","N",false,3.74,0.35],[172,"H",1.003,0.18,"CO2","E","N",true,2.4,0.46],[173,"H",1.003,0.18,"CO2","D","N",true,1.35,0.5],[174,"H",0.7,0.24,"CO2","D","N",false,2.5,0.56],[175,"H",0.7,0.24,"CO2","D","N",false,2.88,0.55],[176,"M",0.706,0.24,"CO2","E","N",false,4.53,0.46],[177,"M",0.707,0.24,"CO2","E","N",false,3.02,0.52],[178,"H",0.702,0.23,"CO2","E","N",false,3.32,0.5],[179,"H",0.703,0.23,"CO2","D","N",true,2.07,0.57],[180,"H",0.998,0.19,"CO2","E","N",false,3.4,0.41],[181,"H",0.999,0.19,"CO2","E","N",true,2.48,0.49],[182,"H",0.999,0.19,"CO2","D","N",true,1.64,0.54],[183,"M",0.703,0.23,"CO2","E","N",false,3.72,0.53],[184,"M",0.704,0.23,"CO2","E","N",false,3.42,0.51],[185,"M",0.704,0.23,"CO2","E","N",false,2.8,0.51],[186,"M",0.706,0.23,"CO2","E","N",false,2.47,0.52],[187,"M",0.997,0.19,"CO2","E","N",false,3.38,0.47],[188,"M",0.998,0.19,"CO2","E","N",false,2.47,0.46],[189,"M",1.002,0.18,"CO2","E","N",false,3.77,0.42],[190,"M",1.006,0.18,"CO2","E","N",false,2.74,0.5],[191,"M",1.007,0.18,"CO2","E","N",false,1.76,0.46],[192,"M",0.999,0.17,"CO2","E","N",false,3.46,0.39],[193,"M",0.999,0.17,"CO2","E","N",false,2.77,0.4],[194,"H",0.989,0.17,"CO2","E","N",false,3.76,0.29],[195,"H",0.99,0.17,"CO2","E","N",true,2.9,0.36],[196,"H",0.998,0.2,"CO2","E","N",true,3.06,0.52],[197,"H",1.0,0.2,"CO2","E","N",true,3.04,0.49],[198,"H",1.0,0.2,"CO2","D","N",true,2.12,0.53],[199,"M",0.992,0.2,"CO2","E","N",false,3.37,0.49],[200,"M",0.995,0.2,"CO2","E","N",false,2.57,0.47],[201,"M",0.996,0.2,"CO2","E","N",false,2.4,0.48],[202,"M",1.0,0.21,"N2","E","N",false,3.3,0.47],[203,"M",1.002,0.21,"N2","E","N",false,2.75,0.52],[204,"H",0.995,0.21,"N2","D","N",false,3.56,0.43],[205,"H",0.996,0.21,"N2","D","?",false,3.58,0.42],[206,"H",1.0,0.21,"N2","D","N",false,2.96,0.5],[207,"H",1.004,0.21,"N2","C","N",false,2.72,0.54],[208,"H",1.004,0.21,"N2","C","N",false,2.92,0.69],[209,"H",1.0,0.16,"N2","E","N",false,3.34,0.34],[210,"H",1.0,0.16,"N2","E","Y",false,null,null],[211,"H",1.0,0.16,"N2","E","N",true,2.52,0.42],[212,"H",1.005,0.15,"N2","E","N",true,2.55,0.37],[213,"H",1.0,0.14,"N2","E","?",false,4.16,0.24],[214,"H",1.0,0.14,"N2","E","N",true,1.83,0.39],[215,"M",0.997,0.14,"N2","E","N",true,3.5,0.3],[216,"M",0.998,0.14,"N2","E","?",false,2.67,0.38],[217,"M",0.999,0.13,"N2","E","N",true,3.46,0.36],[218,"M",1.001,0.13,"N2","E","N",false,2.75,0.35],[219,"M",1.002,0.12,"N2","E","N",false,2.6,0.36],[220,"M",1.002,0.12,"N2","E","N",false,1.94,0.35],[221,"M",1.005,0.12,"N2","E","N",false,1.84,0.38],[222,"M",0.999,0.2,"He","E","N",false,2.91,0.51],[223,"M",0.999,0.2,"He","E","N",false,null,null],[224,"H",0.994,0.2,"He","C","N",false,2.25,0.57],[225,"M",0.991,0.19,"He","E","N",false,2.78,0.57],[226,"M",0.999,0.18,"He","E","N",false,2.79,0.51],[227,"M",1.0,0.18,"He","E","N",false,2.95,0.53],[228,"H",1.01,0.21,"N2","E","?",false,3.32,0.52],[229,"H",1.011,0.21,"N2","D","N",false,2.39,0.57],[230,"H",1.012,0.21,"N2","E","?",false,3.65,0.57],[231,"H",0.998,0.19,"He","D","N",false,2.59,0.54],[232,"H",1.005,0.18,"He","E","N",false,3.52,0.41],[233,"H",1.008,0.18,"He","C","Y",false,2.3,0.49],[234,"H",1.009,0.18,"He","C","N",false,2.27,0.51],[235,"H",0.999,0.17,"He","E","N",false,2.85,0.46],[236,"H",0.999,0.17,"He","E","Y",true,2.12,0.59],[237,"H",0.999,0.17,"He","D","N",false,null,null],[238,"H",1.0,0.17,"He","C","N",true,1.61,0.91],[239,"M",0.992,0.17,"He","E","N",false,2.99,0.49],[240,"M",0.996,0.17,"He","E","N",false,2.9,0.51],[241,"M",1.0,0.16,"He","E","N",true,3.4,0.51],[242,"M",1.001,0.16,"He","E","N",true,null,null],[243,"H",0.997,0.16,"He","E","Y",false,1.49,0.6],[244,"M",0.994,0.15,"He","E","Y",false,3.67,0.43],[245,"M",0.996,0.15,"He","E","N",false,2.52,0.56],[246,"M",0.999,0.14,"He","E","N",false,2.44,0.56],[247,"M",1.0,0.14,"He","E","N",false,1.88,0.58],[248,"M",1.005,0.13,"He","E","N",false,3.56,0.51],[249,"H",0.703,0.24,"He","E","N",false,3.78,0.72],[250,"H",0.7,0.23,"He","C","Y",false,2.8,0.71],[251,"M",0.703,0.24,"He","E","N",false,2.82,0.62],[252,"M",0.703,0.24,"He","D","N",false,2.79,0.7],[253,"M",0.7,0.23,"He","E","N",false,2.45,0.6],[254,"M",0.7,0.23,"He","D","N",false,2.61,0.73],[255,"M",0.7,0.21,"He","E","N",true,3.22,0.56],[256,"M",0.699,0.21,"He","E","N",false,3.25,0.65],[257,"M",0.699,0.21,"He","E","N",false,2.67,0.7],[258,"H",0.697,0.21,"He","E","Y",false,3.23,0.67],[259,"H",0.696,0.21,"He","E","N",false,2.86,0.7],[260,"H",0.701,0.2,"He","E","Y",false,3.69,0.61],[261,"H",0.7,0.2,"He","E","N",false,3.08,0.67],[262,"M",0.694,0.2,"He","E","N",false,3.87,0.6],[263,"M",0.695,0.2,"He","E","Y",false,2.95,0.63],[264,"M",0.701,0.18,"He","E","N",true,3.5,0.59],[265,"M",0.701,0.18,"He","E","N",false,2.7,0.63],[266,"M",0.702,0.18,"He","E","N",true,1.84,0.62],[267,"H",0.695,0.18,"He","E","N",true,2.27,0.71],[268,"H",0.698,0.18,"He","E","N",false,1.86,0.77],[269,"H",0.7,0.17,"He","E","N",false,2.22,0.76],[270,"H",0.701,0.17,"He","C","N",false,1.61,1.06],[271,"M",0.698,0.17,"He","E","N",false,2.79,0.63],[272,"M",0.699,0.17,"He","E","Y",false,2.68,0.66],[273,"H",1.006,0.21,"He","E","N",true,3.54,0.55],[274,"H",1.008,0.21,"He","E","N",true,2.82,0.65]],"fitK35":0.412,"neighbors35":[[204,0.29,"Heptane",0.995,0.21,"N2",3.56,"Disruption"],[47,0.49,"Heptane",1.013,0.21,"N2",3.36,"Completion"],[62,0.73,"Heptane",1.002,0.18,"N2",3.43,"Extinction"],[150,0.86,"Heptane",1.01,0.2,"CO2",3.18,"Extinction"],[206,0.89,"Heptane",1.0,0.21,"N2",2.96,"Disruption"]],"altFuel35":34,"pubs":[["Methanol Droplet Combustion in Oxygen-Inert Environments in Microgravity","V Nayagam, DL Dietrich, MC Hicks, FA Williams",""],["Methanol Droplet Extinction in Oxygen/Carbon-dioxide/Nitrogen Mixtures in Microgravity: Results from the International Space Station Experiments","V. Nayagam",""],["A Numerical Study On The Extinction Characteristics Of Droplet Combustion Under Microgravity Conditions","Farouk Tanvir, Dryer Frederick","10.2514/6.2012-1252"],["Tethered methanol droplet combustion in carbon-dioxide enriched environment under microgravity conditions","Farouk Tanvir, Dryer Frederick L.","10.1016/j.combustflame.2011.06.014"],["FLEX: A Decisive Step Forward in NASA's Combustion Research Program","JM Hickman, DL Dietrich, MC Hicks, V Nayagam, D Stocker",""],["Dynamics of Water Absorption and Evaporation During Methanol Droplet Combustion in Microgravity","MC Hicks, DL Dietrich, V Nayagam, FA Williams",""],["Activation energy asymptotics for methanol droplet extinction in microgravity","Nayagam Vedha","10.1016/j.combustflame.2013.05.011"],["Experimental Study of Initial Diameter Effects on Convection-free Droplet Combustion in the Standard Atmosphere for n-Heptane, n-Octane, and n-Decane: International Space Station and Ground-based Experiments","Liu Yu Cheng, Rah Jeff K., Trenou Koffi N., Hicks Michael C., Avedisian C Thomas","10.2514/6.2014-1019"],["Isolated n-heptane droplet combustion in microgravity: \u201cCool Flames\u201d \u2013 Two-stage combustion","Farouk Tanvir I., Dryer Frederick L.","10.1016/j.combustflame.2013.09.011"],["Theory of the propagation dynamics of spiral edges of diffusion flames in von K\u00e1rm\u00e1n swirling flows","Urzay Javier, Nayagam Vedha, Williams Forman A.","10.1016/j.combustflame.2010.08.015"],["Analysis of the melt phase of a rotating polymer disc supporting a diffusion flame","Nayagam Vedha, Williams F. A.","10.1017/jfm.2011.349"],["Partial-Burning Regime for Quasi-Steady Droplet Combustion Supported by Cool Flames","Nayagam Vedha, Dietrich Daniel L., Williams Forman A.","10.2514/1.J054437"],["Asymptotic analysis of quasi-steady n-heptane droplet combustion supported by cool-flame chemistry","Seshadri Kalyanasundaram, Peters Norbert, Williams Forman A., Nayagam Vedha, Paczko Guenter","10.1080/13647830.2016.1248494"],["n-Butanol droplet combustion: Numerical modeling and reduced gravity experiments","Alam Fahd E., Liu Y.C., Avedisian C.T., Dryer F.L., Farouk T.I.","10.1016/j.proci.2014.06.043"],["Droplet Combustion Experiments Aboard the International Space Station","Dietrich Daniel L., Nayagam Vedha, Hicks Michael C., Ferkul Paul V., Dryer Frederick L., Farouk Tanvir, Shaw Benjamin D., Suh Hyun Kyu, Choi Mun Y., Liu Yu Cheng, Avedisian C. Thomas, Williams Forman A.","10.1007/s12217-014-9372-2"],["Computational modeling of the effects of support fibers on evaporation of fiber-supported droplets in reduced gravity","N Ghata, BD Shaw",""],["Oxygen Lewis Number Effects on Reduced Gravity Combustion of Methanol and n-Heptane Droplets","Shaw Benjamin D., Vang Chang L.","10.1080/00102202.2015.1072176"],["ISS Droplet Combustion Experiments - Uncertainties in Droplet Sizes and Burning Rates","Shaw Benjamin D.","10.1007/s12217-014-9377-x"],["Combustion of n-Butanol, Gasoline, and n-Butanol/Gasoline Mixture Droplets","Xu Yuhao, Avedisian C. Thomas","10.1021/acs.energyfuels.5b00158"],["Computational Modeling of Unsupported and Fiber-Supported n-Heptane Droplet Combustion in Reduced Gravity: A Study of Fiber Effects","Ghata Narugopal, Shaw Benjamin D.","10.1080/00102202.2014.971950"],["The effect of support fibers on micro-convection in droplet combustion experiments","Liu Y.C., Xu Y., Avedisian C.T., Hicks M.C.","10.1016/j.proci.2014.07.022"],["Cool-flame extinction during n-alkane droplet combustion in microgravity","Nayagam Vedha, Dietrich Daniel L., Hicks Michael C., Williams Forman A.","10.1016/j.combustflame.2015.01.012"],["A short mechanism for the low-temperature ignition of n-heptane at high pressures","Prince Juan C., Williams Forman A., Ovando Guillermo E.","10.1016/j.fuel.2014.08.063"],["The role of cool-flame chemistry in quasi-steady combustion and extinction of n-heptane droplets","Paczko Guenter, Peters Norbert, Seshadri Kalyanasundaram, Williams Forman Arthur","10.1080/13647830.2014.934296"],["Combustion of Submillimeter Heptane/Methanol and Heptane/Ethanol Droplets in Reduced Gravity","Aharon I., Tam V. K., Shaw B. D.","10.1155/2013/154202"],["Sub-millimeter sized methyl butanoate droplet combustion: Microgravity experiments and detailed numerical modeling","Farouk T.I., Liu Y.C., Savas A.J., Avedisian C.T., Dryer F.L.","10.1016/j.proci.2012.07.074"],["On the spherically symmetrical combustion of methyl decanoate droplets and comparisons with detailed numerical modeling","Liu Yu Cheng, Farouk Tanvir, Savas Anthony J., Dryer Frederick L., Thomas Avedisian C.","10.1016/j.combustflame.2012.11.006"],["The spherically symmetric droplet burning characteristics of Jet-A and biofuels derived from camelina and tallow","Liu Yu Cheng, Savas Anthony J., Avedisian C. Thomas","10.1016/j.fuel.2013.02.025"],["Spherically symmetric droplet combustion of three and four component miscible mixtures as surrogates for Jet-A","Liu Yu Cheng, Savas Anthony J., Thomas Avedisian C.","10.1016/j.proci.2012.05.065"],["AUTOMATED DATA ANALYSIS FOR CONSECUTIVE IMAGES FROM DROPLET COMBUSTION EXPERIMENTS","Dembia Christopher Lee, Liu Yu Cheng, Avedisian C. Thomas","10.5566/ias.v31.p137-148"],["On the extinction characteristics of alcohol droplet combustion under microgravity conditions \u2013 A numerical study","Farouk Tanvir I., Dryer Frederick L.","10.1016/j.combustflame.2012.04.005"],["A comparison of the spherical flame characteristics of sub-millimeter droplets of binary mixtures of n-heptane/iso-octane and n-heptane/toluene with a commercial unleaded gasoline","Liu Yu Cheng, Avedisian C. Thomas","10.1016/j.combustflame.2011.08.015"],["Comparison of the Burning Characteristics of Indolene and Commercial Grade Gasoline Droplets without Convection","Liu Yu Cheng, Savas Anthony J., Avedisian C. Thomas","10.1021/ef3007849"],["Can cool flames support quasi-steady alkane droplet burning?","Nayagam Vedha, Dietrich Daniel L., Ferkul Paul V., Hicks Michael C., Williams Forman A.","10.1016/j.combustflame.2012.07.012"],["Experiments on Submillimeter Free Droplet Flame Extinction","Shaw B. D., Wang D. F.","10.1080/00102202.2012.759946"],["Influences of support fibers on vaporizing fuel droplets","Shringi D., Dwyer H.A., Shaw B.D.","10.1016/j.compfluid.2013.02.005"],["Numerical studies of flows over liquid droplets on cylindrical fibers","Shringi D., Dwyer H.A., Shaw B.D.","10.1016/j.compfluid.2013.02.011"],["Interpretation of Backlit Droplet Images from ISS Droplet Combustion Experiments","Yu Fei, Shaw Benjamin D.","10.2478/gsr-2014-0007"],["Combustion of Methanol Droplets in Air-Diluent Environments with Reduced and Normal Gravity","BD Shaw, J Wei","10.1155/2012/587987"],["Microgravity droplet combustion: effect of tethering fiber on burning rate and flame structure","Farouk T., Dryer F. L.","10.1080/13647830.2010.547601"],["Influence of Gravity and Ambient Pressure on Combustion and Flammability of n-Heptane and 1-Propanol Droplets in Air-Diluent Environments","Shaw B. D., Wei J. B.","10.1080/00102202.2010.498798"],["Ignition and combustion of n-heptane droplets in carbon dioxide enriched environments","Dzik Justin, Nayagam Vedha, Williams Forman A.","10.1016/j.icheatmasstransfer.2009.10.006"],["Computational modeling of n-heptane droplet combustion in air\u2013diluent environments under reduced-gravity","Jin Y., Shaw B.D.","10.1016/j.ijheatmasstransfer.2010.08.005"],["Numerical Simulation of Unsteady Flows and Shape Oscillations in Liquid Droplets Induced by Deployment Needle Retraction","Yan Jin, Shaw Benjamin D.","10.1007/s12217-008-9096-2"],["Nonane droplet combustion with and without buoyant convection: Flame structure, burning rate and extinction in air and helium","Bae J.H., Avedisian C.T.","10.1016/j.proci.2008.06.221"],["Temperature and fiber optic spectroscopy composition measurements of heated propanol\u2013acetone droplets","Xiao J.S., Wei J.B., Shaw B.D., Peng Z.","10.1016/j.optlaseng.2009.05.004"],["Laser-induced fluorescence imaging of acetone inside evaporating and burning fuel droplets","Shringi D.S., Shaw B.D., Dwyer H.A.","10.1016/j.optlaseng.2008.08.002"],["Reduced Gravity Combustion of Propanol Droplets in Oxygen-Inert Environments","Wei J. B., Shaw B. D.","10.1080/00102200903190851"],["PROPANOL DROPLET FLAMMABILITY AND COMBUSTION IN AIR-DILUENT ENVIRONMENTS UNDER NORMAL AND REDUCED GRAVITY","SHAW B. D., WEI J. B.","10.1080/00102200601057394"],["Developing Surrogates for Liquid Transportation Fuels: The Role of Spherically Symmetric Droplet Combustion","Avedisian C. Thomas","10.1007/978-81-322-2211-8_16"],["Detailed results from the flame extinugishment experiment (FLEX) - March 2009 to December 2011","DL Dietrich, VM Bryg, PV Ferkul, FA Williams, FL Dryer, BD Shaw, MY Choi, MV Nayagam, MC Hicks, CT Avedisian",""]]};
+const T = DATA.tests, TS = DATA.ts, ALL = DATA.all;
+const COL = ['s0','s1','s2'];
+const IDS3 = ['35','207','28'];
+const fmt=(v,d=2,u='')=>v==null?'—':(+v).toFixed(d)+(u?' '+u:'');
+const pct=v=>v==null?'—':Math.round(v*100)+'%';
+const endCls=e=>'end-'+e[0];
+const NS='http://www.w3.org/2000/svg';
+function svg(w,h){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`0 0 ${w} ${h}`);return s}
+function el(p,tag,attrs,txt){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e}
+const syncers={};
+function reg(group,fn){if(!group)return;(syncers[group]=syncers[group]||[]).push(fn)}
+function emit(group,t){(syncers[group]||[]).forEach(f=>f(t))}
+
+/* ---------- line charts ---------- */
+function lineChart(host){
+  const ids=host.dataset.tests.split(','), kind=host.dataset.chart, H=+host.dataset.h||140, W=420;
+  const m={l:34,r:8,t:8,b:22};
+  const series=ids.map((id,i)=>{
+    let pts;
+    if(kind==='d2') pts=TS[id].drop.map(p=>[p[0],p[1]*p[1]]);
+    else pts=TS[id].uv.map(p=>[p[0],p[1]]);
+    pts=pts.filter(p=>p[0]>=0&&p[1]!=null&&p[1]>0);
+    return {id,pts,cls:COL[i]};
+  });
+  let xs=series.flatMap(s=>s.pts.map(p=>p[0])), ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+  let x1=Math.max(...xs); if(kind==='d2'&&ids.length===1) x1=Math.min(x1,30);
+  const y1=Math.max(...ys)*1.05, x0=0, y0=0;
+  const X=v=>m.l+(v-x0)/(x1-x0)*(W-m.l-m.r), Y=v=>H-m.b-(v-y0)/(y1-y0)*(H-m.t-m.b);
+  const s=svg(W,H);
+  el(s,'path',{class:'ax',d:`M${m.l},${m.t}V${H-m.b}H${W-m.r}`});
+  const step=x1>20?10:x1>8?2:1;
+  for(let v=0;v<=x1;v+=step){el(s,'text',{x:X(v),y:H-8,'text-anchor':'middle'},v)}
+  el(s,'text',{x:W-m.r,y:H-8+0,'text-anchor':'end'},'t, с');
+  el(s,'text',{x:2,y:m.t+8},kind==='d2'?'d², мм²':'d полум\'я, мм');
+  el(s,'text',{x:m.l-3,y:Y(y1/1.05)+3,'text-anchor':'end'},(y1/1.05).toFixed(0));
+  series.forEach(se=>{
+    if(kind==='d2'&&ids.length===1){se.pts=se.pts.filter(p=>p[0]<=x1)}
+    el(s,'path',{class:se.cls,d:'M'+se.pts.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join('L')});
+  });
+  if(ids.length>1){ids.forEach((id,i)=>el(s,'text',{x:W-m.r-4,y:m.t+10+i*12,'text-anchor':'end',class:''},`— №${id}`).setAttribute('style',`fill:var(--${['hl','dis','com'][i]})`))}
+  if(kind==='d2'&&host.dataset.fit){
+    const t=T['35'], d0=t.d0, k=DATA.fitK35;
+    el(s,'path',{class:'fit',d:`M${X(0)},${Y(d0*d0)}L${X(t.bt)},${Y(d0*d0-k*t.bt)}`});
+    el(s,'line',{class:'vl',x1:X(t.bt),x2:X(t.bt),y1:m.t,y2:H-m.b});
+    el(s,'text',{x:X(t.bt)+3,y:m.t+10},'видиме полум\'я згасло, 8.9 с');
+    el(s,'text',{x:X(t.bt)+3,y:m.t+22},'далі: випаровування / cool flame');
+    el(s,'text',{x:m.l+4,y:H-m.b-6},`фіт K = ${k.toFixed(2)} мм²/с (наш) · ${t.k} (NASA)`);
+  }
+  if(kind==='flame'&&ids.length===1){
+    const t=T[ids[0]]; el(s,'line',{class:'vl',x1:X(t.bt),x2:X(t.bt),y1:m.t,y2:H-m.b});
+  }
+  const cur=el(s,'line',{class:'vl',x1:-10,x2:-10,y1:m.t,y2:H-m.b,style:'stroke:var(--hl);stroke-dasharray:none'});
+  reg(host.dataset.sync,tt=>{const x=X(Math.min(tt,x1));cur.setAttribute('x1',x);cur.setAttribute('x2',x)});
+  host.appendChild(s);
+}
+
+/* ---------- chamber ---------- */
+function chamberChart(host){
+  const H=+host.dataset.h||120,W=420,m={l:34,r:30,t:8,b:22};
+  const c=TS['35'].chamber; const x0=c[0][0],x1=c[c.length-1][0];
+  const X=v=>m.l+(v-x0)/(x1-x0)*(W-m.l-m.r);
+  const s=svg(W,H); el(s,'path',{class:'ax',d:`M${m.l},${m.t}V${H-m.b}H${W-m.r}`});
+  const ps=c.map(r=>r[1]),ts=c.map(r=>r[3]).filter(v=>v!=null);
+  const pmin=Math.min(...ps)-0.05,pmax=Math.max(...ps)+0.05,tmin=Math.min(...ts)-0.2,tmax=Math.max(...ts)+0.2;
+  const Yp=v=>H-m.b-(v-pmin)/(pmax-pmin)*(H-m.t-m.b),Yt=v=>H-m.b-(v-tmin)/(tmax-tmin)*(H-m.t-m.b);
+  el(s,'path',{class:'s0',d:'M'+c.map(r=>X(r[0])+','+Yp(r[1])).join('L')});
+  el(s,'path',{class:'s1',d:'M'+c.filter(r=>r[3]!=null).map(r=>X(r[0])+','+Yt(r[3])).join('L')});
+  el(s,'line',{class:'vl',x1:X(0),x2:X(0),y1:m.t,y2:H-m.b});
+  el(s,'text',{x:X(0)+3,y:m.t+10},'запалювання');
+  el(s,'text',{x:2,y:m.t+8,style:'fill:var(--hl)'},`p ${pmin.toFixed(1)}–${pmax.toFixed(1)} psia`);
+  el(s,'text',{x:W-2,y:m.t+8,'text-anchor':'end',style:'fill:var(--dis)'},`T3 ${tmin.toFixed(1)}–${tmax.toFixed(1)} °C`);
+  el(s,'text',{x:m.l,y:H-8},`${x0.toFixed(0)} с`);el(s,'text',{x:W-m.r,y:H-8,'text-anchor':'end'},`+${x1.toFixed(0)} с`);
+  host.appendChild(s);
+}
+
+/* ---------- map of all tests ---------- */
+const QF = r=>r[1]==='H'&&r[4]==='N2'&&Math.abs(r[3]-0.21)<0.006&&r[2]>0.9&&r[2]<1.1;
+function mapChart(host){
+  const H=+host.dataset.h||180,W=520,m={l:44,r:8,t:8,b:22};
+  const bands=['N2','CO2','He'];const bh=(H-m.t-m.b)/3;
+  const X=v=>m.l+(v-0.11)/(0.35-0.11)*(W-m.l-m.r);
+  const s=svg(W,H);
+  bands.forEach((b,i)=>{el(s,'text',{x:4,y:m.t+bh*i+bh/2+3},b);el(s,'line',{class:'ax',x1:m.l,x2:W-m.r,y1:m.t+bh*(i+1),y2:m.t+bh*(i+1)})});
+  [0.12,0.15,0.18,0.21,0.24,0.27,0.30,0.34].forEach(v=>el(s,'text',{x:X(v),y:H-8,'text-anchor':'middle'},Math.round(v*100)+'%'));
+  el(s,'text',{x:W-m.r,y:H-8+0,'text-anchor':'end'},'');
+  const sel=host.dataset.map==='cmp'?(r=>IDS3.includes(String(r[0]))):QF;
+  const hash=n=>((n*2654435761)%1000)/1000;
+  const pts=ALL.map(r=>{const i=bands.indexOf(r[4]);const pOff=r[2]<0.85?0.25:(r[2]<1.2?0.6:0.85);
+    const y=m.t+bh*i+bh*pOff+(hash(r[0])-0.5)*bh*0.22;const x=X(r[3])+(hash(r[0]*7)-0.5)*10;return {r,x,y,on:sel(r)}});
+  pts.filter(p=>!p.on).forEach(p=>el(s,'circle',{cx:p.x,cy:p.y,r:2.6,class:'p'+p.r[5]+' faint'}));
+  pts.filter(p=>p.on).forEach(p=>{el(s,'circle',{cx:p.x,cy:p.y,r:3.4,class:'p'+p.r[5]});if(host.dataset.map==='cmp'||p.r[0]===35){el(s,'circle',{cx:p.x,cy:p.y,r:6,class:'ring'});el(s,'text',{x:p.x+7,y:p.y+3,style:'fill:var(--fg)'},'№'+p.r[0])}});
+  host.appendChild(s);
+  const lg=document.createElement('div');lg.className='note';lg.innerHTML='X — O₂; рядки — розбавник, у кожному: верх ≈0.7 атм, низ ≈1 атм. Колір — фінал: <span class="end-E">Extinction</span> · <span class="end-D">Disruption</span> · <span class="end-C">Completion</span>.';host.appendChild(lg);
+}
+
+/* ---------- replay ---------- */
+function interp(arr,t){if(!arr.length)return null;if(t<=arr[0][0])return arr[0][1];for(let i=1;i<arr.length;i++){if(arr[i][0]>=t){const a=arr[i-1],b=arr[i];return a[1]+(b[1]-a[1])*(t-a[0])/((b[0]-a[0])||1)}}return null}
+function replay(host){
+  const id=host.dataset.replay,H=+host.dataset.h||130,W=360;const t=T[id];
+  const drop=TS[id].drop.filter(p=>p[0]>=0),uv=TS[id].uv.filter(p=>p[0]>=0);
+  const tmax=Math.max(drop.length?drop[drop.length-1][0]:0,uv.length?uv[uv.length-1][0]:0,t.bt||0);
+  const s=svg(W,H);const cx=W/2,cy=H/2-6;const sc=(H-30)/28;
+  const fl=el(s,'circle',{cx,cy,r:0,class:'flame'}),dr=el(s,'circle',{cx,cy,r:0,class:'drop'});
+  const lbl=el(s,'text',{x:6,y:H-6});
+  const tag=el(s,'text',{x:W-6,y:12,'text-anchor':'end'},'анімація з виміряних даних · №'+id);
+  host.appendChild(s);
+  function draw(tt){const d=interp(drop,tt),f=interp(uv,tt);
+    dr.setAttribute('r',d?Math.max(1,d*sc*1.2/2):0);
+    const fon=f&&tt<=(t.bt||1e9)&&f>0.1;fl.setAttribute('r',fon?f*sc/2:0);
+    lbl.textContent=`t = ${tt.toFixed(1)} с · крапля ${d?d.toFixed(2):'—'} мм · полум'я ${fon?f.toFixed(1)+' мм':'згасло'}`;}
+  if(!host.dataset.noslider){const inp=document.createElement('input');inp.type='range';inp.min=0;inp.max=tmax.toFixed(1);inp.step=0.1;inp.value=Math.min(4,tmax);inp.id='rng-'+Math.random().toString(36).slice(2,8);inp.setAttribute('aria-label','Час тесту №'+id);
+    inp.addEventListener('input',()=>{draw(+inp.value);if(host.dataset.sync)emit(host.dataset.sync,+inp.value)});host.appendChild(inp);}
+  reg(host.dataset.sync,draw);
+  draw(Math.min(4,tmax));
+  if(host.dataset.sync)setTimeout(()=>emit(host.dataset.sync,Math.min(4,tmax)),0);
+}
+
+/* ---------- static fills ---------- */
+function count(f){return ALL.filter(f).length}
+function ends(rows){const c={E:0,D:0,C:0};rows.forEach(r=>c[r[5]]++);return c}
+const PRESETS=[
+  ['Чи гасне полум\'я саме в повітрі МКС?',r=>r[4]==='N2'&&Math.abs(r[3]-0.21)<0.006&&r[2]>0.9&&r[2]<1.1],
+  ['Як горить у «місячній» атмосфері (≈0.7 атм, ≥30% O₂)?',r=>r[2]<0.85&&r[3]>=0.3],
+  ['CO₂ чи He: що гасить краще?',r=>r[4]!=='N2'],
+  ['Що таке cool flames?',r=>r[7]],
+  ['Перевір закон d² сам: «чисті» тести',null],
+  ['Метанол чи гептан?',()=>true],
+];
+document.querySelectorAll('.presets').forEach(box=>{PRESETS.forEach(([q,f])=>{const d=document.createElement('div');d.className='blk';
+  let body;
+  if(!f){body='<span class="big">161</span> тест: вільна крапля, без Disruption, є ряди краплі й полум\'я'}
+  else{const rows=ALL.filter(f),c=ends(rows);body=`<span class="big">${rows.length}</span> тестів · <span class="end-E">${c.E} Ext</span> · <span class="end-D">${c.D} Dis</span> · <span class="end-C">${c.C} Com</span>`}
+  d.innerHTML=`<div class="small"><b>${q}</b></div><div class="small">${body}</div>`;box.appendChild(d)})});
+const c1=document.getElementById('c1chips');PRESETS.forEach(([q])=>{const s=document.createElement('span');s.className='chip';s.textContent=q;c1.appendChild(s)});
+
+const qrows=ALL.filter(QF);
+const FACETS=[['Паливо',1,{'H':'Heptane','M':'Methanol'},'H'],['Розбавник',4,{'N2':'N₂','CO2':'CO₂','He':'He'},'N2'],['Тиск',2,{'0.7':'≈0.7 атм','1':'≈1 атм','2-3':'2–3 атм'},'1'],['Нитка',6,{'N':'вільна','Y':'нитка','?':'невідомо'},null],['Фінал',5,{'E':'Extinction','D':'Disruption','C':'Completion'},null]];
+const pg=p=>p==null?'?':p<0.85?'0.7':p<1.2?'1':'2-3';
+const val=(r,i)=>i===2?pg(r[2]):r[i];
+function facetHTML(inline){return FACETS.map(([name,i,map,on])=>{const items=Object.entries(map).map(([k,lab])=>{const n=ALL.filter(r=>val(r,i)===k).length;return `<span class="chip ${k===on?'on':''}">${lab} · ${n}</span>`}).join('');
+  return inline?`<span class="small muted">${name}:</span> ${items}`:`<div style="margin-bottom:6px"><div class="small muted">${name}</div><div class="chips">${items}</div></div>`}).join(inline?' &nbsp; ':'')+
+  (inline?' <span class="small muted">O₂:</span> <span class="chip on">21%</span>':'<div class="small muted">O₂</div><div class="chips"><span class="chip on">21% · 54</span><span class="chip">12–34% ▸</span></div>')}
+document.querySelectorAll('.facets').forEach(e=>e.innerHTML=facetHTML(false));
+document.querySelectorAll('.facets-inline').forEach(e=>{e.innerHTML=facetHTML(true);e.className='chips'});
+const qc=ends(qrows);
+document.querySelectorAll('.answer').forEach(e=>e.innerHTML=`<div><b>${qrows.length} тестів</b> гептану в повітрі МКС (21% O₂, ≈1 атм): <span class="end-E">${qc.E} згасли самі</span> · <span class="end-D">${qc.D} обірвані</span> · <span class="end-C">${qc.C} догоріли</span>.</div><div class="small">Більші краплі частіше гаснуть самі, менші — догоряють. ${qrows.filter(r=>r[7]).length} з ${qrows.length} мають позначку cool flame у коментарі.</div><div class="small muted">Застереження: обірвані (Disruption) не означають «горіло б вічно».</div>`);
+function resTable(wide){const rows=[...qrows].sort((a,b)=>(b[8]||0)-(a[8]||0)).slice(0,wide?12:8);
+  return `<table class="t"><tr><th>№</th><th>Паливо</th><th>p, атм</th><th>O₂</th>${wide?'<th>Розб.</th>':''}<th>d₀, мм</th><th>K</th><th>Фінал</th><th>Теги</th><th>Дані</th></tr>`+
+  rows.map(r=>`<tr class="${r[0]===35?'sel':''}"><td>${r[0]}</td><td>${r[1]==='H'?'Heptane':'Methanol'}</td><td>${fmt(r[2],2)}</td><td>${pct(r[3])}</td>${wide?`<td>${r[4]}</td>`:''}<td>${fmt(r[8],2)}</td><td>${fmt(r[9],2)}</td><td class="${endCls(r[5])}">${r[5]==='E'?'Extinction':r[5]==='D'?'Disruption':'Completion'}</td><td>${r[7]?'cool flame':''}${r[6]==='Y'?' нитка':''}</td><td>📈${[7,207].includes(r[0])?' 🎥':''} 📄</td></tr>`).join('')+`</table><div class="note">показано ${rows.length} з ${qrows.length}, сортування за d₀</div>`}
+document.querySelectorAll('.restable').forEach(e=>e.innerHTML=resTable(!!e.dataset.wide));
+
+const t35=T['35'];
+document.querySelectorAll('.t35head').forEach(e=>e.innerHTML=`<b>Тест №35</b> · ${t35.fuel} · ${fmt(t35.p,3)} атм · O₂ ${pct(t35.o2)} / N₂ ${pct(t35.n2)} · <span class="end-E">Extinction</span> &nbsp; <span class="chips" style="display:inline-flex"><span class="chip">вільна крапля</span><span class="chip">cool flame</span><span class="chip">oscillation</span><span class="chip">відео немає</span></span> <span class="small muted">CIR ${t35.cir} · ${t35.date} ${t35.gmt} GMT</span>`);
+document.querySelectorAll('.what35').forEach(e=>e.innerHTML=`Крапля гептану ${t35.d0} мм у повітрі МКС горіла ${t35.bt} с, і видиме полум'я згасло саме при діаметрі ${t35.dext} мм. Після цього крапля далі швидко випаровувалась — дослідник пов'язує це з cool flame.`);
+document.querySelectorAll('.comment35').forEach(e=>e.textContent='«'+t35.comment+'»');
+const P=[["Паливо",t35.fuel],["Тиск",fmt(t35.p,3,'атм')],["O₂ / N₂",pct(t35.o2)+' / '+pct(t35.n2)],["CO₂ / He","0% / 0%"],["d₀",fmt(t35.d0,2,'мм')],["d_ext",fmt(t35.dext,2,'мм')],["K (NASA)",fmt(t35.k,2,'мм²/с')],["K (наш фіт)",fmt(DATA.fitK35,2,'мм²/с')],["Час горіння",fmt(t35.bt,1,'с')],["Крапля","вільна"],["T",fmt(t35.T,0,'K')]];
+document.querySelectorAll('.params35').forEach(e=>e.innerHTML='<dl class="kv">'+P.map(([k,v])=>`<dt><u style="text-decoration-style:dotted">${k}</u></dt><dd>${v}</dd>`).join('')+'</dl>');
+document.querySelectorAll('.nb35').forEach(e=>e.innerHTML='<table class="t"><tr><th>№</th><th>Паливо</th><th>p</th><th>O₂</th><th>Розб.</th><th>d₀</th><th>Фінал</th><th>відстань</th></tr>'+DATA.neighbors35.map(n=>`<tr><td>${n[0]}</td><td>${n[2]}</td><td>${n[3]}</td><td>${pct(n[4])}</td><td>${n[5]}</td><td>${n[6]}</td><td class="${endCls(n[7])}">${n[7]}</td><td>${n[1]}</td></tr>`).join('')+`</table><div class="note">Той самий, але метанол: №${DATA.altFuel35} (Extinction, є відео)</div>`);
+document.querySelectorAll('.files35').forEach(e=>e.innerHTML=`<span class="btn">⬇ CSV (droplet, flame_uv, flame_color)</span> <span class="btn">Summary.pdf</span> <span class="btn">TestSheet.txt</span> · у PSI ${t35.files} файлів, кадри камер ${t35.zips} ГБ (на вимогу)`);
+
+/* compare */
+const ROWS=[['Паливо',t=>t.fuel],['Тиск, атм',t=>fmt(t.p,2)],['O₂',t=>pct(t.o2)],['Розбавник',t=>t.dil],['d₀, мм',t=>fmt(t.d0,2)],['d_ext, мм',t=>fmt(t.dext,2)],['K, мм²/с',t=>fmt(t.k,2)],['Час горіння, с',t=>fmt(t.bt,1)],['Фінал',t=>t.end],['Крапля',t=>t.fiber==='No'?'вільна':'нитка'],['Відео',t=>t.has.vid?'є':'немає']];
+document.querySelectorAll('.difftable').forEach(e=>{const only=!!e.dataset.onlydiff;let h='<table class="t"><tr><th></th>'+IDS3.map(i=>`<th>№${i}</th>`).join('')+'</tr>';
+  ROWS.forEach(([k,f])=>{const v=IDS3.map(i=>f(T[i]));const diff=new Set(v).size>1;if(only&&!diff)return;h+=`<tr><td>${k}</td>`+v.map(x=>`<td class="${diff?'diff':''}">${x}</td>`).join('')+'</tr>'});e.innerHTML=h+'</table>'});
+document.querySelectorAll('.cmpchips').forEach(e=>e.innerHTML=IDS3.map((i,k)=>`<span class="chip" style="color:var(--${['hl','dis','com'][k]})">№${i} · ${T[i].fuel} · ${fmt(T[i].p,2)} атм · ${pct(T[i].o2)} ✕</span>`).join('')+'<span class="chip">+ додати</span>');
+document.querySelectorAll('.cmpcards').forEach(e=>{IDS3.forEach(i=>{const t=T[i];const d=document.createElement('div');d.className='blk';
+  d.innerHTML=`<span class="lab">E · №${i}</span><div class="small"><b>${t.fuel}</b> · ${fmt(t.p,2)} атм · ${pct(t.o2)} O₂ · <span class="${endCls(t.end)}">${t.end}</span></div><div data-replay="${i}" data-h="100"></div><div data-chart="d2" data-tests="${i}" data-h="100"></div><dl class="kv"><dt>d₀</dt><dd>${fmt(t.d0,2,'мм')}</dd><dt>K</dt><dd>${fmt(t.k,2,'мм²/с')}</dd><dt>час</dt><dd>${fmt(t.bt,1,'с')}</dd></dl><div class="quote" style="max-height:4.5em;overflow:hidden">${t.comment}</div>`;e.appendChild(d)})});
+
+/* library */
+document.querySelectorAll('.pubs').forEach(e=>{e.innerHTML='<ol class="small" style="margin:0;padding-left:18px">'+DATA.pubs.slice(0,6).map(p=>`<li>${p[0]} — <span class="muted">${p[1]||''}</span> ${p[2]?'· DOI '+p[2]:''} <span class="btn">Цитата</span></li>`).join('')+'</ol><div class="note">… ще 45</div>'});
+const DICT=[['fuel','—','Experimental table','274'],['p_atm','атм','Experimental table (mmHg → атм)','273'],['x_o2','мольна частка','Experimental table','274'],['diluent','N₂ / CO₂ / He','похідне з x_co2, x_he','274'],['d0_mm','мм','Experimental table','262'],['dext_mm','мм','Experimental table','197'],['k_mm2_s','мм²/с','Experimental table','258'],['burn_time_s','с','Experimental table','266'],['end_type','Ext / Dis / Com','Experimental table','274'],['ts_fiber','так / ні','TestSheet.txt','266'],['ts_comment','текст','TestSheet.txt','266'],['ts_droplet','t, d, x, y','DropletData.txt','254 тести']];
+document.querySelectorAll('.dict').forEach(e=>e.innerHTML='<table class="t"><tr><th>Колонка</th><th>Одиниці</th><th>Джерело</th><th>Заповнено</th></tr>'+DICT.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>');
+
+/* render charts last (cards inject placeholders) */
+document.querySelectorAll('[data-chart="d2"],[data-chart="flame"]').forEach(lineChart);
+document.querySelectorAll('[data-chart="chamber"]').forEach(chamberChart);
+document.querySelectorAll('[data-map]').forEach(mapChart);
+document.querySelectorAll('[data-replay]').forEach(replay);
+</script>

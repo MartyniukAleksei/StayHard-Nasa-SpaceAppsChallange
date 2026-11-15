@@ -1,0 +1,19 @@
+.tchart { width: 100%; overflow: hidden; }
+.tchart svg { display: block; }
+.tchart text { font: 11px var(--mono); fill: var(--ash); }
+.tchart .axlabel { fill: var(--ash); font-size: 12px; }
+.tchart .ax { stroke: var(--line); }
+.tchart polyline { fill: none; stroke-width: 1.5; }
+.tchart .slabel { font-size: 12px; }
+.tchart .cursor { stroke: var(--flame); stroke-dasharray: 3 3; }
+.tchart .marker line { stroke: var(--flame); }
+.tchart .marker text { fill: var(--flame); }
+
+.tone-ink rect, .tone-ink text { fill: var(--ink); } .tone-ink polyline { stroke: var(--ink); }
+.tone-ash rect, .tone-ash text { fill: var(--ash); } .tone-ash polyline { stroke: var(--ash); }
+.tone-flame rect, .tone-flame text { fill: var(--flame); } .tone-flame polyline { stroke: var(--flame); }
+.tone-ext rect, .tone-ext text { fill: var(--end-ext); } .tone-ext polyline { stroke: var(--end-ext); }
+.tone-dis rect, .tone-dis text { fill: var(--end-dis); } .tone-dis polyline { stroke: var(--end-dis); }
+.tone-com rect, .tone-com text { fill: var(--end-com); } .tone-com polyline { stroke: var(--end-com); }
+.tone-s1 rect, .tone-s1 text { fill: #b9b8b0; } .tone-s1 polyline { stroke: #b9b8b0; }
+.tone-s2 rect, .tone-s2 text { fill: #6f6f6a; } .tone-s2 polyline { stroke: #6f6f6a; }

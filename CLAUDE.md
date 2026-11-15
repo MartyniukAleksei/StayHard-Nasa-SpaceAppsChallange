@@ -9,7 +9,7 @@ Documentation for agents lives in `docs/`. Start at `docs/README.md`, which says
 ## Guardrails for agents
 
 Several people and their agents work in this repo in parallel. Team process: `docs/workflow.md`.
-- Work on a feature branch and open a PR into `main`. `main` is protected (required CI checks, no direct or force push); do not try to bypass it.
+- Prefer a feature branch and a PR into `main`; direct pushes to `main` are allowed, force pushes and deleting `main` are not. Nothing blocks a merge with red CI, but only commits with green CI on `main` get deployed, so keep `main` green.
 - Do not touch infrastructure: no Railway changes (variables, volumes, services, deploys) and no creating, editing or deleting GitHub Releases. CD is automatic from `main`. Infra changes are the repo owner's call; propose them in the PR or the docs instead.
 - Never hand-edit `data/flex` or `flame.duckdb`, and never write to the DB from the API. Every data change is code in `build_db` (see Architecture), and every new raw snapshot is a new release made by the data owner.
 - Stay inside the module your task belongs to. Change shared code (`core/config.py`, `api/router.py`, `frontend/src/shared`, DB schema in `build_db`) in a separate small PR.
@@ -26,6 +26,7 @@ uv run pytest                                   # all tests
 uv run pytest tests/test_health.py::test_health # single test
 uv run ruff check . && uv run ruff format --check .
 uv run python -m flame.ingest.psi_flex --verify # check data/flex against manifest.json
+uv run python -m flame.ingest.psi_cfi --verify  # CFI (PSI-39) snapshot data/cfi, see docs/data/cfi.md
 uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb (force rebuild)
 uv run python -m flame.ingest.bootstrap         # rebuild only if build version changed
 uv run python -m flame.rag.eval --k 5           # RAG recall@k on rag/evalsets/psi69.jsonl (--set psi69_holdout)
@@ -37,6 +38,7 @@ Frontend (run from `frontend/`):
 npm install
 npm run dev     # :5173, proxies /api → :8000
 npm run build   # tsc -b && vite build (this is also the type check)
+npm test        # node:test over src/**/*.test.ts (no test framework dependency)
 ```
 
 Both production images together: `docker compose up --build` (backend :8000, frontend :8080; `./data` is mounted read-only as `/data`). `.claude/launch.json` defines the `backend` and `frontend` dev servers.
