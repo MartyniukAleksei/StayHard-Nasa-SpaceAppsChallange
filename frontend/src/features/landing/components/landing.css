@@ -1,0 +1,84 @@
+/* landing: full-height ASCII sky, comets on a fixed layer behind the page content */
+.land-cosmos { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+.land-page { position: relative; }
+.land-page > section { position: relative; z-index: 1; }
+
+.land { height: calc(100svh - 69px); min-height: 560px; overflow: hidden; }
+.land-sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.land-txt {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+}
+.land-in { max-width: 560px; }
+.land h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(44px, 6.6vw, 88px);
+  line-height: 1.02;
+  max-width: 9ch;
+  margin: 16px 0 0;
+  text-wrap: balance;
+}
+.land-sub { margin: 22px 0 0; font-size: clamp(17px, 1.6vw, 19px); color: #cfcec7; max-width: 44ch; }
+.land-cta { display: flex; gap: 8px 16px; flex-wrap: wrap; margin: 26px 0 0 -6px; }
+.land-down {
+  position: absolute;
+  z-index: 1;
+  left: var(--gutter);
+  bottom: 20px;
+  font-size: 13px;
+  color: var(--ash);
+  text-decoration: none;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: var(--hit);
+}
+.land-down i { font-style: normal; color: var(--ink); display: inline-block; animation: land-bob 1.6s steps(2) infinite; }
+@keyframes land-bob { 50% { transform: translateY(4px); } }
+
+/* study picker */
+.land-studies { background: var(--void); border-top: var(--rule); scroll-margin-top: 0; }
+.land-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.land-card { border: 1px dashed var(--line); padding: 20px; display: grid; gap: 10px; align-content: start; }
+.land-card h3 { font-family: var(--display); font-weight: 400; font-size: calc(22px * var(--dz)); margin: 0; }
+.land-card h3 .muted { font-family: var(--sans); font-size: 15px; }
+.land-card p { margin: 0; }
+.land-obj { color: var(--ash); font-size: 14px; }
+.land-card.on { border: 1px solid var(--flame); grid-column: span 3; padding: 0; }
+.land-card-link { display: grid; gap: 12px; padding: 24px; text-decoration: none; }
+.land-card-link:hover .btn { color: #fff; }
+.land-card-link .btn { justify-self: start; margin-left: -6px; }
+.land-card.on .land-obj { max-width: 75ch; }
+.land-facts { grid-template-columns: repeat(3, minmax(0, max-content)); gap: 12px 48px; }
+.land-card.soon .tag { font-size: 11px; padding: 1px 6px; }
+
+@media (max-width: 960px) {
+  .land-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .land-card.on { grid-column: span 2; }
+}
+@media (max-width: 860px) {
+  .land { height: max(720px, calc(100svh - 250px)); }
+  .land-txt { align-items: flex-start; padding-top: 36px; }
+}
+@media (max-width: 600px) {
+  .land-cards { grid-template-columns: minmax(0, 1fr); }
+  .land-card.on { grid-column: auto; }
+  .land-facts { gap: 12px 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .land-down i { animation: none; }
+}

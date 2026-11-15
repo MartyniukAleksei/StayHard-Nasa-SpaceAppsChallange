@@ -7,4 +7,5 @@
                   кожен результат несе `sources` (flame.core.citations) для агента
 - router.py     — /api/studies/flex/{fields,tests,tests/{n},…/timeseries/{signal},
                   …/neighbors,compare}
+- pages/        — відповіді під сторінки UI (огляд, дослідник, звіт тесту, replay, бібліотека)
 """

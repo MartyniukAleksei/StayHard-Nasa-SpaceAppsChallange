@@ -33,7 +33,7 @@ cd frontend && npm install && npm run dev                         # :5173, /api 
 Те саме запускає CI (`.github/workflows/ci.yml`); у `main` — лише через PR із зеленим CI.
 ```bash
 cd backend && uv run ruff check . && uv run ruff format --check . && uv run pytest
-cd frontend && npm run build
+cd frontend && npm test && npm run build    # node:test для *.test.ts; build = tsc -b + vite build
 ```
 
 ## Конвенції
@@ -48,6 +48,7 @@ cd frontend && npm run build
 - Дані з API — тільки через TanStack Query хуки в `features/<name>/api.ts`, `fetch` — через `shared/api/client.ts`.
 - Типи відповідей дзеркалять Pydantic-схеми бекенду.
 - Тексти UI англійською.
+- Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` + `node:assert` (Node 24 сам відкидає типи, залежностей не треба). Імпорт тестованого модуля — з розширенням `./filter.ts`; у `@/`-імпортах лише `import type`. Тести перевіряє `tsconfig.test.json`. Після `npm install` на Windows не комітити зміни `package-lock.json` (зникають поля `libc`, ламається `npm ci` у Docker).
 
 **Загальне**
 - `data/flex` не змінюємо руками; похідні дані — лише скриптами з `flame/ingest`.

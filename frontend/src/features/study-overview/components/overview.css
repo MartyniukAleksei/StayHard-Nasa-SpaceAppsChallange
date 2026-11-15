@@ -1,0 +1,74 @@
+/* Overview, layout 1A: one vertical story, sections in reading order. */
+.ov-hero { max-width: 920px; margin-inline: 0; }
+.ov-hero .stats { grid-template-columns: repeat(4, minmax(0, max-content)); gap: 18px 56px; margin-top: 8px; }
+.ov-kicker { color: var(--ash); font-size: 13px; margin: 0 0 14px; }
+.ov-meta { color: var(--ash); margin: 24px 0 0; }
+.ov-narrow > * { max-width: 75ch; }
+/* G: one wide texture image across the page; 4:3 again on phones */
+.ov-replay .replay canvas, .ov-replay .replay-empty { aspect-ratio: 21 / 8; }
+
+/* presets 3×2 */
+.ov-presets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ov-preset { display: flex; flex-direction: column; gap: 12px; }
+.ov-preset h3 { min-height: 2.6em; }
+.ov-groups { display: grid; gap: 16px; }
+.ov-groups.split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ov-group {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  text-decoration: none;
+  padding: 8px;
+  margin: -8px;
+  border: 1px solid transparent;
+}
+.ov-group:hover, .ov-group:focus-visible { border-color: var(--line); }
+.ov-group:hover .ov-open { color: var(--ink); }
+.ov-open { color: var(--ash); }
+.ov-group-label { font-size: 13px; color: var(--ash); }
+.ov-ends { display: flex; flex-wrap: wrap; gap: 2px 12px; font-family: var(--mono); }
+.end-mark b { font-weight: 500; }
+.ov-excluded { margin: 0; font-size: 12px; color: var(--ash); }
+.ov-note { margin: 0; font-size: 12px; color: var(--ash); display: flex; gap: 8px; align-items: baseline; }
+.ov-note .tag { font-size: 11px; padding: 1px 6px; }
+.ov-soon { margin: -8px 0 20px; font-size: 13px; color: var(--ash); }
+
+/* how it worked / findings / traps */
+.ov-steps { margin: 0; padding-left: 20px; display: grid; gap: 10px; color: var(--ink); }
+.ov-steps li::marker { font-family: var(--mono); color: var(--ash); }
+.ov-ends-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; color: var(--ash); font-size: 14px; }
+.ov-ends-list .end-mark { font-family: var(--mono); }
+.ov-findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.ov-traps { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ov-traps p { margin: 0; color: var(--ash); font-size: 15px; }
+.ov-quote {
+  margin: 10px 0 0;
+  padding-left: 12px;
+  border-left: var(--rule);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink);
+}
+.ov-quote cite { display: block; font-style: normal; font-size: 12px; color: var(--ash); margin-top: 4px; }
+
+/* citation + passport */
+.ov-team { margin: 0 0 10px; padding-left: 18px; }
+.ov-cite { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 8px; }
+.ov-cite p { margin: 0; color: var(--ink); flex: 1 1 40ch; }
+.ov-cite + p { margin: 0 0 24px; }
+
+@media (max-width: 960px) {
+  .ov-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-hero .stats { grid-template-columns: repeat(2, minmax(0, max-content)); }
+}
+@media (max-width: 720px) {
+  .ov-replay .replay canvas, .ov-replay .replay-empty { aspect-ratio: 4 / 3; }
+  .ov-presets, .ov-traps { grid-template-columns: minmax(0, 1fr); }
+  .ov-preset h3 { min-height: 0; }
+  .ov-hero .stats { gap: 18px 32px; }
+}
