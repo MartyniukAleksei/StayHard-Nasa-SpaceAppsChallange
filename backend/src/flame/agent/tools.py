@@ -23,6 +23,7 @@ from flame.core.citations import (
 )
 from flame.rag import service as rag_service
 from flame.rag.schemas import SearchFilters
+from flame.studies.flex import charts
 from flame.studies.flex import repository as flex_repository
 from flame.studies.flex import service as flex
 from flame.studies.flex.fields import FIELDS, SIGNALS
@@ -215,7 +216,33 @@ UI_TOOLS: list[dict[str, Any]] = [
         ),
     },
 ]
+CHART_TOOL: dict[str, Any] = {
+    "name": "make_chart",
+    "description": (
+        "Draw a chart in the chat from the FLEX data. kind=line: one quantity over time for 1-3 "
+        "tests (shared axes) - quantity is one of "
+        + ", ".join(charts.QUANTITIES)
+        + " (droplet_d2 and droplet_d2_normalized are derived from the measured diameter; the "
+        "slope of d² over time is the burning-rate constant). kind=scatter: two numeric "
+        "fields of the test table across the tests matching filters (same filter format as "
+        "query_tests), dots grouped by how the test ended. For line charts leave filters, "
+        "x_field and y_field empty; for scatter leave quantity and test_nos empty. The user "
+        "sees the chart; describe what it shows using the returned summaries."
+    ),
+    "input_schema": _obj(
+        {
+            "kind": {"type": "string", "enum": ["line", "scatter"]},
+            "quantity": {"type": "string", "enum": ["", *charts.QUANTITIES]},
+            "test_nos": {"type": "array", "items": TEST_NO},
+            "filters": TOOLS[0]["input_schema"]["properties"]["filters"],
+            "x_field": {"type": "string", "enum": ["", *charts.NUMERIC_FIELDS]},
+            "y_field": {"type": "string", "enum": ["", *charts.NUMERIC_FIELDS]},
+        }
+    ),
+}
+
 TOOLS.extend(UI_TOOLS)
+TOOLS.append(CHART_TOOL)
 
 
 def _clamp(v: int, lo: int, hi: int) -> int:
@@ -399,6 +426,28 @@ def highlight_params(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> To
     )
 
 
+def make_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    try:
+        if args.get("kind") == "scatter":
+            filters = [Filter(**f) for f in args.get("filters") or []]
+            for f in filters:
+                if f.op in ("is_null", "not_null"):
+                    f.value = None
+            out = charts.scatter(cur, filters, args.get("x_field", ""), args.get("y_field", ""))
+        else:
+            nos = [int(n) for n in args.get("test_nos") or []]
+            out = charts.line(cur, args.get("quantity", ""), nos)
+    except charts.ChartError as e:
+        raise ToolError(str(e)) from e
+    notes = out["chart"]["notes"]
+    return ToolOutput(
+        sources=out["sources"],
+        notes=[f"Chart shown to the user. {'; '.join(notes)}"] if notes else [],
+        note_url=out["sources"][0].url,
+        events=[{"event": "chart", "data": out["chart"]}],
+    )
+
+
 Handler = Callable[[duckdb.DuckDBPyConnection, dict[str, Any]], ToolOutput]
 
 HANDLERS: dict[str, Handler] = {
@@ -410,6 +459,7 @@ HANDLERS: dict[str, Handler] = {
     "search_docs": search_docs,
     "propose_action": propose_action,
     "highlight_params": highlight_params,
+    "make_chart": make_chart,
 }
 
 
@@ -434,4 +484,6 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return "Preparing a link…"
         case "highlight_params":
             return "Highlighting values on the page…"
+        case "make_chart":
+            return "Drawing a chart from the data…"
     return "Working…"

@@ -16,3 +16,5 @@
 {"id": "ui-open-tests", "q": "Show me the heptane tests that ran at about 0.7 atm with 30% oxygen or more.", "expect_proposal": "open_tests", "mention_any": ["Disruption"]}
 {"id": "ui-open-compare", "q": "Let me compare FLEX-019 and FLEX-027 side by side.", "expect_proposal": "open_compare", "expect_tests": [19, 27], "min_test_hits": 2}
 {"id": "ui-highlight", "q": "What was the oxygen level and burning-rate constant in this test?", "page_context": {"route": "/studies/flex/tests/19", "test_no": 19}, "expect_highlight": true, "expect_tests": [19], "min_test_hits": 1}
+{"id": "chart-d2", "q": "Plot how the droplet diameter squared shrinks over time for FLEX-027 and FLEX-028.", "expect_chart": "line", "expect_tests": [27, 28], "min_test_hits": 2}
+{"id": "chart-scatter", "q": "Chart the burning-rate constant against oxygen fraction for all heptane tests.", "expect_chart": "scatter"}

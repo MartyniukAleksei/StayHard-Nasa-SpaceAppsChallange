@@ -7,7 +7,7 @@
 |---|---|---|
 | 1 | Бекенд: цикл, інструменти даних, цитати, ліміти, SSE, eval | ✅ |
 | 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | ✅ |
-| 3 | Графіки `make_chart` | план |
+| 3 | Графіки `make_chart` | ✅ |
 | 4 | Кадри камер за подією, відео, replay | план |
 | — | Симуляція what-if | відкладено |
 
@@ -25,6 +25,7 @@
 | `search_docs(query, test_nos, source_types)` | `rag.service.search` | чанки RAG |
 | `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
+| `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |
 
 Усі схеми `strict: true`. `tool_result` містить лише блоки `search_result` (API не дозволяє змішувати їх з текстом).
 
@@ -42,6 +43,7 @@
 | `error` | `reason` (`model_busy`, `api_error`), `message` | пояснення користувачеві |
 | `proposal` | `{id, action, label, params}` | кнопка-пропозиція (див. ui-actions.md) |
 | `highlight` | `{fields[], test_nos[]}` | підсвітити `[data-field]` на поточній сторінці |
+| `chart` | `{kind, title, x_label, y_label, derived, series[{id,label,points,kind,tone}], test_nos, notes}` | графік у повідомленні (`ChartBlock`), `[Open on page]`, `[Download CSV]` |
 | `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, картка джерела з `quotes`, позначки «General knowledge» / «No source» |
 
 Відмови до стріму — JSON `{"detail": {"reason", "message", "retry_after"}}`: 503 `not_configured` / `budget`, 429 `rate_limit` (+ `Retry-After`), 422 `bad_history` / `too_long`. Фронт показує `message` як є.
@@ -70,3 +72,8 @@ uv run python -m flame.agent.eval --only trap-no-data
 - `AgentSearch` — поле в шапці замість заглушки: Enter відкриває панель і надсилає питання.
 - `AgentPanel` — права панель (420 px; на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран), живий текст і статуси, позначки «general knowledge» / «no source», номери `[n]` → картка джерела внизу панелі (назва, дослівні цитати, `[Open source]`: рядок тесту й порівняння ведуть на сторінки застосунку, файли й PDF — на бекенд, DOI — на doi.org; `lib/links.ts`), кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
 - Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`; `highlight` — DOM.
+
+## Графіки (`studies/flex/charts.py`, `make_chart`)
+- **line** — одна величина в часі для 1–3 тестів на спільних осях: `droplet_diameter`, `droplet_d2` (derived), `droplet_d2_normalized` ((d/d₀)² від t/d₀², derived), `flame_diameter_uv`, `flame_diameter_color`, `standoff_uv`. Лише t ≥ 0 (після запалювання), ≤ 300 точок на серію. Тест без ряду чи без d₀ пропускається з приміткою.
+- **scatter** — два числові поля таблиці для тестів за фільтрами (формат `query_tests`), групи за типом завершення (тони й значки `EndMark`).
+- Фітів і екстраполяції немає; моделі повертаються підсумки серій як джерела. Фронт: `ChartBlock` (`TimeChart`), CSV з DOI в першому рядку (`lib/csv.ts`).
