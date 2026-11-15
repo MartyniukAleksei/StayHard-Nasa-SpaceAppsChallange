@@ -48,10 +48,8 @@ function Header() {
     <header className="top">
       <div className="top-row">
         <Link to="/" className="brand">
-          {/* pixel fire: two tongues and an inner flame */}
-          <svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shapeRendering="crispEdges">
-            <path d="M6 0h1v1H6zM6 1h2v1H6zM5 2h3v1H5zM5 3h3v1H5zM12 3h1v1H12zM4 4h5v1H4zM12 4h2v1H12zM4 5h5v1H4zM11 5h3v1H11zM3 6h7v1H3zM11 6h3v1H11zM3 7h11v1H3zM2 8h6v1H2zM9 8h5v1H9zM2 9h5v1H2zM10 9h4v1H10zM1 10h5v1H1zM11 10h4v1H11zM1 11h4v1H1zM7 11h2v1H7zM11 11h4v1H11zM1 12h4v1H1zM6 12h4v1H6zM11 12h4v1H11zM1 13h4v1H1zM6 13h4v1H6zM11 13h3v1H11zM2 14h3v1H2zM7 14h2v1H7zM11 14h3v1H11zM3 15h10v1H3z" />
-          </svg>
+          {/* the site icon is the favicon: one drawing for the tab and the header */}
+          <img src="/favicon.svg" width={24} height={24} alt="" className="brand-icon" />
           <span className="h-brand">StayHard</span>
         </Link>
         {study && (

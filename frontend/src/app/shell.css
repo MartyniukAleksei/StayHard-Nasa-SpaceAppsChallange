@@ -16,6 +16,7 @@
   gap: 8px 16px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-height: var(--hit); }
+.brand-icon { display: block; flex: none; }
 .top-nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .top-nav a {
   color: var(--ash);
