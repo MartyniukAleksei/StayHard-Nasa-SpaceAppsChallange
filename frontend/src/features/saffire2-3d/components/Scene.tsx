@@ -7,7 +7,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { createFlameMaterial } from "@/shared/three/flameMaterial";
 import type { Playback } from "@/shared/three/playback";
 import { SAMPLE_LENGTH_MM } from "../lib/burn";
-import { stateAt, valueAt, type SaffireModel, type SceneSample } from "../lib/model";
+import { samplesAt, stateAt, valueAt, type ClockMode, type SaffireModel, type SceneSample } from "../lib/model";
 import { CARD, Module, sampleCenter } from "./Apparatus";
 
 interface SceneProps {
@@ -19,6 +19,8 @@ interface SceneProps {
   scaleBar: RefObject<HTMLDivElement | null>;
   /** close-up of one sample: the camera starts near it and stays on it */
   focusId?: string;
+  /** "series": one recording after another (default); "aligned": all nine from their own ignition */
+  mode?: ClockMode;
 }
 
 const FOV = 32;
@@ -27,10 +29,11 @@ const SCALE_MM = 100;
 // One scene unit = 1 mm. Y is up = the flow direction (fans at the top draw air upward).
 export function Scene(props: SceneProps) {
   const start = useMemo<[number, number, number]>(() => {
-    if (!props.focusId) return [420, 260, 1900];
+    // side by side: far enough to frame the whole 3 × 3 card
+    if (!props.focusId) return props.mode === "aligned" ? [CARD.x + 560, 200, 2250] : [420, 260, 1900];
     const [x, y] = sampleCenter(Number(props.focusId.split("-")[1]));
     return [x + 260, y + 90, 760];
-  }, [props.focusId]);
+  }, [props.focusId, props.mode]);
   return (
     <Canvas
       camera={{ position: start, fov: FOV, near: 5, far: 12000 }}
@@ -56,7 +59,7 @@ export function Scene(props: SceneProps) {
   );
 }
 
-function World({ model, playback, reducedMotion, labels, scaleBar, focusId }: SceneProps) {
+function World({ model, playback, reducedMotion, labels, scaleBar, focusId, mode = "series" }: SceneProps) {
   const controls = useRef<OrbitControlsImpl>(null);
   const camera = useThree((s) => s.camera);
   const viewport = useThree((s) => s.size);
@@ -67,9 +70,10 @@ function World({ model, playback, reducedMotion, labels, scaleBar, focusId }: Sc
   useFrame(() => {
     const c = controls.current;
     if (!c) return;
-    // the view drifts toward the sample being recorded, keeping the viewer's angle and distance
-    const { moment } = stateAt(model, playback.t);
-    const idx = moment.segment ? Number(moment.segment.id.split("-")[1]) : null;
+    // the view drifts toward the sample being recorded, keeping the viewer's angle and distance;
+    // side by side, all nine burn at once, so it stays on the whole card
+    const seg = mode === "series" ? stateAt(model, playback.t).moment.segment : null;
+    const idx = seg ? Number(seg.id.split("-")[1]) : null;
     if (fixed) focus.set(fixed[0], fixed[1], 0);
     else if (idx != null) {
       const [x, y] = sampleCenter(idx);
@@ -97,9 +101,9 @@ function World({ model, playback, reducedMotion, labels, scaleBar, focusId }: Sc
       />
       <Module labels={labels} />
       {model.samples.map((s) => (
-        <SampleStrip key={s.id} s={s} model={model} playback={playback} labels={labels} />
+        <SampleStrip key={s.id} s={s} model={model} playback={playback} labels={labels} mode={mode} reducedMotion={reducedMotion} />
       ))}
-      <FlowParticles model={model} playback={playback} reducedMotion={reducedMotion} />
+      <FlowParticles model={model} playback={playback} reducedMotion={reducedMotion} mode={mode} />
     </>
   );
 }
@@ -115,7 +119,9 @@ const colorOf = (s: SceneSample) =>
 
 const PMMA_STRIP_MM = 50; // 2-7: 5 cm PMMA at the igniter end, 24 cm Nomex above (table)
 
-function SampleStrip({ s, model, playback, labels }: { s: SceneSample; model: SaffireModel; playback: Playback; labels: boolean }) {
+type StripProps = { s: SceneSample; model: SaffireModel; playback: Playback; labels: boolean; mode: ClockMode; reducedMotion: boolean };
+
+function SampleStrip({ s, model, playback, labels, mode, reducedMotion }: StripProps) {
   const [cx, cy] = sampleCenter(s.index);
   const sign = s.igniterAtTop ? -1 : 1; // direction from the igniter end along the strip
   const igniterY = cy - (sign * SAMPLE_LENGTH_MM) / 2;
@@ -124,12 +130,13 @@ function SampleStrip({ s, model, playback, labels }: { s: SceneSample; model: Sa
   const light = useRef<THREE.PointLight>(null);
   const igniter = useRef<THREE.MeshStandardMaterial>(null);
   const frame = useRef<THREE.LineSegments>(null);
+  const front = useRef<THREE.Mesh>(null);
   const flameMat = useMemo(() => createFlameMaterial("#2b45e0", "#7f97ff"), []);
   useEffect(() => () => flameMat.dispose(), [flameMat]);
   const composite = /&/.test(s.sample.material);
 
   useFrame(({ clock }) => {
-    const now = stateAt(model, playback.t).samples.find((x) => x.s.id === s.id)!;
+    const now = samplesAt(model, mode, playback.t).find((x) => x.s.id === s.id)!;
     const b = now.burn;
     // charred zone from the igniter end
     if (char.current) {
@@ -150,6 +157,16 @@ function SampleStrip({ s, model, playback, labels }: { s: SceneSample; model: Sa
       }
       flameMat.uniforms.uOpacity.value = b.flame ? 0.45 + 0.55 * now.brightness : 0;
       flameMat.uniforms.uTime.value = clock.elapsedTime + s.index * 3.1;
+    }
+    // glowing edge where the strip is burning now: the spread front, or the base of an anchored flame
+    if (front.current) {
+      front.current.visible = b.flame;
+      if (b.flame) {
+        const at = b.mode === "anchored" ? b.flameTo : b.burned;
+        front.current.position.y = igniterY + sign * at;
+        const flicker = 0.75 + 0.25 * Math.sin(clock.elapsedTime * 9 + s.index) * Math.sin(clock.elapsedTime * 5.3);
+        (front.current.material as THREE.MeshBasicMaterial).opacity = (0.55 + 0.45 * now.brightness) * flicker;
+      }
     }
     if (igniter.current) {
       igniter.current.emissiveIntensity = now.igniterOn ? 6 : 0;
@@ -193,6 +210,11 @@ function SampleStrip({ s, model, playback, labels }: { s: SceneSample; model: Sa
         <torusGeometry args={[5, 1.4, 8, 24]} />
         <meshStandardMaterial ref={igniter} color="#5a5a5a" emissive="#ff5a14" emissiveIntensity={0} metalness={0.6} roughness={0.4} />
       </mesh>
+      <mesh ref={front} position={[cx, igniterY, 2.4]} visible={false}>
+        <boxGeometry args={[51, 3, 1]} />
+        <meshBasicMaterial color="#ff8a3d" transparent opacity={0.9} toneMapped={false} />
+      </mesh>
+      <Embers s={s} model={model} playback={playback} mode={mode} reducedMotion={reducedMotion} cx={cx} igniterY={igniterY} sign={sign} />
       <mesh ref={flame} material={flameMat} visible={false}>
         <sphereGeometry args={[1, 48, 48]} />
       </mesh>
@@ -206,10 +228,81 @@ function SampleStrip({ s, model, playback, labels }: { s: SceneSample; model: Sa
   );
 }
 
+const N_EMBERS = 70;
+const EMBER_LIFE_S = 1.6;
+
+/** Sparks lifted off a burning strip by the duct flow. Illustrative: nothing in the data measures them. */
+function Embers({ s, model, playback, mode, reducedMotion, cx, igniterY, sign }: Omit<StripProps, "labels"> & { cx: number; igniterY: number; sign: number }) {
+  const points = useRef<THREE.Points>(null);
+  const state = useMemo(() => {
+    const pos = new Float32Array(N_EMBERS * 3);
+    const col = new Float32Array(N_EMBERS * 3);
+    const life = new Float32Array(N_EMBERS).map(() => Math.random() * -EMBER_LIFE_S); // staggered start
+    const vel = new Float32Array(N_EMBERS * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    return { g, pos, col, life, vel };
+  }, []);
+  const material = useMemo(
+    () => new THREE.PointsMaterial({ size: 4.5, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+    [],
+  );
+  useEffect(
+    () => () => {
+      state.g.dispose();
+      material.dispose();
+    },
+    [state, material],
+  );
+
+  useFrame((_, dt) => {
+    const p = points.current;
+    if (!p) return;
+    const now = samplesAt(model, mode, playback.t).find((x) => x.s.id === s.id)!;
+    const b = now.burn;
+    p.visible = b.flame && !reducedMotion;
+    if (!p.visible) return;
+    const step = Math.min(dt, 0.05);
+    const { pos, col, life, vel } = state;
+    for (let i = 0; i < N_EMBERS; i++) {
+      life[i] += step;
+      if (life[i] < 0) {
+        col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = 0;
+        continue;
+      }
+      if (life[i] > EMBER_LIFE_S) {
+        // respawn inside the flame zone
+        life[i] = 0;
+        const along = b.flameFrom + Math.random() * Math.max(6, b.flameTo - b.flameFrom);
+        pos[i * 3] = cx + (Math.random() - 0.5) * 48;
+        pos[i * 3 + 1] = igniterY + sign * along;
+        pos[i * 3 + 2] = 4 + Math.random() * 10;
+        vel[i * 3] = (Math.random() - 0.5) * 18;
+        vel[i * 3 + 1] = 40 + Math.random() * 60; // up: the duct flow carries them
+        vel[i * 3 + 2] = 6 + Math.random() * 22;
+      }
+      pos[i * 3] += vel[i * 3] * step;
+      pos[i * 3 + 1] += vel[i * 3 + 1] * step;
+      pos[i * 3 + 2] += vel[i * 3 + 2] * step;
+      const f = 1 - life[i] / EMBER_LIFE_S; // fades from white-orange to dim red
+      const k = f * f * (0.6 + 0.4 * now.brightness);
+      col[i * 3] = k;
+      col[i * 3 + 1] = (0.35 + 0.4 * f) * k;
+      col[i * 3 + 2] = 0.12 * f * k;
+    }
+    (state.g.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+    (state.g.attributes.color as THREE.BufferAttribute).needsUpdate = true;
+  });
+
+  return <points ref={points} geometry={state.g} material={material} visible={false} frustumCulled={false} />;
+}
+
 const N_PARTICLES = 700;
 
-/** Air drawn upward through the duct; speed = anemometer of the sample being recorded (real time). */
-function FlowParticles({ model, playback, reducedMotion }: { model: SaffireModel; playback: Playback; reducedMotion: boolean }) {
+/** Air drawn upward through the duct; speed = anemometer of the sample being recorded (real time).
+ *  Side by side: the mean of the anemometers of the recordings running at that moment (derived). */
+function FlowParticles({ model, playback, reducedMotion, mode }: { model: SaffireModel; playback: Playback; reducedMotion: boolean; mode: ClockMode }) {
   const points = useRef<THREE.Points>(null);
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -237,11 +330,13 @@ function FlowParticles({ model, playback, reducedMotion }: { model: SaffireModel
   useFrame((_, dt) => {
     const p = points.current;
     if (!p) return;
-    const { moment, samples } = stateAt(model, playback.t);
-    const act = samples.find((x) => x.active);
-    const cmS = act && act.tIgn != null ? valueAt(act.s.flow, act.tIgn) : null;
+    const flows = samplesAt(model, mode, playback.t)
+      .filter((x) => x.active && x.tIgn != null)
+      .map((x) => valueAt(x.s.flow, x.tIgn!))
+      .filter((v): v is number => v != null);
+    const cmS = flows.length ? flows.reduce((a, b) => a + b, 0) / flows.length : null;
     // only while a recording runs: between recordings there is no flow measurement
-    p.visible = moment.segment != null && cmS != null;
+    p.visible = cmS != null;
     if (!p.visible || reducedMotion) return;
     const step = (cmS ?? 0) * 10 * Math.min(dt, 0.05); // mm per frame, real time
     const pos = geometry.attributes.position as THREE.BufferAttribute;

@@ -1,5 +1,6 @@
 // Dashboard + nine sensor series → the model the scene and HUD read every frame.
 import type { SaffireDashboard, SaffireSample, SaffireSeries } from "@/features/saffire2";
+import { alignedTIgn, buildAligned, type AlignedClock } from "./aligned";
 import { burnAt, type BurnInput, type BurnState } from "./burn";
 import { buildTimeline, momentAt, type Moment, type SeriesTimeline } from "./timeline";
 
@@ -23,6 +24,8 @@ export type SceneSample = {
 export type SaffireModel = {
   samples: SceneSample[];
   timeline: SeriesTimeline;
+  /** the same recordings aligned at ignition ("side by side" mode) */
+  aligned: AlignedClock;
   co2: { minutes: number; ppm: number }[]; // module CO₂, minutes from the first recording
   doi: string;
 };
@@ -93,7 +96,7 @@ export function buildModel(dash: SaffireDashboard, series: SaffireSeries[]): Saf
   if (recs.length === 0) return null;
   const co2 = dash.co2_timeline.flatMap((c) => c.points.map(([m, v]) => ({ minutes: m, ppm: Math.round(v * 10000) })));
   co2.sort((a, b) => a.minutes - b.minutes);
-  return { samples, timeline: buildTimeline(recs), co2, doi: dash.about.doi };
+  return { samples, timeline: buildTimeline(recs), aligned: buildAligned(recs), co2, doi: dash.about.doi };
 }
 
 export type SampleNow = {
@@ -105,7 +108,17 @@ export type SampleNow = {
   brightness: number; // 0…1 from the radiometers (data), 0 without a flame
 };
 
-/** State of every sample at playback position p. */
+/** One sample at `tIgn` seconds from its ignition; `active` = its recording is running. */
+function sampleNow(s: SceneSample, active: boolean, tIgn: number | null): SampleNow {
+  const burn = burnAt(s.burn, tIgn);
+  // series time is already seconds from ignition (backend: t = t_s − ignition_t_s)
+  const amps = active && tIgn != null ? valueAt(s.igniter, tIgn) : null;
+  const rad = active && tIgn != null ? valueAt(s.radiometer, tIgn) : null;
+  const brightness = burn.flame ? Math.max(0.25, Math.min(1, (rad ?? 0) / s.radiometerPeak)) : 0;
+  return { s, active, tIgn, igniterOn: amps != null && amps > 0.5, burn, brightness };
+}
+
+/** State of every sample at playback position p ("as flown": one recording after another). */
 export function stateAt(model: SaffireModel, p: number): { moment: Moment; samples: SampleNow[] } {
   const moment = momentAt(model.timeline, p);
   const samples = model.samples.map((s) => {
@@ -114,14 +127,24 @@ export function stateAt(model: SaffireModel, p: number): { moment: Moment; sampl
     let tIgn: number | null = null;
     if (active) tIgn = moment.tIgn;
     else if (seg && moment.epoch > seg.epochEnd) tIgn = Infinity;
-    const burn = burnAt(s.burn, tIgn);
-    // series time is already seconds from ignition (backend: t = t_s − ignition_t_s)
-    const amps = active && tIgn != null ? valueAt(s.igniter, tIgn) : null;
-    const rad = active && tIgn != null ? valueAt(s.radiometer, tIgn) : null;
-    const brightness = burn.flame ? Math.max(0.25, Math.min(1, (rad ?? 0) / s.radiometerPeak)) : 0;
-    return { s, active, tIgn, igniterOn: amps != null && amps > 0.5, burn, brightness };
+    return sampleNow(s, active, tIgn);
   });
   return { moment, samples };
+}
+
+/** State of every sample at t seconds from ignition, all nine aligned ("side by side"). */
+export function stateAligned(model: SaffireModel, t: number): SampleNow[] {
+  return model.samples.map((s) => {
+    const tIgn = alignedTIgn(model.aligned, s.id, t);
+    return sampleNow(s, tIgn != null && Number.isFinite(tIgn), tIgn);
+  });
+}
+
+export type ClockMode = "aligned" | "series";
+
+/** The samples the scene draws at playback time t in either mode. */
+export function samplesAt(model: SaffireModel, mode: ClockMode, t: number): SampleNow[] {
+  return mode === "aligned" ? stateAligned(model, t) : stateAt(model, t).samples;
 }
 
 /** Module CO₂ (ppm) at an onboard time; null outside the recordings. */

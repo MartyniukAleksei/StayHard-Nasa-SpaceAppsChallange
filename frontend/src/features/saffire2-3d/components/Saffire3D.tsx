@@ -1,7 +1,8 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Playback } from "@/shared/three/playback";
-import type { SaffireModel } from "../lib/model";
+import type { ClockMode, SaffireModel } from "../lib/model";
 import { ignitionPos } from "../lib/timeline";
+import { AlignedPhase, AlignedReadouts, AlignedTimeline } from "./AlignedHud";
 import { CardFallback } from "./CardFallback";
 import { Phase, Readouts } from "./Readouts";
 import { hasWebGL, prefersReducedMotion, Scene, SceneBoundary, useSaffireModel } from "./shell";
@@ -32,9 +33,9 @@ export function Saffire3D({ bare = false }: { bare?: boolean }) {
       <div className="wrap">
         <h2 id="sf3d-title" className="h-section">The whole experiment in 3D</h2>
         <p className="lede">
-          The flow duct aboard Cygnus with its card of nine samples. Play the series: each sample is lit in turn
-          and its flame, igniter and burned length follow the flight data and the experiment table. Each sample also
-          has its own 3D close-up on its sample page.
+          The flow duct aboard Cygnus with its card of nine samples. Side by side, all nine are lit together at their
+          own ignition so they can be compared; as flown, each is lit in turn. Flame, igniter and burned length follow
+          the flight data and the experiment table. Each sample also has its own 3D close-up on its sample page.
         </p>
         {body}
       </div>
@@ -42,13 +43,24 @@ export function Saffire3D({ bare = false }: { bare?: boolean }) {
   );
 }
 
+const MODES: { id: ClockMode; label: string }[] = [
+  { id: "aligned", label: "Side by side" },
+  { id: "series", label: "As flown" },
+];
+
 function Replay({ model }: { model: SaffireModel }) {
   const reduced = useMemo(prefersReducedMotion, []);
+  const [mode, setMode] = useState<ClockMode>("aligned");
   const playback = useMemo(() => {
+    if (mode === "aligned") {
+      const p = new Playback(model.aligned.tMin, model.aligned.tMax, !reduced, Math.max(model.aligned.tMin, -3));
+      p.speed = 5;
+      return p;
+    }
     const p = new Playback(0, model.timeline.total, false, ignitionPos(model.timeline, "2-5"));
     p.speed = 20;
     return p;
-  }, [model]);
+  }, [model, mode, reduced]);
   const [active, setActive] = useState(true);
   const [labels, setLabels] = useState(true);
   const root = useRef<HTMLDivElement>(null);
@@ -59,22 +71,43 @@ function Replay({ model }: { model: SaffireModel }) {
 
   return (
     <div className="sf3d" ref={root}>
+      <div className="sf3d-modes" role="group" aria-label="How the nine samples are shown">
+        {MODES.map((m) => (
+          <button key={m.id} type="button" className={m.id === mode ? "on" : ""} aria-pressed={m.id === mode} onClick={() => setMode(m.id)}>
+            {m.label}
+          </button>
+        ))}
+        <span className="sf3d-modes-note mono">
+          {mode === "aligned"
+            ? "all nine from their own ignition; in flight they burned one after another"
+            : "one recording after another, as on board; long pauses shortened"}
+        </span>
+      </div>
       <figure className="sf3d-stage">
         <Suspense fallback={<div className="sf3d-empty">Starting 3D…</div>}>
-          <Scene model={model} playback={playback} active={active} reducedMotion={reduced} labels={labels} scaleBar={scaleBar} />
+          <Scene key={mode} model={model} playback={playback} active={active} reducedMotion={reduced} labels={labels} scaleBar={scaleBar} mode={mode} />
         </Suspense>
         <div className="sf3d-scale mono" aria-hidden="true">
           <div ref={scaleBar} />
           10 cm at the card
         </div>
         <figcaption className="sf3d-phase mono">
-          <Phase model={model} playback={playback} />
+          {mode === "aligned" ? <AlignedPhase model={model} playback={playback} /> : <Phase model={model} playback={playback} />}
         </figcaption>
       </figure>
       <div className="sf3d-under">
-        <Timeline model={model} playback={playback} />
-        <Readouts model={model} playback={playback} labels={labels} onLabels={setLabels} />
-        <Note doi={model.doi} />
+        {mode === "aligned" ? (
+          <>
+            <AlignedTimeline model={model} playback={playback} />
+            <AlignedReadouts model={model} playback={playback} labels={labels} onLabels={setLabels} />
+          </>
+        ) : (
+          <>
+            <Timeline model={model} playback={playback} />
+            <Readouts model={model} playback={playback} labels={labels} onLabels={setLabels} />
+          </>
+        )}
+        <Note doi={model.doi} aligned={mode === "aligned"} />
       </div>
     </div>
   );
@@ -94,18 +127,23 @@ export function useOffscreenStop(root: React.RefObject<HTMLDivElement | null>, p
   }, [root, playback, setActive]);
 }
 
-export function Note({ doi, sample }: { doi: string; sample?: string }) {
+export function Note({ doi, sample, aligned = false }: { doi: string; sample?: string; aligned?: boolean }) {
   return (
     <p className="sf3d-note">
       3D replay drawn from flight data and the experiment table, not a recording · Saffire-II (PSI-99, doi:{doi})
-      {sample ? ` · sample ${sample}` : ""}. From the data: which sample is recorded, igniter on/off (igniter current),
+      {sample ? ` · sample ${sample}` : ""}.
+      {aligned
+        ? " Side by side: every recording is shifted so its ignition is at 0 s; in flight the samples burned one after another over about an hour."
+        : ""}{" "}
+      From the data: which sample is recorded, igniter on/off (igniter current),
       flame duration (table burn time), burned length after each test (table), flame brightness (radiometers), flow
       speed (anemometer), module CO₂. Estimate: the flame front moves at the table spread rate (SIBAL) or evenly over
       the burn time (PMMA strip of 2-7); thick PMMA keeps its flame at the base (Note 4) while the damaged zone grows
       evenly to its table length. To scale: samples 5 × 29 cm on a 3 × 3 card (Readme, Fig. 1); the module about 53 ×
       90 × 133 cm (Objectives, Development and Status, Fig. 1). Schematic: spacing on the card, fans, flow
-      straighteners, avionics bay, cameras. Illustrative: colours, flame shape and flicker; particles move at the
-      measured flow speed in real time, not at playback speed.{sample ? "" : " Long pauses between recordings are shortened."}{" "}
+      straighteners, avionics bay, cameras. Illustrative: colours, flame shape and flicker, sparks and the glowing
+      burn edge; particles move at the measured flow speed in real time, not at playback speed
+      {aligned ? " (side by side: the mean of the recordings running at that moment)" : ""}.{sample || aligned ? "" : " Long pauses between recordings are shortened."}{" "}
       Drag to rotate, scroll to zoom.
     </p>
   );

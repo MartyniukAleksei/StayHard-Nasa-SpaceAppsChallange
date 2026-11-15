@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { ANCHOR_MM, burnAt, burnMode, frontRate, type BurnInput } from "./burn.ts";
+import { alignedTIgn, buildAligned } from "./aligned.ts";
 import { buildTimeline, ignitionPos, momentAt } from "./timeline.ts";
 
 const sibal: BurnInput = { material: "SIBAL", burnTimeS: 145, ugBurnCm: 29, spreadLo: 2.1, spreadHi: 2.1, spreadNote: "" };
@@ -77,5 +78,34 @@ describe("series timeline", () => {
 
   test("jump goes a few seconds before ignition", () => {
     assert.equal(ignitionPos(tl, "2-2"), 115 + 60 - 3);
+  });
+});
+
+describe("side by side clock", () => {
+  const recs = [
+    { id: "2-1", epochStart: 0, epochEnd: 60_000, ignitionEpoch: 10_000 },
+    { id: "2-5", epochStart: 600_000, epochEnd: 800_000, ignitionEpoch: 620_000 },
+    { id: "2-9", epochStart: 900_000, epochEnd: 950_000, ignitionEpoch: null },
+  ];
+  const clock = buildAligned(recs);
+
+  test("windows are relative to each sample's own ignition", () => {
+    assert.deepEqual(clock.windows[0], { id: "2-1", from: -10, to: 50, ignited: true });
+    assert.deepEqual(clock.windows[1], { id: "2-5", from: -20, to: 180, ignited: true });
+    assert.equal(clock.tMin, -20);
+    assert.equal(clock.tMax, 180);
+  });
+
+  test("a recording without ignition starts at 0", () => {
+    assert.deepEqual(clock.windows[2], { id: "2-9", from: 0, to: 50, ignited: false });
+  });
+
+  test("all samples share t inside their windows; final state after, nothing before", () => {
+    assert.equal(alignedTIgn(clock, "2-1", 30), 30);
+    assert.equal(alignedTIgn(clock, "2-5", 30), 30);
+    assert.equal(alignedTIgn(clock, "2-1", 100), Infinity);
+    assert.equal(alignedTIgn(clock, "2-1", -15), null);
+    assert.equal(alignedTIgn(clock, "2-5", -15), -15);
+    assert.equal(alignedTIgn(clock, "2-7", 0), null);
   });
 });

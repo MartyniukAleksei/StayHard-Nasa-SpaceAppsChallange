@@ -124,7 +124,7 @@ UI-шляхи BASS-II навмисно не збігаються з загаль
 | `/studies/same-r/compare?ids=` | Порівняння до 3 тестів SAME-R: спільні осі P-Trak і DustTrak B, ТЕМ-знімок на тест | `features/same-r` |
 | `/studies/same-r/library` | Бібліотека SAME-R: NASA-документи зі знімка, усі фото з МКС, цитата | `features/same-r` |
 | `/studies/same-r/tests/:id` | Тест SAME-R: Watch (3D-відтворення з даних), графіки телеметрії, параметри, ТЕМ-знімки, файли (локальні або з PSI) | `features/same-r`, `features/same-r-3d` |
-| `/studies/saffire2` | Огляд Saffire-II у продовій будові FLEX: hero → 3D всієї серії → Samples to read first → How it worked (схема, як закінчується смужка) → What was found → питання → Browse → References | `features/saffire2` + `features/saffire2-3d` ([ADR 0011](decisions/0011-saffire2-3d-replay.md)) |
+| `/studies/saffire2` | Огляд Saffire-II у продовій будові FLEX: hero → 3D всієї серії (Side by side: усі 9 від свого запалювання; As flown: по черзі) → Samples to read first → How it worked (схема, як закінчується смужка) → What was found → питання → Browse → References | `features/saffire2` + `features/saffire2-3d` ([ADR 0011](decisions/0011-saffire2-3d-replay.md)) |
 | `/studies/saffire2/samples` | Дослідник: фасети, картка 3×3 як мапа, таблиця, «Go to a sample», прев'ю в модалці, порівняння ≤ 4 | `features/saffire2` |
 | `/studies/saffire2/samples/:id` | Зразок: What happened (з таблиці), Watch (3D зразка рухає курсор графіків), Sensors, Parameters, Same material, Files | `features/saffire2`, `features/saffire2-3d` |
 | `/studies/saffire2/compare?ids=` | Порівняння: пресети, колонки з «Open in 3D», накладені криві на спільних осях | `features/saffire2` |
