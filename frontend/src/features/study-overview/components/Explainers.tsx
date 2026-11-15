@@ -1,19 +1,6 @@
 import { EndMark, END_TYPES } from "@/shared/ui/EndMark";
 import { Link } from "react-router";
-import { VideoGallery } from "./VideoGallery";
 import { END_DEFINITIONS, FINDINGS, HOW_IT_WORKED, TRAPS } from "../content";
-
-/** G: real NASA camera videos of FLEX tests. */
-export function VideoSection() {
-  return (
-    <section className="band" aria-labelledby="videos-title">
-      <div className="wrap">
-        <h2 id="videos-title" className="h-section">Watch the flames</h2>
-        <VideoGallery />
-      </div>
-    </section>
-  );
-}
 
 /** Link to the explorer, at the end of the story. */
 export function BrowseTests() {

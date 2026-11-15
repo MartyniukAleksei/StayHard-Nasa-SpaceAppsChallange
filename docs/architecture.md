@@ -78,7 +78,7 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/studies/flex/tests/{n}/report` | ✅ UI, сторінка тесту 3A: паспорт + `neighbors` (5 схожих: те саме паливо, розбавник і клас нитки, найближчі за O₂, тиском і d₀; *derived*) + `files` + `videos` + `has_3d` |
 | GET | `/api/studies/flex/tests/{n}/replay` | ✅ UI: `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок |
 | GET | `/api/studies/flex/tests/{n}/series.csv` | ✅ усі точки рядів (`signal,t_s,value`), у першому рядку — цитата з DOI |
-| GET | `/api/studies/flex/videos` | ✅ UI: усі mp4 камер NASA (PSI FLEX) з умовами тесту (`test_no, fuel, diluent, x_o2, p_atm, end_type, name, path`) — галерея на Огляді |
+| GET | `/api/studies/flex/videos` | ✅ UI: усі mp4 камер NASA (PSI FLEX) з умовами тесту (`test_no, fuel, diluent, x_o2, p_atm, end_type, name, path`) — зараз UI його не використовує (галерею на Огляді замінив 3D-приклад) |
 | GET | `/api/studies/flex/library` | ✅ UI: цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
 | POST | `/api/agent` | ✅ SSE: `text_delta`, `status`, `limit`, `done` (відповідь із сегментами й джерелами) — [docs/agent](agent/README.md) |
 
