@@ -27,7 +27,7 @@
 - **BM25** — розширення DuckDB `fts` (індекс будується в `build_db`). Ловить точні терміни: `LLUV`, `Dext`, `20CAL10`.
 - **Злиття — Reciprocal Rank Fusion**: `score = Σ 1/(60 + rank)` по обох списках (по 30 кандидатів). Ранги з кожного пошуку повертаються для дебагу.
 - **Переранжування — cross-encoder** `Xenova/ms-marco-MiniLM-L-6-v2` (fastembed) по top-20 після RRF: оцінює пару «запит–текст» разом. Порядок видачі — за `rerank_score`; вимикається `rerank=false`. Важчий `BAAI/bge-reranker-base` дав ще +1 влучання, але в ~4.6 раза повільніший — відкинуто.
-- **Посилання:** кожен hit має `url` (контракт [ADR 0005](../decisions/0005-citation-contract.md)) і `to_source()` → блок `search_result` для Claude API.
+- **Посилання:** кожен hit має `url` (контракт [ADR 0006](../decisions/0006-citation-contract.md)) і `to_source()` → блок `search_result` для Claude API.
 - **Кеш ембеддингів.** `index.build` бере вектори зі старого `flame.duckdb` за `text_hash = sha256(model + embed_text)`; рахує лише нові/змінені. Зміна моделі інвалідує кеш (`meta.embed_model`).
 - **Не text-to-SQL і не MCP** — див. [mission.md](mission.md).
 

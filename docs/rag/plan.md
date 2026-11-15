@@ -22,8 +22,8 @@
 - [x] Eval і тюнінг (recall@5 / MRR): гібрид 0.79 / 0.62 → глосарій абревіатур 0.86 / 0.69 → cross-encoder 0.93 / 0.88; відкладений набір 0.90 / 0.85. Промахи, що лишилися: питання про моделі кінетики (сторінка з таблицею моделей), SF6-матриця (дубль EIRD/Test Plan), №179 (схожі коментарі CO2-тестів).
 
 ## 6. Контракт джерел і API для агента — ✅
-- [x] `core/citations.py`, ADR 0005; `url` у `chunks` і `Hit`, `Hit.to_source()`.
-- [x] `media`: `GET /api/media/flex/{path}`.
+- [x] `core/citations.py`, ADR 0006; `url` у `chunks` і `Hit`, `Hit.to_source()`.
+- [x] `media`: `GET /api/media/flex/files/{path}` (поруч із кадрами камер з PSI, ADR 0005).
 - [x] `studies/flex`: `fields`, `tests` з фільтрами, картка тесту, часові ряди, `neighbors`, `compare`; `sources` у кожному результаті; `fiber_conflict`.
 - [x] Прод після автодеплою перевірено: `/api/health` ok, `/api/rag/search` на проді дає ту саму видачу, що локально. Під час перезбирання БД бекенд ~кілька хвилин віддає 502 (див. deployment.md).
 
@@ -32,6 +32,6 @@
 - [x] `docs/rag/*`, ADR 0004, оновлено `architecture.md`, `data/flex.md`, `README.md`.
 
 ## Далі (поза цим PR)
-- Агент: інструменти над `rag.service.search` і `studies.flex.service` (кожен повертає `sources` → `search_result`), промпт, перевірка цитат за ADR 0005, стрімінг `POST /api/agent`. Потрібен ключ Claude API у змінних Railway (рішення власника).
+- Агент: інструменти над `rag.service.search` і `studies.flex.service` (кожен повертає `sources` → `search_result`), промпт, перевірка цитат за ADR 0006, стрімінг `POST /api/agent`. Потрібен ключ Claude API у змінних Railway (рішення власника).
 - Фронт: сторінка тесту за `/api/studies/flex/tests/{n}`, рендер цитат.
 - Нове дослідження: `rag/sources/<study>.py` + `evalsets/<study>.jsonl` + підключення в `build_db`.

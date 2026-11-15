@@ -85,7 +85,7 @@ def test_in_and_null_filters(client) -> None:
 def test_test_detail_and_comment_source(client) -> None:
     body = client.get("/api/studies/flex/tests/1").json()
     assert body["test"]["fuel"] == "Heptane"
-    assert body["files"][0]["url"] == "/api/media/flex/raw/001/FLEX-001_DropletData.txt"
+    assert body["files"][0]["url"] == "/api/media/flex/files/raw/001/FLEX-001_DropletData.txt"
     assert [s["text"] for s in body["sources"]][1] == "Sooty flame."
     assert client.get("/api/studies/flex/tests/99").status_code == 404
 
@@ -99,7 +99,7 @@ def test_timeseries_downsamples_and_keeps_last_point(client) -> None:
     assert body["rows"][-1][0] == pytest.approx(9.9)
     assert [s["url"] for s in body["sources"]] == [
         "/api/studies/flex/tests/1/timeseries/droplet",
-        "/api/media/flex/raw/001/FLEX-001_DropletData.txt",
+        "/api/media/flex/files/raw/001/FLEX-001_DropletData.txt",
     ]
     assert client.get("/api/studies/flex/tests/1/timeseries/bogus").status_code == 404
 
@@ -119,15 +119,15 @@ def test_compare_warns_on_fiber_mix_and_disruption(client) -> None:
 
 
 def test_media_serves_only_allowed_files(client) -> None:
-    ok = client.get("/api/media/flex/raw/001/FLEX-001_DropletData.txt")
+    ok = client.get("/api/media/flex/files/raw/001/FLEX-001_DropletData.txt")
     assert ok.status_code == 200
     assert ok.headers["content-disposition"].startswith("inline")
     for bad in [
-        "/api/media/flex/secret.txt",
-        "/api/media/flex/raw/../secret.txt",
-        "/api/media/flex/raw/%2e%2e/secret.txt",
-        "/api/media/other/raw/001/FLEX-001_DropletData.txt",
-        "/api/media/flex/raw/001/missing.txt",
+        "/api/media/flex/files/secret.txt",
+        "/api/media/flex/files/raw/../secret.txt",
+        "/api/media/flex/files/raw/%2e%2e/secret.txt",
+        "/api/media/flex/files/../flex/raw/001/FLEX-001_DropletData.txt",
+        "/api/media/flex/files/raw/001/missing.txt",
     ]:
         assert client.get(bad).status_code == 404, bad
 

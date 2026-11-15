@@ -26,12 +26,14 @@
 | `comments` | `<CIR>_Comments.txt` | службові примітки обробки | ~200 | ~5 КБ |
 | `camera_index_txt` | `<CIR>A.txt` / `D.txt` | індекс кадрів камер | ~100 | ~100 КБ |
 | `testsheet_rtf` | `TestSheet.rtf` | дубль TestSheet з картинками | 268 | ~1 МБ |
-| `camera_images_zip` A | `<CIR>A.zip` | кадри **HiBMS** (backlit, 1024×1024, 12 біт, 30 fps) — силует краплі | ~240 | **~1.7 ГБ** |
-| `camera_images_zip` B | `<CIR>B.zip` | ймовірно **LLL-UV** (512×512) | ~250 | ~160 МБ |
-| `camera_images_zip` D | `<CIR>D.zip` | ймовірно **кольорова камера** (640×480) | ~250 | ~290 МБ |
-| `video` | `*.mp4` | запис з борту | **лише ~25 тестів** (23 з них <60 МБ) | 3 МБ – 1.2 ГБ |
+| `camera_images_zip` A | `<CIR>A.zip` | кадри **HiBMS** (backlit, 1024×1024, 16-біт TIFF, 30 fps) — силует краплі | 240 | **~1.7 ГБ** |
+| `camera_images_zip` B | `<CIR>B.zip` | кадри **LLL-UV** (512×512, 16-біт TIFF) — полум'я в UV (OH*) | 250 | ~160 МБ |
+| `camera_images_zip` D | `<CIR>D.zip` | кадри **кольорової камери** (640×480, 24-біт BMP) | 247 | ~290 МБ |
+| `video` | `*.mp4` | запис з борту | **лише 14 тестів** (у знімку `media/` — 12, ті, де файли <60 МБ) | 3 МБ – 1.2 ГБ |
 
-> Букви камер A/B/D виведено з `*_Camera_Settings.txt` (IPSU1 = HiBMS, IPSU2 = LLL-UV, IPSU4 = колір). Перевірити на 1–2 архівах.
+> Букви камер A/B/D виведено з `*_Camera_Settings.txt` (IPSU1 = HiBMS, IPSU2 = LLL-UV, IPSU4 = колір) і перевірено на архівах тесту 100.
+> Кожен zip містить кадри `<CIR><cam>_NNNNN.tif|bmp` і власний індекс `<CIR><cam>.txt` (ImgNum, Mseconds, MTimeStamp, FileName).
+> Кадри є у 253 тестів із 274 — це єдине «зображення» для тестів без mp4. Бекенд віддає їх поштучно: `/api/media/flex/{test_no}/cameras/…` (див. `docs/architecture.md` і [ADR 0005](../decisions/0005-psi-frames-proxy.md)).
 
 ### Інше
 - **Engineering / Science Documents, Presentations** (~15 МБ): вимоги до експерименту, тест-план, «Cool Flames in Space» тощо → для RAG.
@@ -58,7 +60,7 @@
 
 **Як отримати файл шару C:** знайти рядок у `test_files` (є `name` і `version`) →
 `GET https://psi.nasa.gov/geode-py/ws/studies/PSI-69/download?file=<name>&version=<version>&redirect=false` → у відповіді текстом приходить **підписане S3-посилання** → GET по ньому.
-Це робить бекенд (`/media/{test_id}/{file}`) з кешем. Фронт у PSI напряму не ходить.
+Для кадрів камер це вже робить бекенд (модуль `media`): він читає з S3 лише потрібні байти zip через HTTP Range, тож архів цілком не качається. Фронт у PSI напряму не ходить.
 
 ## 3. Схема БД
 

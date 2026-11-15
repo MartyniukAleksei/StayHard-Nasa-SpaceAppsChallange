@@ -57,6 +57,6 @@ Data flow: PSI API → `flame.ingest.psi_flex` (offline) → `data/flex/` (snaps
 - Numbers shown in the UI or in agent answers must come from the data. Anything we compute ourselves (for example K from a d² fit) is labelled as an estimate.
 - Test `end_type` is Extinction, Completion or Disruption. Disruption means "self-extinction not observed", **never** "would burn forever".
 - Tests with a fiber (`ts_fiber`) must not be mixed with free-floating droplets.
-- The agent answers only from tool output and cites every claim (test, file, page or DOI). When data is missing, it says so. Every tool result carries `sources` (`flame/core/citations.py`, ADR 0005); build source URLs only with that module.
+- The agent answers only from tool output and cites every claim (test, file, page or DOI). When data is missing, it says so. Every tool result carries `sources` (`flame/core/citations.py`, ADR 0006); build source URLs only with that module.
 - Test conditions come from the `tests` table, not from TestSheet comments (35 comments name the wrong fuel); `fiber_conflict` marks 8 tests whose fiber flag contradicts the comment.
 - PSI data is CC0, but the FLEX DOI must be cited (`data/flex/about.json`).

@@ -31,9 +31,9 @@ docker-compose.yml  локальний запуск прод-образів
 | `core/config.py` | `Settings` (pydantic-settings, env). **Усі шляхи до даних тільки звідси**: `data_dir`, `flex_dir`, `duckdb_path` |
 | `db/duckdb.py` | read-only підключення; FastAPI-dependency `get_cursor` |
 | `api/router.py` | префікс `/api`, збирає роутери модулів; `api/routes/` — службові (health) |
-| `core/citations.py` | контракт джерел: `Source(url, title, text)`, побудова URL, `to_search_result` для Claude API ([ADR 0005](decisions/0005-citation-contract.md)) |
+| `core/citations.py` | контракт джерел: `Source(url, title, text)`, побудова URL, `to_search_result` для Claude API ([ADR 0006](decisions/0006-citation-contract.md)) |
 | `studies/flex/` | домен FLEX: `fields` (whitelist полів і сигналів) → `schemas` → `repository` (SQL) → `service` (логіка, `sources` у кожному результаті) → `router` (HTTP) |
-| `media/` | віддача файлів знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу; на ці URL ведуть посилання-джерела |
+| `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела |
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
 | `agent/` | LLM-агент та інструменти (`query_tests`, `compare_tests`, `search_docs`, `get_timeseries`, `open_view`) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
@@ -51,7 +51,10 @@ docker-compose.yml  локальний запуск прод-образів
 | GET | `/api/studies/flex/tests/{n}/timeseries/{signal}?max_points=` | ✅ `droplet`, `flame_color`, `flame_uv`, `chamber`; проріджування зі збереженням останньої точки |
 | GET | `/api/studies/flex/tests/{n}/neighbors?k=` | ✅ найближчі за умовами (те саме паливо й тип краплі; оцінка) |
 | GET | `/api/studies/flex/compare?ids=&ids=` | ✅ детермінований diff + попередження (нитка, паливо, Disruption, пропуски) |
-| GET | `/api/media/flex/{path}` | ✅ файли знімка (`raw/…`, `docs/…`, `media/…`), inline, Range |
+| GET | `/api/media/flex/{test_no}/cameras` | ✅ камери з кадрами в PSI (`A` HiBMS, `B` LLL-UV, `D` колір), лише БД |
+| GET | `/api/media/flex/{test_no}/cameras/{camera}/frames` | ✅ `{n_frames, fps, start_time, t_ms[], frame_url}`, перший виклик ~3–6 с |
+| GET | `/api/media/flex/{test_no}/cameras/{camera}/frames/{i}.jpg?max_side=` | ✅ JPEG одного кадру, ~1–2 с без кешу |
+| GET | `/api/media/flex/files/{path}` | ✅ файли знімка (`raw/…`, `docs/…`, `media/…`), inline, Range |
 | POST | `/api/agent` (stream) | план |
 
 ## Дані — `flame.duckdb`

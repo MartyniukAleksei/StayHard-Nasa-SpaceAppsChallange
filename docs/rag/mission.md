@@ -22,7 +22,7 @@
 - Не вигадує цитат: кожен результат уже має поле `citation`.
 
 ## Правила
-- **Кожна відповідь агента має посилання на джерело** — контракт [ADR 0005](../decisions/0005-citation-contract.md). Кожен hit RAG і кожен результат `studies/flex` несе `Source(url, title, text)`; агент передає їх у Claude API як блоки `search_result`, і API сам повертає цитати з нашим `url` і дослівним `cited_text`. URL: тест → `/api/studies/flex/tests/{n}`, файл/PDF-сторінка → `/api/media/flex/…#page=N`, опис і публікації → `https://doi.org/…` (FLEX DOI з `data/flex/about.json`).
+- **Кожна відповідь агента має посилання на джерело** — контракт [ADR 0006](../decisions/0006-citation-contract.md). Кожен hit RAG і кожен результат `studies/flex` несе `Source(url, title, text)`; агент передає їх у Claude API як блоки `search_result`, і API сам повертає цитати з нашим `url` і дослівним `cited_text`. URL: тест → `/api/studies/flex/tests/{n}`, файл/PDF-сторінка → `/api/media/flex/files/…#page=N`, опис і публікації → `https://doi.org/…` (FLEX DOI з `data/flex/about.json`).
 - Disruption = «самозгасання не спостерігалось», не «горіло б вічно».
 - Тести з ниткою (`ts_fiber`) не змішуємо з вільними краплями — префікс TestSheet-чанка містить `fiber yes/no`. У 8 тестах прапорець суперечить коментарю — `fiber_conflict` (див. [data/flex.md](../data/flex.md)).
 - Індекс будується офлайн у `build_db`; API лише читає.

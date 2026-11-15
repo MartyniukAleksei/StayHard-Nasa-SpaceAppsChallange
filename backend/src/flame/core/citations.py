@@ -1,6 +1,6 @@
 """Контракт джерел: кожен результат, що може потрапити у відповідь агента, несе посилання.
 
-Див. docs/decisions/0005-citation-contract.md. Коротко:
+Див. docs/decisions/0006-citation-contract.md. Коротко:
 - `Source` — одиниця даних для LLM: `url` (куди веде посилання), `title`, `text` (що саме
   модель може процитувати). Інструменти агента повертають список `Source`.
 - `to_search_result` перетворює `Source` у блок `search_result` Claude API з увімкненими
@@ -31,7 +31,7 @@ def doi_url(doi: str) -> str:
 
 def media_url(study: str, path: str, page: int | None = None) -> str:
     """Файл знімка дослідження (`path` відносно каталогу знімка, напр. raw/002/x.txt)."""
-    url = f"{API_PREFIX}/media/{STUDY_SLUGS[study]}/{quote(path)}"
+    url = f"{API_PREFIX}/media/{STUDY_SLUGS[study]}/files/{quote(path)}"
     return f"{url}#page={page}" if page else url
 
 

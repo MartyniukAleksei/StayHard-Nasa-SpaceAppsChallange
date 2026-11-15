@@ -43,7 +43,7 @@ def test_hybrid_search_ranks_relevant_chunk_first(cur) -> None:
     assert hits[0].test_no == 2
     assert hits[0].bm25_rank == 1
     assert hits[0].citation.startswith("FLEX-002 TestSheet")
-    assert hits[0].url == "/api/media/flex/raw/002/t.txt"
+    assert hits[0].url == "/api/media/flex/files/raw/002/t.txt"
 
 
 class FakeReranker:
@@ -64,7 +64,7 @@ def test_rerank_reorders_rrf_candidates(cur) -> None:
 def test_pdf_hit_links_to_page_and_converts_to_search_result(cur) -> None:
     f = SearchFilters(source_types=["doc_pdf"])
     [hit] = service.search(cur, "oxygen index", 5, f, embedder=FakeEmbedder(), rerank=False)
-    assert hit.url == "/api/media/flex/docs/plan.pdf#page=2"
+    assert hit.url == "/api/media/flex/files/docs/plan.pdf#page=2"
     block = to_search_result(hit.to_source())
     assert block["type"] == "search_result"
     assert block["source"] == hit.url

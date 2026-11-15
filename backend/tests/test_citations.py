@@ -5,7 +5,9 @@ from flame.rag.sources import Document
 
 
 def test_url_builders() -> None:
-    assert media_url("PSI-69", "docs/A B.pdf", page=3) == "/api/media/flex/docs/A%20B.pdf#page=3"
+    assert (
+        media_url("PSI-69", "docs/A B.pdf", page=3) == "/api/media/flex/files/docs/A%20B.pdf#page=3"
+    )
     assert build_test_url("PSI-69", 2) == "/api/studies/flex/tests/2"
     assert doi_url("10.1/x") == "https://doi.org/10.1/x"
 
