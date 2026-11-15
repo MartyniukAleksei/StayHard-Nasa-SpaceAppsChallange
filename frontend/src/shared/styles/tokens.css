@@ -1,0 +1,39 @@
+/* StayHard design tokens (docs/design/stayhard-ds.html, docs/design/README.md).
+   Dark only. Blue (--flame) is reserved for what is active or "live". */
+
+@font-face {
+  font-family: "IBM VGA";
+  /* IBM VGA 8x16 (Plus): Oldschool PC Font Pack, (c) VileR, int10h.org, CC BY-SA 4.0 */
+  src: url("../assets/fonts/ibm-vga.woff") format("woff");
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  --void: #050505;
+  --deep: #0e0e0d;
+  --line: #262624;
+  --ash: #8d8d88;
+  --ink: #f1f0ea;
+  --paper: #ebe5d5;
+  --soot: #151412;
+  --flame: #4d6bff;
+
+  /* Test end types: DS extension, always paired with a glyph. */
+  --end-ext: #6fa384;
+  --end-com: #c8735f;
+  --end-dis: #c09a52;
+
+  --brand: "IBM VGA", ui-monospace, monospace;
+  --display: "IBM VGA", ui-monospace, monospace;
+  --sans: "Geist", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --bz: 0.92;
+  --dz: 1.1;
+
+  --rule: 1px solid var(--line);
+  --gutter: max(5vw, 16px);
+  --max: 1240px;
+  --hit: 44px;
+}

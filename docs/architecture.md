@@ -43,6 +43,8 @@ docker-compose.yml  локальний запуск прод-образів
 | Метод | Шлях | Стан |
 |---|---|---|
 | GET | `/api/health` | ✅ `{status, env, db, flex_data}` |
+| GET | `/api/studies/flex/overview` | ✅ `{about, facts, presets[]}` — паспорт (з `study_about`), факти, пресети-питання з розкладом за фіналами (лише вільні краплі + скільки виключено через нитку). 503, якщо БД не зібрана |
+| GET | `/api/studies/flex/tests/{id}/replay` | ✅ `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок. 404 для невідомого тесту |
 | GET | `/api/studies/flex/tests?filters` | план |
 | GET | `/api/studies/flex/tests/{id}` (+ `/timeseries/{signal}`, `/neighbors`) | план |
 | GET | `/api/studies/flex/compare?ids=` | план |
@@ -50,7 +52,9 @@ docker-compose.yml  локальний запуск прод-образів
 | POST | `/api/agent` (stream) | план |
 
 ## Дані — `flame.duckdb`
-Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)). План: таблиця `chunks(id, source, test_no, page, text, embedding FLOAT[N])` для RAG, пошук `array_cosine_similarity` (або індекс розширення `vss`).
+Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)), а також `study_about(study, about JSON)` — вміст `about.json`. Нормалізація при збірці: `tests.test_date` з дворозрядним роком (у джерелі змішані `11/27/09` і `11/27/2009`, тож 50 рядків читались як рік 9–11) переноситься в 20xx.
+
+Похідні прапорці (рахуються в SQL, у UI підписані *derived*): **cool flame** — `ts_comment` відповідає `cool[- ]?flame` (без урахування регістру); **clean** — вільна крапля, не Disruption, є ряди краплі й UV-полум'я. План: таблиця `chunks(id, source, test_no, page, text, embedding FLOAT[N])` для RAG, пошук `array_cosine_similarity` (або індекс розширення `vss`).
 Правило: числа в UI і відповідях агента — тільки з цієї БД; все, що рахуємо самі (fit K тощо), позначаємо як оцінку.
 
 ## Frontend — `frontend/src/`

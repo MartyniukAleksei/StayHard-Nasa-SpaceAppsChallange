@@ -1,0 +1,467 @@
+<title>FLEX Student Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column; layer ladder → block cards → flow map → page specs → matrix. Tokens mirror app/src/styles.css */
+:root{
+  --bg:#fbfaf8;--surface:#ffffff;--surface-2:#f3f1ed;--border:#e3dfd8;--text:#1d1c1a;--muted:#6b6760;
+  --accent:#2f5bd3;--accent-soft:#e8eefc;
+  --ext:#1f8a5b;--dis:#c47f12;--com:#c2412d;--ext-soft:#e3f3ea;--dis-soft:#fbf0dc;--com-soft:#fbe6e2;
+  --flame:#e07a14;--flame-soft:#fcefe0;
+  --font:"Inter",system-ui,-apple-system,sans-serif;--serif:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141517;--surface:#1c1d20;--surface-2:#24262a;--border:#33363b;--text:#ecebe8;--muted:#a19d96;
+  --accent:#7ea2ff;--accent-soft:#1f2a44;--ext:#4cc38a;--dis:#e3a93b;--com:#ef7a66;--ext-soft:#173226;--dis-soft:#362a12;--com-soft:#3a1d18;
+  --flame:#f5a14f;--flame-soft:#3a2614;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141517;--surface:#1c1d20;--surface-2:#24262a;--border:#33363b;--text:#ecebe8;--muted:#a19d96;
+  --accent:#7ea2ff;--accent-soft:#1f2a44;--ext:#4cc38a;--dis:#e3a93b;--com:#ef7a66;--ext-soft:#173226;--dis-soft:#362a12;--com-soft:#3a1d18;
+  --flame:#f5a14f;--flame-soft:#3a2614;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:15px/1.6 var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(28px,4.5vw,40px)}
+h2{font-size:26px}
+h3{font-size:18px}
+p{margin:0}
+.eyebrow{font:500 12px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:17px;color:var(--muted);max-width:68ch}
+section{display:flex;flex-direction:column;gap:20px}
+.mono{font-family:var(--mono);font-size:.88em}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+
+/* hero facts */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.fact{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:14px 16px}
+.fact b{display:block;font:600 24px/1.1 var(--serif)}
+.fact span{font-size:13px;color:var(--muted)}
+
+/* layer ladder */
+.ladder{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.rung{display:grid;grid-template-columns:72px 1fr 1.1fr;gap:16px;padding:14px 18px;border-top:1px solid var(--border);align-items:start}
+.rung:first-child{border-top:0}
+.rung .tag{font:600 13px var(--mono);color:var(--accent)}
+.rung .q{color:var(--muted);font-style:italic}
+.rung.q-layer{background:var(--dis-soft)}
+.rung.q-layer .tag{color:var(--dis)}
+.rung > div{min-width:0}
+@media (max-width:640px){.rung{grid-template-columns:56px 1fr}.rung .q{grid-column:2}}
+
+/* blocks */
+.blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.block header{display:flex;gap:10px;align-items:baseline}
+.letter{font:600 13px var(--mono);color:var(--surface);background:var(--text);border-radius:5px;padding:2px 7px;flex:none}
+.block.q .letter{background:var(--dis)}
+.block.d .letter{background:var(--accent)}
+.block h3{font-size:17px}
+.layer{font:500 11px var(--mono);color:var(--muted);margin-left:auto;flex:none}
+dl.kv{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0}
+.stat{font-size:13px;background:var(--surface-2);border-radius:6px;padding:8px 10px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;border-radius:99px;padding:2px 9px;background:var(--surface-2);border:1px solid var(--border)}
+.pill.ext{background:var(--ext-soft);border-color:transparent;color:var(--ext)}
+.pill.dis{background:var(--dis-soft);border-color:transparent;color:var(--dis)}
+.pill.com{background:var(--com-soft);border-color:transparent;color:var(--com)}
+
+/* outcome bar */
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden}
+.bar i{display:block}
+
+/* flow map */
+.flow{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:16px}
+.flow svg{display:block;min-width:760px;width:100%;height:auto}
+.flow text{font-family:var(--font);fill:var(--text)}
+.flow .sub{fill:var(--muted);font-size:11.5px}
+.flow .node{fill:var(--surface-2);stroke:var(--border)}
+.flow .node.hot{fill:var(--accent-soft);stroke:var(--accent)}
+.flow .edge{stroke:var(--muted);fill:none;stroke-width:1.4}
+.flow .edge.dash{stroke-dasharray:4 4}
+.flow .arrow{fill:var(--muted)}
+.flow .band{fill:var(--flame-soft);stroke:var(--flame)}
+
+/* entry paths */
+.paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.path{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.steps b{font:600 12px var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:2px 7px}
+.steps .arr{color:var(--muted)}
+
+/* page specs */
+.pages{display:flex;flex-direction:column;gap:14px}
+details.page{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+details.page summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:16px 18px}
+details.page summary::-webkit-details-marker{display:none}
+details.page summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius)}
+.pnum{font:600 20px var(--serif);color:var(--accent)}
+.route{font:12px var(--mono);color:var(--muted)}
+.chev{color:var(--muted);transition:transform .15s}
+details[open] .chev{transform:rotate(90deg)}
+.pbody{padding:0 18px 18px 74px;display:grid;grid-template-columns:1fr 240px;gap:24px}
+.pbody > div{min-width:0}
+.pbody ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.side{display:flex;flex-direction:column;gap:12px;font-size:13.5px}
+.side h4{margin:0 0 4px;font:500 11px var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:720px){.pbody{grid-template-columns:1fr;padding-left:18px}}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+
+/* presets */
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.preset{border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.preset b{font:600 20px var(--serif)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{padding:9px 12px;text-align:left;border-top:1px solid var(--border);vertical-align:top}
+thead th{border-top:0;background:var(--surface-2);font-weight:600;font-size:12.5px}
+td.c{text-align:center}
+.dot3{color:var(--accent);letter-spacing:1px}
+.dot2{color:var(--accent);opacity:.65;letter-spacing:1px}
+.dot1{color:var(--muted);letter-spacing:1px}
+
+pre.code{margin:0;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;font:12.5px/1.55 var(--mono)}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--border);padding-top:16px}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <span class="eyebrow">Flame in Freefall · FLEX (PSI-69) · студентський сценарій</span>
+  <h1>Які дані є у FLEX і як провести через них студента</h1>
+  <p class="lead">Персона — бакалавр інженерної чи фізичної спеціальності з лабораторною, курсовою або власним питанням. Головна вимога — швидко знайти відповідь. Нижче: шари даних (від загального до часткового), що кожен блок каже студенту, і як це лягає на сторінки.</p>
+  <div class="facts num">
+    <div class="fact"><b>274</b><span>тести в таблиці</span></div>
+    <div class="fact"><b>6 555</b><span>файлів у PSI, ≈924 ГБ</span></div>
+    <div class="fact"><b>254</b><span>тести з рядом d(t)</span></div>
+    <div class="fact"><b>14</b><span>тестів з відео</span></div>
+    <div class="fact"><b>51</b><span>публікація (45 з DOI)</span></div>
+  </div>
+</header>
+
+<section id="layers">
+  <span class="eyebrow">Від загального до часткового</span>
+  <h2>П'ять шарів даних, однакових для всього PSI</h2>
+  <p class="lead">Сторінки будуємо під шари, а не під файли FLEX. Тоді CFI, BASS, SAFFIRE, SPICE підключаються конфігом.</p>
+  <div class="ladder">
+    <div class="rung"><span class="tag">L1</span><div><b>Дослідження</b><br><span class="mono">about.json</span> — мета, гіпотеза, метод, обладнання, автори, DOI</div><div class="q">«Що це і навіщо?»</div></div>
+    <div class="rung"><span class="tag">L2</span><div><b>Простір тестів</b><br><span class="mono">tests.csv</span> — що змінювали (фактори) → що отримали (відгуки, фінал)</div><div class="q">«Що пробували і що вийшло загалом?»</div></div>
+    <div class="rung"><span class="tag">L3</span><div><b>Один тест</b><br>паспорт, коментар дослідника, часові ряди, телеметрія, відео, Summary.pdf</div><div class="q">«Що саме сталося тут?»</div></div>
+    <div class="rung"><span class="tag">L4</span><div><b>Знання</b><br>тест-план, вимоги, презентації, публікації</div><div class="q">«Що з цього висновували автори?»</div></div>
+    <div class="rung"><span class="tag">L5</span><div><b>Похідне (наше)</b><br>diff, сусіди, власний фіт K, середовище, теги, висновок для безпеки</div><div class="q">«Що це означає?»</div></div>
+    <div class="rung q-layer"><span class="tag">Q</span><div><b>Якість і межі</b> — наскрізний шар<br>нитка, Disruption, cool flames, пропуски, прогалини</div><div class="q">«Чи можна цьому вірити?»</div></div>
+  </div>
+</section>
+
+<section id="blocks">
+  <span class="eyebrow">Аналіз даних FLEX</span>
+  <h2>Логічні блоки: що показують і коли потрібні</h2>
+
+  <div class="blocks">
+    <article class="block">
+      <header><span class="letter">A</span><h3>Паспорт дослідження</h3><span class="layer">L1</span></header>
+      <p>Мета (межі займистості, CO₂/He/SF₆), гіпотеза, метод пошуку LOI, CIR + MDCA на МКС, тести 2009–2011, PI F. Williams, DOI <span class="mono">10.60555/mbq8-0451</span>, CC0.</p>
+      <dl class="kv"><dt>Каже</dt><dd>навіщо існує експеримент</dd><dt>Коли</dt><dd>перші 30 с; вступ і цитата в роботі</dd><dt>Як</dt><dd>hero + факт-картки + «скопіювати цитату»</dd></dl>
+      <div class="stat">Схема <span class="mono">about.json</span> однакова в PSI, тож блок масштабується без роботи.</div>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">B</span><h3>Фізика і словник</h3><span class="layer">L1·L4</span></header>
+      <p>Кулясте полум'я без підйомної сили · закон <span class="mono">d² = d₀² − K·t</span> · три фінали тесту · cool flames · K, d₀, d_ext, standoff, розбавник, LOI, нитка.</p>
+      <dl class="kv"><dt>Каже</dt><dd>мінімум, щоб читати графіки</dd><dt>Коли</dt><dd>до першого тесту, потім точково</dd><dt>Як</dt><dd>схема + формула + тултипи, не стіна тексту</dd></dl>
+      <div class="stat">Шаблон для інших: явище → один закон → як закінчується тест → пастки.</div>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">C</span><h3>Фактори (що змінювали)</h3><span class="layer">L2</span></header>
+      <dl class="kv num">
+        <dt>Паливо</dt><dd>метанол 157 · гептан 117</dd>
+        <dt>Тиск</dt><dd>≈0.7 атм 103 · ≈1 атм 161 · 2–3 атм 9</dd>
+        <dt>O₂</dt><dd>0.12–0.34, 15 рівнів</dd>
+        <dt>Розбавник</dt><dd>N₂ 101 · CO₂ 123 · He 50</dd>
+        <dt>d₀</dt><dd>1.1–4.7 мм</dd>
+        <dt>Нитка</dt><dd>ні 212 · так 54 · ? 8</dd>
+      </dl>
+      <dl class="kv"><dt>Коли</dt><dd>пошук і формулювання питання</dd><dt>Як</dt><dd>фасети з лічильниками; мапа покриття O₂ × тиск з порожніми клітинками</dd></dl>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">D</span><h3>Результати (що вийшло)</h3><span class="layer">L2</span></header>
+      <div class="bar" role="img" aria-label="Extinction 186, Disruption 61, Completion 27">
+        <i style="width:67.9%;background:var(--ext)"></i><i style="width:22.3%;background:var(--dis)"></i><i style="width:9.8%;background:var(--com)"></i>
+      </div>
+      <div class="pills num"><span class="pill ext">Extinction 186</span><span class="pill dis">Disruption 61</span><span class="pill com">Completion 27</span></div>
+      <dl class="kv num"><dt>K</dt><dd>0.05–1.06 мм²/с (258)</dd><dt>Час</dt><dd>0.3–39.2 с (266)</dd><dt>d_ext</dt><dd>0–4.6 мм (197)</dd></dl>
+      <dl class="kv"><dt>Каже</dt><dd>головну закономірність — коли вогонь гасне сам</dd><dt>Як</dt><dd>scatter 274 тестів + answer card над пошуком</dd></dl>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">E</span><h3>Паспорт тесту</h3><span class="layer">L3</span></header>
+      <p>Рядок таблиці + TestSheet (266) з <b>коментарем дослідника</b>, нитка, температура, протокол запалювання, налаштування камер.</p>
+      <div class="pills num"><span class="pill">drift 161</span><span class="pill">disrupt 88</span><span class="pill">cool flame 52</span><span class="pill">radiative 51</span><span class="pill">soot 20</span><span class="pill">oscillation 19</span><span class="pill">bubble 10</span><span class="pill">not reliable 4</span></div>
+      <dl class="kv"><dt>Каже</dt><dd>історію тесту і чи вірити його числам</dd><dt>Коли</dt><dd>перед графіками; при доборі тестів</dd><dt>Як</dt><dd>цитата + автоматичні теги + прапорці якості</dd></dl>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">F</span><h3>Часові ряди</h3><span class="layer">L3</span></header>
+      <dl class="kv num">
+        <dt>droplet</dt><dd>t, d, x, y · 30 Гц · 254</dd>
+        <dt>flame_uv</dt><dd>діаметр, standoff · 252</dd>
+        <dt>flame_color</dt><dd>діаметр, standoff · 216</dd>
+        <dt>chamber</dt><dd>p, T1–T4 · 1 Гц · 251</dd>
+        <dt>radiometer</dt><dd>100 Гц · ~250, ще не в БД</dd>
+      </dl>
+      <dl class="kv"><dt>Каже</dt><dd>як «живе» полум'я; нахил d² = K</dd><dt>Коли</dt><dd>розбір тесту і <b>лабораторна</b></dd><dt>Як</dt><dd>replay + синхронні графіки, фіт K «наш vs NASA», CSV</dd></dl>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">G</span><h3>Медіа і звіти NASA</h3><span class="layer">L3</span></header>
+      <dl class="kv num"><dt>Summary.pdf</dt><dd>254 тести, ~0.3 МБ</dd><dt>Відео</dt><dd>14 тестів: 7, 13, 33, 34, 36, 116, 141, 157, 207, 208, 226, 237, 255, 264</dd><dt>Кадри</dt><dd>до 1.7 ГБ/тест, на вимогу</dd></dl>
+      <dl class="kv"><dt>Каже</dt><dd>«це справжнє»; офіційний графік для звірки</dd><dt>Коли</dt><dd>вау на вході; перевірка в кінці лаби</dd><dt>Як</dt><dd>відео поруч з replay, або чесне «анімація з даних»</dd></dl>
+    </article>
+
+    <article class="block">
+      <header><span class="letter">H</span><h3>Документи і публікації</h3><span class="layer">L4</span></header>
+      <p>51 публікація (45 з DOI) · Test Plan, DoD · ERD, EIRD · 4 презентації, зокрема «Cool Flames in Space».</p>
+      <dl class="kv"><dt>Каже</dt><dd>що висновували автори, на кого посилатися</dd><dt>Коли</dt><dd>література для курсової; джерело для відповіді агента</dd><dt>Як</dt><dd>бібліотека з темами + «скопіювати цитату»</dd></dl>
+    </article>
+
+    <article class="block d">
+      <header><span class="letter">L5</span><h3>Похідне, яке рахуємо ми</h3><span class="layer">L5</span></header>
+      <p>Середовище (МКС / «місячне» / з гасником) · власний фіт K vs K NASA · diff між тестами · найближчі сусіди · теги з коментарів · висновок для безпеки.</p>
+      <div class="stat">Кожне число підписане: виміряне, наш фіт чи оцінка з тестів №…</div>
+    </article>
+
+    <article class="block q">
+      <header><span class="letter">Q</span><h3>Якість і межі даних</h3><span class="layer">наскрізний</span></header>
+      <dl class="kv num">
+        <dt>Нитка</dt><dd>54 / 212 / 8 — за замовчуванням «вільні»</dd>
+        <dt>Disruption</dt><dd>61 — «самозгасання не спостерігалось»</dd>
+        <dt>Cool flames</dt><dd>52 — «згасло» ≠ «безпечно»</dd>
+        <dt>Пропуски</dt><dd>без d₀ 12, без K 16, без рядів ~20</dd>
+        <dt>Прогалини</dt><dd>немає ≥30% O₂ + CO₂/He</dd>
+      </dl>
+      <div class="stat">Показуємо поруч з числом, а не окремою сторінкою.</div>
+    </article>
+  </div>
+</section>
+
+<section id="generalize">
+  <span class="eyebrow">Масштабування</span>
+  <h2>Ті самі ролі колонок в інших дослідженнях</h2>
+  <p class="lead">Шапки експериментальних таблиць PSI розкладаються на однакові ролі. Нове дослідження = новий конфіг, сторінки ті самі.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Роль</th><th>FLEX</th><th>CFI</th><th>BASS-II</th><th>SAFFIRE-II</th><th>SPICE</th><th>SAME-R</th></tr></thead>
+      <tbody>
+        <tr><th>ID / час</th><td>Test #, CIR, дата</td><td>Flex №, CIR</td><td>Test #, Sample #</td><td>Sample №</td><td>GMT ignition</td><td>Test #, дата</td></tr>
+        <tr><th>Об'єкт</th><td>паливо, d₀</td><td>паливо, нитка</td><td>матеріал</td><td>матеріал, розміри</td><td>паливо, сопло</td><td>тип зразка</td></tr>
+        <tr><th>Атмосфера</th><td>p, O₂, N₂, CO₂, He</td><td>p, O₂, N₂, He</td><td>O₂, CO₂, CO</td><td>O₂</td><td>—</td><td>—</td></tr>
+        <tr><th>Потік</th><td>—</td><td>—</td><td>fan, restrictor</td><td>швидкість, напрям</td><td>air rate</td><td>inlet velocity</td></tr>
+        <tr><th>Відгук</th><td>K, d_ext, час</td><td>у сирих</td><td>O₂/CO₂/CO після</td><td>довжина горіння 0g <b>і 1g</b></td><td>smoke point</td><td>Rt/R0, aging</td></tr>
+        <tr><th>Фінал</th><td>Ext / Dis / Com</td><td>у сирих</td><td>з відео</td><td>—</td><td>smoke / no</td><td>—</td></tr>
+        <tr><th>Сирі ряди</th><td>d(t), полум'я, камера</td><td>те саме + CoolFlame</td><td>відео, ProofSheet</td><td>телеметрія xlsx</td><td>flamelength, кадри</td><td>лічильники, tif</td></tr>
+      </tbody>
+    </table>
+  </div>
+<pre class="code">// studies/&lt;code&gt;/schema.ts — єдине, що пишемо руками для нового дослідження
+export const SCHEMA = {
+  unit: "test",                                   // test | sample | run
+  factors:   { fuel: "cat", p_atm: "num", x_o2: "num", diluent: "cat", d0_mm: "num", fiber: "cat" },
+  responses: { k_mm2_s: "num", burn_time_s: "num", dext_mm: "num" },
+  outcome:   { field: "end_type", values: ["Extinction", "Completion", "Disruption"] },
+  signals:   ["droplet", "flame_uv", "flame_color", "chamber"],
+  media:     ["video", "summary_pdf"],
+  mapAxes:   { x: "x_o2", y: "diluent", color: "end_type" },
+  presets, caveats, physics,                      // готові питання, блок Q, блок B
+};</pre>
+  <p>Що передбачити: одиниця буває тестом, зразком чи сесією; явного фіналу немає скрізь (тоді результат = головне число); сирі ряди є не в усіх тестів, і сторінка мусить деградувати без помилок; порівняння 1g vs 0g є лише в SAFFIRE-II і частково BASS.</p>
+</section>
+
+<section id="flow">
+  <span class="eyebrow">User flow</span>
+  <h2>Сторінки і переходи</h2>
+  <div class="flow">
+    <svg viewBox="0 0 900 330" role="img" aria-label="Схема переходів між п'ятьма сторінками">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="band" x="20" y="14" width="860" height="40" rx="8"/>
+      <text x="450" y="39" text-anchor="middle" font-size="13.5" font-weight="600">Пошук / агент у шапці — answer card + посилання на тести</text>
+
+      <rect class="node" x="20" y="110" width="160" height="80" rx="10"/>
+      <text x="100" y="140" text-anchor="middle" font-size="15" font-weight="600">1 · Огляд</text>
+      <text class="sub" x="100" y="160" text-anchor="middle">що і навіщо</text>
+      <text class="sub" x="100" y="176" text-anchor="middle">A · B · D · G</text>
+
+      <rect class="node hot" x="230" y="110" width="180" height="80" rx="10"/>
+      <text x="320" y="140" text-anchor="middle" font-size="15" font-weight="600">2 · Дослідник тестів</text>
+      <text class="sub" x="320" y="160" text-anchor="middle">мапа + фільтри + таблиця</text>
+      <text class="sub" x="320" y="176" text-anchor="middle">C · D · Q · L5</text>
+
+      <rect class="node" x="460" y="110" width="160" height="80" rx="10"/>
+      <text x="540" y="140" text-anchor="middle" font-size="15" font-weight="600">3 · Тест</text>
+      <text class="sub" x="540" y="160" text-anchor="middle">що сталося</text>
+      <text class="sub" x="540" y="176" text-anchor="middle">E · F · G · Q</text>
+
+      <rect class="node" x="670" y="110" width="210" height="80" rx="10"/>
+      <text x="775" y="140" text-anchor="middle" font-size="15" font-weight="600">4 · Порівняння</text>
+      <text class="sub" x="775" y="160" text-anchor="middle">чим відрізняються</text>
+      <text class="sub" x="775" y="176" text-anchor="middle">D · F · L5</text>
+
+      <rect class="node" x="230" y="250" width="420" height="60" rx="10"/>
+      <text x="440" y="276" text-anchor="middle" font-size="15" font-weight="600">5 · Бібліотека і дані</text>
+      <text class="sub" x="440" y="295" text-anchor="middle">публікації · словник даних · цитата · кошик лабораторної → ZIP</text>
+
+      <path class="edge" d="M180,150 L226,150" marker-end="url(#ah)"/>
+      <path class="edge" d="M410,150 L456,150" marker-end="url(#ah)"/>
+      <path class="edge" d="M620,150 L666,150" marker-end="url(#ah)"/>
+      <path class="edge dash" d="M540,190 C540,222 340,222 330,194" marker-end="url(#ah)"/>
+      <text class="sub" x="440" y="232" text-anchor="middle">знайди схожі</text>
+      <path class="edge" d="M100,190 L100,280 L226,280" marker-end="url(#ah)"/>
+      <path class="edge" d="M775,190 L775,280 L654,280" marker-end="url(#ah)"/>
+      <path class="edge dash" d="M320,54 L320,106" marker-end="url(#ah)"/>
+      <path class="edge dash" d="M775,54 L775,106" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+
+  <h3>Три типові входи</h3>
+  <div class="paths">
+    <div class="path"><b>«Хочу зрозуміти»</b><div class="steps"><b>1</b><span class="arr">→</span>відео/replay<span class="arr">→</span><b>3</b><span class="arr">→</span><b>2</b></div><p class="lead" style="font-size:14px">Інтуїція і головна закономірність.</p></div>
+    <div class="path"><b>«Лабораторна»</b><div class="steps"><b>2</b> preset «чисті»<span class="arr">→</span><b>3</b><span class="arr">→</span>CSV<span class="arr">→</span><b>5</b> цитата</div><p class="lead" style="font-size:14px">Дані, власний K, посилання.</p></div>
+    <div class="path"><b>«Своє питання»</b><div class="steps">пошук<span class="arr">→</span><b>4</b><span class="arr">→</span><b>2</b> мапа покриття<span class="arr">→</span><b>5</b></div><p class="lead" style="font-size:14px">Відповідь з доказами і межами.</p></div>
+  </div>
+</section>
+
+<section id="presets">
+  <span class="eyebrow">Швидкий пошук</span>
+  <h2>Питання, на які дані вже відповідають</h2>
+  <p class="lead">Картки-пресети на сторінці огляду. Кожна одразу дає цифру і веде в дослідник або порівняння.</p>
+  <div class="presets num">
+    <div class="preset"><b>29</b>тестів у повітрі МКС (21% O₂, 1 атм): 14 згасли самі, 11 обірвані, 4 догоріли</div>
+    <div class="preset"><b>17</b>«місячних» тестів (≈0.7 атм, ≥30% O₂): жодного самозгасання</div>
+    <div class="preset"><b>173</b>тести з гасником: CO₂ 123 проти He 50 — що спрацьовує краще?</div>
+    <div class="preset"><b>52</b>тести з cool flames у коментарі (45 гептан)</div>
+    <div class="preset"><b>161</b>«чистий» тест для лабораторної: вільна крапля, без Disruption, є ряди</div>
+    <div class="preset"><b>157 / 117</b>метанол проти гептану</div>
+  </div>
+</section>
+
+<section id="pages">
+  <span class="eyebrow">Структура сторінок</span>
+  <h2>Що на кожній сторінці, зверху вниз</h2>
+  <div class="pages">
+    <details class="page" open>
+      <summary><span class="pnum">1</span><span><b>Огляд дослідження</b><br><span class="route">/studies/flex</span></span><span class="chev">›</span></summary>
+      <div class="pbody">
+        <div><ol>
+          <li>Hero: питання дослідження + відео/replay + факт-картки</li>
+          <li>Питання, на які відповідають дані (пресети з цифрами)</li>
+          <li>Як працював експеримент: схема, d², три фінали</li>
+          <li>Що знайшли: 3 висновки з посиланнями</li>
+          <li>Пастки при читанні даних</li>
+          <li>Як цитувати → бібліотека</li>
+        </ol></div>
+        <div class="side"><div><h4>Блоки</h4>A · B · D · G · Q</div><div><h4>Коли</h4>перший вхід; контекст для вступу курсової</div></div>
+      </div>
+    </details>
+    <details class="page" open>
+      <summary><span class="pnum">2</span><span><b>Дослідник тестів</b><br><span class="route">/studies/flex/tests</span></span><span class="chev">›</span></summary>
+      <div class="pbody">
+        <div><ol>
+          <li>Пошук природною мовою → видно застосовані фільтри</li>
+          <li>Answer card: скільки знайдено, розподіл фіналів, 1 речення, застереження</li>
+          <li>Мапа 274 тестів (знайдені яскраві), перемикач осей</li>
+          <li>Фасети з лічильниками; за замовчуванням «вільні краплі»</li>
+          <li>Таблиця: ключові колонки, теги, іконки наявності рядів/відео/Summary</li>
+          <li>Вибір 2–4 → «Порівняти» або «У кошик лабораторної»</li>
+        </ol></div>
+        <div class="side"><div><h4>Блоки</h4>C · D · Q · L5</div><div><h4>Коли</h4>пошук, формулювання питання, добір тестів</div></div>
+      </div>
+    </details>
+    <details class="page">
+      <summary><span class="pnum">3</span><span><b>Сторінка тесту</b><br><span class="route">/studies/flex/tests/:id</span></span><span class="chev">›</span></summary>
+      <div class="pbody">
+        <div><ol>
+          <li>Заголовок: паливо · атмосфера · фінал + теги якості</li>
+          <li>Що сталося: 1–2 речення з даних + коментар дослідника</li>
+          <li>Replay (+ відео, якщо є) з таймлайном</li>
+          <li>Синхронні графіки: d²(t) з фітом K, полум'я і standoff, камера</li>
+          <li>Параметри з тултипами-словником</li>
+          <li>Схожі тести; «той самий, але інше паливо/розбавник»</li>
+          <li>Що це означає для безпеки</li>
+          <li>Файли: CSV, Summary.pdf, сирі файли PSI, цитата</li>
+        </ol></div>
+        <div class="side"><div><h4>Блоки</h4>E · F · G · Q · L5</div><div><h4>Коли</h4>розбір випадку; робота над лабораторною</div></div>
+      </div>
+    </details>
+    <details class="page">
+      <summary><span class="pnum">4</span><span><b>Порівняння</b><br><span class="route">/studies/flex/compare?ids=…</span></span><span class="chev">›</span></summary>
+      <div class="pbody">
+        <div><ol>
+          <li>Колонки тестів з підсвіченим diff</li>
+          <li>Чим відрізняються і чому це важливо (з посиланнями)</li>
+          <li>Накладені d²(t) і полум'я; replay поруч на одному таймлайні</li>
+          <li>Положення на загальній мапі</li>
+          <li>Висновок + що з порівняння не випливає</li>
+        </ol></div>
+        <div class="side"><div><h4>Блоки</h4>D · F · L5</div><div><h4>Коли</h4>власне питання «що буде, якщо…»; розділ аналізу</div></div>
+      </div>
+    </details>
+    <details class="page">
+      <summary><span class="pnum">5</span><span><b>Бібліотека і дані</b><br><span class="route">/studies/flex/library</span></span><span class="chev">›</span></summary>
+      <div class="pbody">
+        <div><ol>
+          <li>Публікації з фільтром за темою</li>
+          <li>Документи NASA</li>
+          <li>Словник даних: колонка, одиниці, джерело, заповненість</li>
+          <li>Відомі проблеми даних</li>
+          <li>Як цитувати; кошик лабораторної → ZIP (CSV + README з цитатою)</li>
+        </ol></div>
+        <div class="side"><div><h4>Блоки</h4>H · A · Q</div><div><h4>Коли</h4>оформлення роботи; перевірка джерела числа</div></div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="matrix">
+  <span class="eyebrow">Блок × етап</span>
+  <h2>Коли кожен блок потрібен студенту</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Блок</th><th>Зорієнтуватись</th><th>Зрозуміти</th><th>Знайти</th><th>Розібрати тест</th><th>Порівняти</th><th>Оформити</th></tr></thead>
+      <tbody>
+        <tr><th>A Паспорт</th><td class="c dot3">●●●</td><td class="c dot1">●</td><td></td><td></td><td></td><td class="c dot3">●●●</td></tr>
+        <tr><th>B Фізика</th><td class="c dot1">●</td><td class="c dot3">●●●</td><td class="c dot1">●</td><td class="c dot2">●●</td><td class="c dot1">●</td><td class="c dot1">●</td></tr>
+        <tr><th>C Фактори</th><td></td><td class="c dot1">●</td><td class="c dot3">●●●</td><td class="c dot1">●</td><td class="c dot2">●●</td><td></td></tr>
+        <tr><th>D Результати</th><td class="c dot2">●●</td><td class="c dot2">●●</td><td class="c dot3">●●●</td><td class="c dot1">●</td><td class="c dot3">●●●</td><td class="c dot2">●●</td></tr>
+        <tr><th>E Паспорт тесту</th><td></td><td></td><td class="c dot1">●</td><td class="c dot3">●●●</td><td class="c dot2">●●</td><td class="c dot1">●</td></tr>
+        <tr><th>F Часові ряди</th><td></td><td class="c dot2">●●</td><td></td><td class="c dot3">●●●</td><td class="c dot3">●●●</td><td class="c dot3">●●●</td></tr>
+        <tr><th>G Медіа</th><td class="c dot3">●●●</td><td class="c dot2">●●</td><td></td><td class="c dot2">●●</td><td class="c dot1">●</td><td class="c dot2">●●</td></tr>
+        <tr><th>H Документи</th><td></td><td class="c dot1">●</td><td></td><td></td><td class="c dot1">●</td><td class="c dot3">●●●</td></tr>
+        <tr><th>Q Якість</th><td class="c dot1">●</td><td class="c dot1">●</td><td class="c dot2">●●</td><td class="c dot3">●●●</td><td class="c dot2">●●</td><td class="c dot2">●●</td></tr>
+        <tr><th>L5 Похідне</th><td class="c dot1">●</td><td></td><td class="c dot2">●●</td><td class="c dot2">●●</td><td class="c dot3">●●●</td><td class="c dot2">●●</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="open">
+  <span class="eyebrow">Відкриті питання</span>
+  <h2>Що ще вирішити команді</h2>
+  <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:72ch">
+    <li>Мова інтерфейсу для студентів: англійська чи дві мови?</li>
+    <li>Додати радіометр у БД (зараз лише PDF)? Він потрібен для лабораторної про радіаційне згасання.</li>
+    <li>Кошик лабораторної: для MVP достатньо localStorage?</li>
+    <li>Теги з коментарів: ключові слова чи LLM-класифікація з перевіркою?</li>
+  </ol>
+</section>
+
+<p class="foot">Джерела: data/flex/tests.csv, test_files.csv, about.json (flex-v1, PSI-69, DOI 10.60555/mbq8-0451, CC0); шапки Experimental table з psi_samples/. Текстова версія: docs/student_flow_flex.md.</p>
+</div>

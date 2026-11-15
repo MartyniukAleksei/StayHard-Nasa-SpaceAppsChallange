@@ -1,0 +1,68 @@
+[
+ {
+  "accession": "PSI-69",
+  "acronym": "FLEX",
+  "title": "Flame Extinguishment Experiment",
+  "doi": "10.60555/mbq8-0451",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Spacecraft Fire Safety",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "The FLEX (Flame Extinguishment Experiment) investigation aims to map the flammability limits of liquid fuels in microgravity environments, measure the effectiveness of various gaseous fire suppressants such as CO2, He, and SF6, and develop reliable predictive models for combustion limits under reduced gravity conditions. The mission seeks to validate and improve simplified models by incorporating detailed chemical reactions, heat transfer, and material movement, using both space-based data and extensive ground-based tests. Key flight experiment goals include obtaining high-resolution measurements of droplet burning rates, flame extinction behavior, heat radiation, soot levels, and temperature profiles, while systematically analyzing the effects of different ambient conditions and suppressant concentrations. These investigations are essential for advancing the fundamental understanding of combustion processes in microgravity and enhancing fire safety protocols for future space missions.",
+  "license": "CC0-1.0"
+ },
+ {
+  "accession": "PSI-39",
+  "acronym": "CFI",
+  "title": "Cool Flames Investigation",
+  "doi": "10.60555/m6pj-a914",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Droplets",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "The objectives of this investigation are to:\n    1) Examine the combustion behavior of n-dodecane and mixtures of n-dodecane/iso-dodecane at pressures ranging from 0.25 atm to 5 atm.\n    2) Analyze the effects of helium dilution on cool flame behavior.\n    3) Examine the behavior of combustion characteristics.\n    4) Investigate the relationship between droplet size, pressure, and flame extinction, and (5) understand the consequence of soot formation during cool flame combustion.",
+  "license": "CC0-1.0"
+ },
+ {
+  "accession": "PSI-25",
+  "acronym": "BASS-II",
+  "title": "Burning and Suppression of Solids - II",
+  "doi": "10.60555/4qc4-de67",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Spacecraft Fire Safety",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.\nObjectives Include:\n  1) Study the ignition, flame growth, flame spread, and extinction limits for solid fuels burning in low-velocity forced flows in microgravity.\n  2) Begin to bridge the gap between the normal gravity NASA-STD-6001 Test #1 method, ground-based microgravity tests, and actual material flammability in microgravity.\n  3) Provide SoFIE PIs with preliminary data to refine Science Requirements.\n  4)  Practical, realistic (thicker) fuels in typical geometries will be examined, including slabs, cylinders, and spherical sections.\n\nThe primary variables include:\n     • Forced flow velocity (speed and direction)\n     • Ambient oxygen concentration (via working volume nitrogen vitiation)\n     • Sample geometry (rods, spherical section, slabs, films, and fabric sheets",
+  "license": "CC0-1.0"
+ },
+ {
+  "accession": "PSI-99",
+  "acronym": "SAFFIRE-II",
+  "title": "Spacecraft Fire Experiment-II",
+  "doi": "10.60555/2chp-m469",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Surface Combustion",
+  "flight_program": "Cygnus Spacecraft",
+  "objective": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
+  "license": "CC0-1.0"
+ },
+ {
+  "accession": "PSI-107",
+  "acronym": "SPICE",
+  "title": "Smoke Point In Co-flow Experiment",
+  "doi": "10.60555/9kbh-e962",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Fire Safety",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "The objective of SPICE is to better understand the complex process of combustion by observing flames in a microgravity environment aboard the International Space Station (ISS) and analogous ground experiments.\n\nSpecific objectives were:\n(1) Identify the laminar smoke-point properties of non-buoyant jet diffusion flames under various co-flow conditions in microgravity.\n(2) Determine the effects of burner diameter and co-flow velocity on the luminous flame lengths and smoke points.\n(3) Quantify the sooting propensity of different fuels, such as ethylene, propane, and propylene mixtures.\n(4) Validate the correlation between luminous flame shape and residence time under microgravity conditions.\n(5) Investigate the impact of air and fuel flow rate variations on smoke point phenomena in space.",
+  "license": "CC0-1.0"
+ },
+ {
+  "accession": "PSI-102",
+  "acronym": "SAME",
+  "title": "Smoke and Aerosol Measurement Experiment",
+  "doi": "10.60555/gd4k-8h62",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Spacecraft Fire Safety",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment. A numerical code was to be developed to predict the smoke droplet growth as a function of the fuel pyrolysis rate, the thermodynamic properties of the pyrolysis vapor, and the flow environment.",
+  "license": "CC0-1.0"
+ }
+]
