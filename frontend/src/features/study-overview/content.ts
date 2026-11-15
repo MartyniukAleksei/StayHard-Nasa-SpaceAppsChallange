@@ -21,37 +21,39 @@ export const END_DEFINITIONS = {
 /** The test shown as the 3D example on the overview (methanol in ISS air, goes out by itself). */
 export const SHOWCASE_TEST = 33;
 
-export type Trap = { title: string; body: string; cite?: { test: number; quote: string } };
+export type Finding = {
+  /** The claim, as approved by the team 2026-11-15. */
+  claim: string;
+  test: number;
+  /** Where the evidence comes from: a measurement, or something we derive from measurements. */
+  evidence: "measured" | "derived";
+  /** What to keep in mind when reading the chart. */
+  caveat: string;
+  refs: string[];
+};
 
-export const TRAPS: Trap[] = [
-  {
-    title: "Disruption ≠ “would burn forever”",
-    body: "A disrupted test was stopped before the flame could go out on its own. It tells you self-extinction was not observed, nothing more.",
-  },
-  {
-    title: "Extinguished ≠ safe",
-    body: "After the visible flame dies, heptane can keep reacting as a cool flame, invisible to the eye.",
-    cite: { test: 35, quote: "This behavior is indicative of cool flame burning and extinction." },
-  },
-];
-
-export type Finding = { text: string; test: number; doi: string };
-
-/** Three findings, each with a test to look at and the publication behind it (team-approved 2026-11-15). */
 export const FINDINGS: Finding[] = [
   {
-    text: "After the visible flame goes out, a heptane droplet can keep burning as an invisible, low-temperature cool flame: a second burning stage.",
+    claim:
+      "After the visible flame goes out, a heptane droplet can keep burning as an invisible, low-temperature cool flame: a second burning stage.",
     test: 35,
-    doi: "10.1016/j.combustflame.2012.07.012",
+    evidence: "measured",
+    caveat: "The series shows the droplet still vaporising after the flame is gone. That it is a cool flame is the researchers’ reading, in the comment and the papers.",
+    refs: ["nayagam12", "nayagam14", "farouk"],
   },
   {
-    text: "A support fiber changes the burning rate and the shape of the flame, so droplets held on a fiber and free-floating droplets are not compared directly.",
+    claim:
+      "A support fiber changes the burning rate and the shape of the flame, so droplets held on a fiber and free-floating droplets are not compared directly.",
     test: 49,
-    doi: "10.1080/13647830.2010.547601",
+    evidence: "derived",
+    caveat: "One pair of tests is an illustration, not proof: the initial diameters differ and #49 also has a data gap. The effect itself is shown and modelled in the paper.",
+    refs: ["farouk11"],
   },
   {
-    text: "A methanol flame in ISS air can go out by itself long before the droplet has burned away.",
+    claim: "A methanol flame in ISS air can go out by itself long before the droplet has burned away.",
     test: 34,
-    doi: "10.1016/j.combustflame.2013.05.011",
+    evidence: "measured",
+    caveat: "In this test the droplet left the camera’s field of view near extinction and no extinction diameter is listed. The test has no flame series, so the time the flame went out is not in the data.",
+    refs: ["nayagam13", "dietrich"],
   },
 ];
