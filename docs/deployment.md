@@ -22,7 +22,7 @@
 ### Як заповнюється і оновлюється Volume (автоматично)
 Контейнер стартує з `python -m flame.ingest.bootstrap && uvicorn …`. Bootstrap ідемпотентний:
 1. **Знімок FLEX.** Якщо `/data/flex` немає або `DATA_ARCHIVE_URL` відрізняється від записаного в `/data/.archive_url` — качає zip (GitHub Release [`data-flex-v1`](https://github.com/MartyniukAleksei/nasa-2026/releases/tag/data-flex-v1)) і замінює `/data/flex`.
-2. **БД.** Якщо `flame.duckdb` немає, знімок оновився або `build_db.BUILD_VERSION` (хеш коду збірки) не збігається з записаним у таблиці `meta` — перезбирає `build/flame.duckdb`.
+2. **БД.** Якщо `flame.duckdb` немає, знімок оновився або `build_db.BUILD_VERSION` (хеш коду збірки) не збігається з записаним у таблиці `meta` — перезбирає `build/flame.duckdb`. Разом із БД будується RAG-індекс: модель ембеддингів запечена в образ (`MODELS_DIR=/app/models`), тож мережа не потрібна; вектори перевикористовуються зі старої БД, тому повна векторизація (~хвилини CPU) буває лише на першій збірці або при зміні моделі.
 
 Тобто:
 - **змінили обробку даних** (`flame/ingest/build_db.py`, `flame/rag/*`) → PR → мердж → деплой сам перезбере БД;

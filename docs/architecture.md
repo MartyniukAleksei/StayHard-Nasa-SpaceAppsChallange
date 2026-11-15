@@ -33,7 +33,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `api/router.py` | префікс `/api`, збирає роутери модулів; `api/routes/` — службові (health) |
 | `studies/flex/` | домен FLEX: `schemas` → `repository` (SQL) → `service` (логіка) → `router` (HTTP) |
 | `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md). План: віддача файлів тесту з Volume |
-| `rag/` | чанкінг, ембеддинги, векторний пошук по таблиці `chunks` |
+| `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
 | `agent/` | LLM-агент та інструменти (`query_tests`, `compare_tests`, `search_docs`, `get_timeseries`, `open_view`) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
 
@@ -43,6 +43,7 @@ docker-compose.yml  локальний запуск прод-образів
 | Метод | Шлях | Стан |
 |---|---|---|
 | GET | `/api/health` | ✅ `{status, env, db, flex_data}` |
+| GET | `/api/rag/search?q=&k=&study=&test_no=&source_type=` | ✅ гібридний пошук по текстах |
 | GET | `/api/studies/flex/tests?filters` | план |
 | GET | `/api/studies/flex/tests/{id}` (+ `/timeseries/{signal}`, `/neighbors`) | план |
 | GET | `/api/studies/flex/compare?ids=` | план |
@@ -53,7 +54,7 @@ docker-compose.yml  локальний запуск прод-образів
 | POST | `/api/agent` (stream) | план |
 
 ## Дані — `flame.duckdb`
-Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)). План: таблиця `chunks(id, source, test_no, page, text, embedding FLOAT[N])` для RAG, пошук `array_cosine_similarity` (або індекс розширення `vss`).
+Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)). Також таблиця `chunks` (RAG): тексти з метаданими й цитатою, `embedding FLOAT[384]` (`bge-small-en-v1.5`) і FTS-індекс; пошук `array_cosine_similarity` + BM25 зі злиттям RRF ([rag/techstack.md](rag/techstack.md), [ADR 0004](decisions/0004-rag-local-embeddings.md)). Ембеддинги перевикористовуються зі старої БД за хешем тексту.
 **БД не редагується — перезбирається.** Будь-яка обробка даних = код у `build_db` (або модулі з `BUILD_SOURCES`). Версія збірки (хеш цього коду) пишеться в таблицю `meta`; `flame.ingest.bootstrap` перезбирає БД локально й на проді, коли версія змінилась (деталі — [deployment.md](deployment.md)). Сирий знімок змінюється лише новим релізом `data-flex-vN`.
 
 Правило: числа в UI і відповідях агента — тільки з цієї БД; все, що рахуємо самі (fit K тощо), позначаємо як оцінку.

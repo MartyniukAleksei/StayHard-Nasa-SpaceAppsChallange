@@ -1,0 +1,41 @@
+import json
+from pathlib import Path
+
+import duckdb
+
+from flame.rag.sources import flex
+
+
+def test_testsheet_and_about_documents(tmp_path: Path) -> None:
+    with duckdb.connect(str(tmp_path / "flex.duckdb")) as con:
+        con.execute(
+            """
+            CREATE TABLE tests AS SELECT * FROM (VALUES
+              (2, '20CAL10', 'Methanol', 1.003, 0.21, 'N2', 'Extinction', false, ' Burns to extinction. '),
+              (3, '20CAL12', 'Methanol', 1.0, 0.21, 'N2', 'Disruption', NULL, NULL)
+            ) t(test_no, cir_id, fuel, p_atm, x_o2, diluent, end_type, ts_fiber, ts_comment)
+            """  # noqa: E501
+        )
+    about = {
+        "doi": "10.1/x",
+        "title": "FLEX",
+        "objective": "Measure LOI.",
+        "hypothesis": "",
+        "publications": [{"title": "Paper", "authorList": "A B", "doi": ""}],
+    }
+    (tmp_path / "about.json").write_text(json.dumps(about))
+
+    docs = list(flex.iter_documents(tmp_path))
+    [ts] = [d for d in docs if d.source_type == "testsheet"]
+    assert ts.test_no == 2
+    assert ts.text.startswith("Test FLEX-002 (CIR 20CAL10): Methanol droplet, 1.00 atm, O2 0.21")
+    assert ts.text.endswith("Burns to extinction.")
+    kinds = sorted(d.source_type for d in docs)
+    assert kinds == ["about", "publication", "testsheet"]  # порожня hypothesis пропущена
+    assert all(d.meta["doi"] == "10.1/x" for d in docs if d.source_type != "testsheet")
+
+
+def test_missing_sources_yield_nothing(tmp_path: Path) -> None:
+    with duckdb.connect(str(tmp_path / "flex.duckdb")) as con:
+        con.execute("CREATE TABLE tests AS SELECT 1 AS test_no")  # мінімальний знімок
+    assert list(flex.iter_documents(tmp_path)) == []

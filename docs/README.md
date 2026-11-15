@@ -11,6 +11,7 @@
 | Що будуємо і для кого, демо-сценарій, правила агента | [product/mission.md](product/mission.md), [product/jtbd.md](product/jtbd.md) |
 | UX-флоу студента (FLEX) | [product/student_flow_flex.md](product/student_flow_flex.md) |
 | Дані FLEX: схема таблиць, якість, як отримати | [data/flex.md](data/flex.md) |
+| RAG: навіщо, технічні рішення, план і статус | [rag/mission.md](rag/mission.md), [rag/techstack.md](rag/techstack.md), [rag/plan.md](rag/plan.md) |
 | PSI API (звідки качаємо) | [data/psi_api.md](data/psi_api.md) |
 | Чому так, а не інакше | [decisions/](decisions/) (ADR) |
 
