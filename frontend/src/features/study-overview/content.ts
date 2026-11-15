@@ -6,8 +6,6 @@ export const HERO_QUESTION =
 
 export const HERO_VARIED = "O₂, pressure, CO₂, He";
 
-export const DEMO_TEST = 35;
-
 export const HOW_IT_WORKED = [
   "A single fuel droplet is deployed inside the combustion chamber and ignited.",
   "With no gravity there is no buoyancy, so the flame forms an almost perfect sphere around the droplet.",

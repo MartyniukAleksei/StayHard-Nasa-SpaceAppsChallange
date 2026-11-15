@@ -9,11 +9,11 @@ const TAB_3D = "3d";
 
 /** G: real camera video when the dataset has it, otherwise the replay drawn from measured data.
  *  The 3D replay is one more tab on the full test page; it is not offered in the compact (compare) block. */
-export function MediaBlock({ t, compact = false }: { t: Pick<TestDetail, "test_no" | "has_series" | "videos">; compact?: boolean }) {
+export function MediaBlock({ t, compact = false }: { t: Pick<TestDetail, "test_no" | "has_series" | "has_3d" | "videos">; compact?: boolean }) {
   const tabs: Tab[] = [
     ...t.videos.map((v) => ({ id: v.path, label: v.name.replace(/\.mp4$/i, ""), video: v })),
     ...(t.has_series ? [{ id: "replay", label: "Replay from data" }] : []),
-    ...(t.has_series && !compact ? [{ id: TAB_3D, label: "3D replay" }] : []),
+    ...(t.has_3d && !compact ? [{ id: TAB_3D, label: "3D replay" }] : []),
   ];
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const tab = tabs.find((x) => x.id === active) ?? tabs[0];

@@ -24,7 +24,14 @@ export function ChartBlock({ chart }: { chart: Chart }) {
         {chart.derived && <span className="tag ag-tag" title="Computed from measured values">derived</span>}
       </figcaption>
       <TimeChart
-        series={chart.series.map(({ id, label, points, kind, tone }) => ({ id, label, points, kind, tone }))}
+        // scatter series are end types: their legend (EndMark + counts) is drawn below, not by TimeChart
+        series={chart.series.map(({ id, label, points, kind, tone }) => ({
+          id,
+          label: chart.kind === "scatter" ? undefined : label,
+          points,
+          kind,
+          tone,
+        }))}
         xLabel={chart.x_label}
         yLabel={chart.y_label}
         height={200}

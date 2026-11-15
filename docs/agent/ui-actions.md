@@ -33,7 +33,7 @@
 Зараз розмічено: параметри на сторінці тесту (`TestReport` → `Params`) і колонки порівняння (`Compare`). Нова сторінка з параметрами — додай ці атрибути, і підсвічування запрацює.
 
 ## Параметри `open_tests`
-`explorer` — ті самі ключі й значення, що в `features/explorer/lib/filter.ts` (`fuel`, `diluent`, `pressure ∈ 0.7|1|2-3`, `o2 ∈ <16.5|16.5-21|air|21.6-30|30+`, `fiber ∈ free|fiber|unknown|all`, `end`, `tag ∈ series|video|cool`). Тест бекенду звіряє переліки з `filter.ts`.
+`explorer` — ті самі ключі й значення, що в `features/explorer/lib/filter.ts` (`fuel`, `diluent`, `pressure ∈ 0.7|1|2-3`, `o2 ∈ <16.5|16.5-21|air|21.6-30|30+`, `fiber ∈ free|fiber|unknown|all`, `end`, `tag ∈ series|video|3d|cool`). Тест бекенду звіряє переліки з `filter.ts`.
 
 ## Час у відео/replay (етап 4)
 Сторінка тесту читає `?view=video|replay|3d&t=<секунди>` і відкриває потрібну вкладку на моменті `t`.

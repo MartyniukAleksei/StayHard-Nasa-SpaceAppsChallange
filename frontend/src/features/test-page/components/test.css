@@ -24,9 +24,26 @@
 .tp-comment { margin: 0; padding-left: 14px; border-left: 2px solid var(--line); color: var(--ink); max-width: 75ch; }
 .tp-kv { grid-template-columns: 1fr; gap: 0; }
 .tp-kv-row { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 16px; padding: 6px 0; border-bottom: 1px solid #161615; }
-.tp-nb { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.tp-nb li { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #161615; }
+.tp-nb-wrap { overflow-x: auto; }
+.tp-nb { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.tp-nb th { text-align: left; font: 12px var(--mono); color: var(--ash); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: var(--rule); white-space: nowrap; }
+.tp-nb td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--deep); white-space: nowrap; }
 .tp-nb .end-mark { font-family: var(--mono); font-size: 13px; }
+
+/* what happened */
+.tp-what-label { margin: 0; display: flex; gap: 8px; align-items: baseline; }
+.tp-what-label .tag { font-size: 11px; padding: 1px 6px; }
+
+/* d² law: our estimate vs NASA, formulas */
+.tp-d2 { display: grid; gap: 16px; }
+.tp-d2-k { display: flex; flex-wrap: wrap; gap: 4px 32px; }
+.tp-d2-k p { margin: 0; }
+.tp-d2-k .tag { font-size: 11px; padding: 1px 6px; }
+.tp-formulas { margin: 0; display: grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 10px 20px; max-width: 900px; }
+.tp-formulas dt { color: var(--ash); font: 13px var(--mono); }
+.tp-formulas dd { margin: 0; color: var(--ink); }
+.math { font-family: var(--mono); white-space: nowrap; }
+.math sup, .math sub, .tp-formulas sup, .tp-formulas sub { font-size: .72em; }
 .tp-files { list-style: none; margin: 0; padding: 0; }
 .tp-files li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) auto; gap: 4px 16px; padding: 8px 0; border-bottom: 1px solid #161615; align-items: baseline; }
 .tp-files a { word-break: break-word; }
@@ -34,4 +51,6 @@
 @media (max-width: 640px) {
   .tp-kv-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .tp-files li { grid-template-columns: minmax(0, 1fr); }
+  .tp-formulas { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .tp-formulas dd { margin-bottom: 10px; }
 }

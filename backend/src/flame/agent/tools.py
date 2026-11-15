@@ -171,7 +171,7 @@ EXPLORER_FACETS: dict[str, list[str]] = {
     "o2": ["<16.5", "16.5-21", "air", "21.6-30", "30+"],
     "fiber": ["free", "fiber", "unknown", "all"],
     "end": ["Extinction", "Disruption", "Completion"],
-    "tag": ["series", "video", "cool"],
+    "tag": ["series", "video", "3d", "cool"],
 }
 ACTIONS = ["open_tests", "open_test", "open_compare"]
 

@@ -41,25 +41,25 @@
 }
 .x3d-speeds button.on { color: var(--ink); border-bottom-color: var(--flame); }
 .x3d-timeline svg { width: 100%; display: block; cursor: ew-resize; touch-action: none; border: var(--rule); background: var(--deep); }
-.x3d-timeline svg text { font: 11px var(--mono); fill: var(--ash); user-select: none; }
+.x3d-timeline svg text { font: var(--chart-font); fill: var(--ash); user-select: none; }
 .x3d-timeline svg text.ink { fill: var(--ink); }
 .x3d-timeline svg text.live { fill: var(--flame); }
-.x3d-timeline svg text.uv { fill: #a99bf0; }
-.x3d-timeline svg .tick { stroke: var(--line); }
+.x3d-timeline svg text.uv { fill: var(--series-uv); }
+.x3d-timeline svg .tick { stroke: var(--chart-grid); }
 .x3d-timeline svg .tick.zero { stroke: var(--ash); }
 .x3d-timeline svg .tick.event { stroke: var(--ash); stroke-dasharray: 2 3; }
 .x3d-timeline svg .tick.end { stroke: var(--flame); stroke-dasharray: 3 3; }
 .x3d-timeline svg .line { fill: none; stroke-width: 1.5; }
 .x3d-timeline svg .line.d2 { stroke: var(--ink); }
 .x3d-timeline svg .line.vis { stroke: var(--flame); }
-.x3d-timeline svg .line.uv { stroke: #a99bf0; }
+.x3d-timeline svg .line.uv { stroke: var(--series-uv); }
 .x3d-timeline svg .cursor { stroke: var(--ink); }
 
 .x3d-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
 .x3d-layer { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 32px; }
 .x3d-layer input { margin: 0; accent-color: currentColor; }
 .x3d-vis { color: var(--flame); }
-.x3d-uv { color: #a99bf0; }
+.x3d-uv { color: var(--series-uv); }
 .x3d-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ash); max-width: 110ch; }
 
 .x3d-frames { display: grid; gap: 10px; align-content: start; }

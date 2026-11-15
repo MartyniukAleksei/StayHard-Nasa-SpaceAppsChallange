@@ -21,6 +21,8 @@
 | `--flame` | `#4d6bff` | лише активне/«живе» |
 | `--paper` / `--soot` | `#ebe5d5` / `#151412` | інверсія для друку/постерів |
 | `--end-ext` / `--end-com` / `--end-dis` | `#6fa384` / `#c8735f` / `#c09a52` | фінали тестів, завжди зі значком |
+| `--series-1` / `--series-2` / `--series-uv` | `#b9b8b0` / `#6f6f6a` / `#a99bf0` | додаткові серії графіків |
+| `--chart-grid`, `--chart-font` | `--line`, `11px Geist Mono` | сітка й підписи осей |
 | `--brand`, `--display` | IBM VGA | назва, заголовки |
 | `--sans` / `--mono` | Geist / Geist Mono | текст / числа, гліфи, кнопки |
 | `--bz` / `--dz` | 0.92 / 1.1 | масштаб назви / заголовків |
@@ -57,7 +59,11 @@
 | `EndMark` | `@/shared/ui/EndMark` | `<EndMark type="Extinction" count={10} short />` → «● 10 Ext»; `END_TYPES` — порядок відображення |
 | `Placeholder` | `@/shared/ui/Placeholder` | `<Placeholder>what is missing</Placeholder>` → «TODO (team): …» |
 | `CopyButton` | `@/shared/ui/CopyButton` | `<CopyButton text={citation} />`, повідомлення через `role="status"` |
-| `TimeChart` | `@/shared/ui/chart/TimeChart` | SVG: `series[{id,label,points,kind:"dots"\|"line",tone}]`, `xLabel`, `yLabel`, `ariaLabel`, `xDomain`/`yDomain` (спільні осі для порівняння), `cursor`, `markers[{x,label}]`; tone: `ink ash flame ext dis com s1 s2` |
+| `TimeChart` | `@/shared/ui/chart/TimeChart` | SVG: `series[{id,label,points,kind:"dots"\|"line"\|"dashed",tone}]`, `xLabel`, `yLabel`, `ariaLabel`, `xDomain`/`yDomain` (спільні осі для порівняння), `cursor`, `markers[{x,label}]`, `gaps[[from,to]]`, `legendExtra`; назви серій — у легенді під графіком; tone: `ink ash flame ext dis com s1 s2 uv` |
+| `EndGlyph`, `EndGlyphIcon` | `@/shared/ui/chart/EndGlyph` | SVG-маркер фіналу ● ○ ◇ для scatter / легенд / таблиць |
+| `ChartLegend` | `@/shared/ui/chart/ChartLegend` | HTML-легенда; `onToggle` робить пункти перемикачами (`aria-pressed`) |
+| `ChartTooltip` | `@/shared/ui/chart/ChartTooltip` | підказка в `position:relative` обгортці графіка, сама відсувається від краю |
+| `MARGIN`, `DOT`, `GLYPH_R`, `END_SHAPE` | `@/shared/ui/chart/theme` | розміри й форми теми графіків (`docs/design/README.md` → «Графіки») |
 | `useWidth()` | `@/shared/lib/useWidth` | `[ref, width]` через ResizeObserver — для SVG з чіткими підписами |
 | `num`, `pct`, `chem`, `bytes`, `fiberLabel`, `DASH` | `@/shared/lib/format` | лише форматування: `num(3.851,2,"mm")`, `pct(0.21)` → «21%», `chem("CO2")` → «CO₂», `null` → «—» |
 
@@ -65,7 +71,7 @@
 
 | Фіча | Експорт | Для чого |
 |---|---|---|
-| `flex-tests` | `useTests` (рядки Дослідника), `useTest(id)` (звіт тесту), `useTestsDetail(ids)`, `useLibrary`, `mediaUrl(path)`, `seriesCsvUrl(id)`, `compareHref(ids)`, `testHref(id)`, `parseIds`, `MAX_COMPARE`, типи `TestSummary`, `TestDetail`, `FileItem`, `Library` | будь-які дані FLEX для UI |
+| `flex-tests` | `useTests` (рядки Дослідника), `useTest(id)` (звіт тесту), `useVideos` (mp4 NASA), `useTestsDetail(ids)`, `useLibrary`, `mediaUrl(path)`, `seriesCsvUrl(id)`, `compareHref(ids)`, `testHref(id)`, `parseIds`, `MAX_COMPARE`, типи `TestSummary`, `TestDetail`, `FileItem`, `Library` | будь-які дані FLEX для UI |
 | `explorer` | `Explorer`, `presetHref(groupId)` | посилання «відкрити ці тести» з тими самими фільтрами |
 | `replay` | `DropletReplay({testNo})`, `useReplay`, `useReplays`, тип `Replay` | ASCII-replay краплі й полум'я з виміряних рядів |
 | `test-page` | `TestReport`, `MediaBlock`, `FileList` | список файлів/документів з розмірами й типами |

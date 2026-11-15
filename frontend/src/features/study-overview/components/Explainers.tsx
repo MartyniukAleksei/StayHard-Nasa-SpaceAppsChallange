@@ -1,14 +1,30 @@
-import { DropletReplay } from "@/features/replay";
 import { EndMark, END_TYPES } from "@/shared/ui/EndMark";
+import { Link } from "react-router";
 import { Placeholder } from "@/shared/ui/Placeholder";
-import { DEMO_TEST, END_DEFINITIONS, FINDINGS, HOW_IT_WORKED, TRAPS } from "../content";
+import { VideoGallery } from "./VideoGallery";
+import { END_DEFINITIONS, FINDINGS, HOW_IT_WORKED, TRAPS } from "../content";
 
-/** G: full-width replay of the demo test, rebuilt from measured series. */
-export function ReplaySection() {
+/** G: real NASA camera videos of FLEX tests. */
+export function VideoSection() {
   return (
-    <section className="band" aria-label={`Replay of test ${DEMO_TEST}`}>
-      <div className="wrap ov-replay">
-        <DropletReplay testNo={DEMO_TEST} />
+    <section className="band" aria-labelledby="videos-title">
+      <div className="wrap">
+        <h2 id="videos-title" className="h-section">Watch the flames</h2>
+        <VideoGallery />
+      </div>
+    </section>
+  );
+}
+
+/** Link to the explorer, at the end of the story. */
+export function BrowseTests() {
+  return (
+    <section className="band" aria-label="All tests">
+      <div className="wrap ov-browse">
+        <p className="lede">Every test, filterable by fuel, oxygen, pressure and outcome.</p>
+        <Link className="btn" to="/studies/flex/tests">
+          Browse all tests →
+        </Link>
       </div>
     </section>
   );

@@ -25,6 +25,14 @@
   --end-com: #c8735f;
   --end-dis: #c09a52;
 
+  /* Chart series (docs/design/README.md → Charts). Measured = --ink, model = dashed --ink,
+     event/cursor = --flame; extra series use these muted inks, never the end colours. */
+  --series-1: #b9b8b0;
+  --series-2: #6f6f6a;
+  --series-uv: #a99bf0;
+  --chart-grid: var(--line);
+  --chart-font: 11px var(--mono);
+
   --brand: "IBM VGA", ui-monospace, monospace;
   --display: "IBM VGA", ui-monospace, monospace;
   --sans: "Geist", system-ui, sans-serif;

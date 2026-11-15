@@ -1,6 +1,6 @@
 import { useOverview } from "../api";
 import { AboutDetails } from "./AboutDetails";
-import { Findings, HowItWorked, ReplaySection, Traps } from "./Explainers";
+import { BrowseTests, Findings, HowItWorked, Traps, VideoSection } from "./Explainers";
 import { Hero } from "./Hero";
 import { PresetGrid } from "./PresetGrid";
 import "./overview.css";
@@ -29,12 +29,13 @@ export function StudyOverview() {
   return (
     <div className="ov">
       <Hero about={data.about} facts={data.facts} />
-      <ReplaySection />
+      <VideoSection />
       <HowItWorked />
       <Findings />
       <PresetGrid presets={data.presets} />
       <Traps />
       <AboutDetails about={data.about} />
+      <BrowseTests />
     </div>
   );
 }

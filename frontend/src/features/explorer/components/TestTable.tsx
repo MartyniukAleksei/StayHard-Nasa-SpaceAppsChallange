@@ -62,6 +62,9 @@ export function TestTable({ rows, selected, onSelect, compareIds, onToggleCompar
                 </button>
               </th>
             ))}
+            <th scope="col" className="ex-th-plain">
+              <span className="sr-only">Media</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -96,6 +99,13 @@ export function TestTable({ rows, selected, onSelect, compareIds, onToggleCompar
                 <td className="hide-m">{num(t.burn_time_s, 1)}</td>
                 <td>
                   <EndMark type={t.end_type} short />
+                </td>
+                <td className="ex-media">
+                  {t.has_3d && (
+                    <span className="tag ex-3d" title="3D replay available">
+                      3D
+                    </span>
+                  )}
                 </td>
               </tr>
             );
