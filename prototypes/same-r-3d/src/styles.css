@@ -1,0 +1,26 @@
+/* StayHard tokens, the subset the replay needs (frontend/src/shared/styles/tokens.css). */
+:root {
+  color-scheme: dark;
+  --void: #050505;
+  --deep: #0e0e0d;
+  --line: #262624;
+  --ash: #8d8d88;
+  --ink: #f1f0ea;
+  --flame: #4d6bff;
+  --sans: "Geist", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --rule: 1px solid var(--line);
+  --hit: 44px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--void); color: var(--ink); font: 15px/1.5 var(--sans); }
+.mono { font-family: var(--mono); }
+.page { max-width: 1240px; margin: 0 auto; padding: 24px max(5vw, 16px) 48px; display: grid; gap: 16px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.page-head h1 { margin: 0; font: 500 18px var(--mono); }
+.page-head nav { display: flex; gap: 4px; }
+.page-head a { color: var(--ash); text-decoration: none; padding: 10px 6px; font-size: 13px; }
+.page-head a[aria-current] { color: var(--ink); }
+.btn { background: none; border: var(--rule); color: var(--ink); font: 13px var(--mono); min-height: var(--hit); padding: 0 14px; cursor: pointer; }
+.btn:hover { border-color: var(--ash); }
+:focus-visible { outline: 1px solid var(--flame); outline-offset: 2px; }
