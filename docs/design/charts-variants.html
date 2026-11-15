@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Графіки: варіанти стилю</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--void:#050505;--deep:#0e0e0d;--line:#262624;--ash:#8d8d88;--ink:#f1f0ea;--flame:#4d6bff;--end-ext:#6fa384;--end-com:#c8735f;--end-dis:#c09a52;--sans:"Geist",system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);font:15px/1.55 var(--sans);padding:32px max(4vw,16px) 64px}
+h1{font:400 28px var(--mono);margin:0 0 6px}
+.lede{color:var(--ash);max-width:80ch;margin:0 0 28px}
+.v{border-top:1px solid var(--line);padding:24px 0 32px;display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:16px 40px}
+.v h2{font:500 18px var(--mono);margin:0 0 6px}
+.v .why{color:var(--ash);font-size:14px;margin:0}
+.v .why b{color:var(--ink);font-weight:500}
+.chart{width:100%}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font:11px var(--mono);fill:var(--ash)}
+@media(max-width:820px){.v{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>Графіки: три варіанти стилю</h1>
+<p class="lede">Реальні дані тесту №13: d² краплі від часу, наш МНК-фіт і прогалина 4.7–6.0 s без вимірів. Той самий графік у трьох стилях; вибраний стиль переносимо в <code>shared/ui/chart</code> на всі графіки (d², діаметри, превʼю, Порівняння, агент, мапа Дослідника).</p>
+
+<section class="v"><div><h2>A · Прилад</h2><p class="why"><b>Міліметрівка.</b> Тонка сітка за поділками, виміри — порожні кружечки, фіт — синій пунктир з підписом на лінії, табличка-показник K у куті, прогалина — штриховка. Курсор показує t і d² під мишею. Найбільш «науковий», легко зчитувати значення.</p></div><div class="chart" id="A"></div></section>
+
+<section class="v"><div><h2>B · Термінал (ASCII)</h2><p class="why"><b>У стилі StayHard і терміналу агента.</b> Осі й сітка — символами ─ │ ┼, виміри — гліфи · • ●, фіт — ряд «·» синім, підписи моноширинні. Найбільш фірмовий, але точні значення — лише через курсор/tooltip.</p></div><div class="chart" id="B"></div></section>
+
+<section class="v"><div><h2>C · Пояснювальний</h2><p class="why"><b>Для студента.</b> Без рамки й сітки, осі лише в межах даних, анотації прямо на графіку з виносками: «прогрів», «немає вимірів», «полум'я згасло», трикутник нахилу Δ(d²)/Δt = K. Найкраще пояснює фізику, менше «приладу».</p></div><div class="chart" id="C"></div></section>
+
+<script>
+const DATA={"d2": [[0.0, 6.6875], [0.033, 6.9505], [0.067, 7.0385], [0.1, 7.0385], [0.133, 7.0564], [0.167, 6.9984], [0.2, 7.0396], [0.233, 6.9783], [0.267, 7.0051], [0.3, 6.9817], [0.333, 6.9683], [0.367, 6.9817], [0.4, 6.9304], [0.433, 6.9494], [0.467, 6.9003], [0.5, 6.9249], [0.533, 6.9126], [0.567, 6.8758], [0.6, 6.8981], [0.633, 6.858], [0.667, 6.8535], [0.7, 6.8379], [0.733, 6.8156], [0.8, 6.7967], [0.833, 6.7844], [0.867, 6.7722], [0.9, 6.7488], [0.933, 6.751], [0.967, 6.7287], [1.0, 6.7109], [1.033, 6.7098], [1.067, 6.6786], [1.1, 6.6652], [1.133, 6.6518], [1.167, 6.6251], [1.2, 6.6061], [1.233, 6.5972], [1.267, 6.5738], [1.3, 6.556], [1.333, 6.5493], [1.367, 6.5192], [1.4, 6.5036], [1.433, 6.4769], [1.467, 6.4278], [1.5, 6.3844], [1.533, 6.3643], [1.567, 6.3365], [1.6, 6.3108], [1.633, 6.2908], [1.667, 6.2651], [1.7, 6.2484], [1.733, 6.2239], [1.8, 6.1816], [1.833, 6.1581], [1.867, 6.1392], [1.9, 6.1247], [1.933, 6.118], [1.967, 6.0946], [2.0, 6.0824], [2.033, 6.0779], [2.067, 6.0579], [2.1, 6.0311], [2.133, 6.03], [2.167, 6.02], [2.2, 6.0122], [2.233, 6.0021], [2.267, 5.9999], [2.3, 6.0155], [2.333, 5.991], [2.367, 5.9843], [2.4, 5.9553], [2.433, 5.9431], [2.467, 5.923], [2.5, 5.903], [2.533, 5.8918], [2.567, 5.874], [2.6, 5.8472], [2.633, 5.8272], [2.667, 5.8194], [2.7, 5.8082], [2.733, 5.7804], [2.767, 5.7581], [2.833, 5.7269], [2.867, 5.7035], [2.9, 5.689], [2.933, 5.6689], [2.967, 5.6522], [3.0, 5.631], [3.033, 5.6143], [3.067, 5.5887], [3.1, 5.5686], [3.133, 5.553], [3.167, 5.5419], [3.2, 5.5218], [3.233, 5.4995], [3.267, 5.4906], [3.3, 5.4683], [3.333, 5.4494], [3.367, 5.4193], [3.4, 5.4204], [3.433, 5.3881], [3.467, 5.3747], [3.5, 5.3625], [3.533, 5.3424], [3.567, 5.3335], [3.6, 5.3212], [3.633, 5.29], [3.667, 5.2755], [3.7, 5.2655], [3.733, 5.2443], [3.8, 5.212], [3.833, 5.1987], [3.867, 5.1708], [3.9, 5.1574], [3.933, 5.1385], [3.967, 5.1284], [4.0, 5.1117], [4.033, 5.1017], [4.067, 5.085], [4.1, 5.0594], [4.133, 5.0516], [4.167, 5.0293], [4.2, 5.0125], [4.233, 5.0014], [4.267, 4.9791], [4.3, 4.9669], [4.333, 4.9479], [4.367, 4.9345], [4.4, 4.9167], [4.433, 4.8989], [4.467, 4.8721], [4.5, 4.8576], [4.533, 4.8465], [4.567, 4.8409], [4.6, 4.8209], [4.633, 4.8064], [4.667, 4.7852], [6.0, 4.0464], [6.033, 4.1177], [6.067, 4.1054], [6.1, 4.0932], [6.133, 4.0664], [6.167, 4.0519], [6.2, 4.0419], [6.233, 4.0285], [6.267, 4.0107], [6.3, 3.994], [6.333, 3.975], [6.367, 3.9617], [6.4, 3.9427], [6.433, 3.9327], [6.467, 3.9138], [6.5, 3.8904], [6.533, 3.8814], [6.567, 3.8547], [6.6, 3.8547], [6.633, 3.8346], [6.667, 3.819], [6.7, 3.8057], [6.733, 3.7867], [6.8, 3.76], [6.833, 3.7433], [6.867, 3.7243], [6.9, 3.7165], [6.933, 3.6964], [6.967, 3.6875], [7.0, 3.6697], [7.033, 3.6541], [7.067, 3.6485], [7.1, 3.6285], [7.133, 3.6095], [7.167, 3.5984], [7.2, 3.585], [7.233, 3.5806], [7.267, 3.5616], [7.3, 3.5505], [7.333, 3.5304], [7.367, 3.5271], [7.4, 3.517], [7.433, 3.5059], [7.467, 3.4502]], "flame": [[0.25, 9.579], [0.283, 9.356], [0.317, 9.416], [0.35, 9.489], [0.383, 9.534], [0.417, 9.715], [0.45, 9.406], [0.483, 9.567], [0.517, 9.598], [0.55, 9.781], [0.583, 9.888], [0.617, 10.119], [0.65, 9.819], [0.683, 10.062], [0.717, 9.911], [0.75, 9.945], [0.783, 10.188], [0.817, 9.91], [0.85, 9.902], [0.883, 9.684], [0.95, 10.016], [0.983, 10.299], [1.017, 10.407], [1.05, 10.356], [1.083, 10.326], [1.117, 10.643], [1.15, 10.61], [1.183, 10.392], [1.217, 10.531], [1.25, 10.646], [1.283, 10.781], [1.317, 10.77], [1.35, 10.893], [1.383, 10.328], [1.417, 10.617], [1.45, 10.532], [1.483, 10.289], [1.517, 10.922], [1.55, 10.782], [1.583, 10.533], [1.617, 10.926], [1.65, 11.076], [1.683, 10.869], [1.717, 10.97], [1.75, 11.085], [1.783, 10.798], [1.817, 10.856], [1.85, 11.028], [1.883, 10.996], [1.95, 10.876], [1.983, 10.909], [2.017, 10.956], [2.05, 10.951], [2.083, 10.872], [2.117, 10.756], [2.15, 10.962], [2.183, 10.852], [2.217, 10.92], [2.25, 11.013], [2.283, 10.441], [2.317, 10.741], [2.35, 10.808], [2.383, 10.864], [2.417, 10.638], [2.45, 10.697], [2.483, 10.886], [2.517, 10.827], [2.55, 10.974], [2.583, 10.768], [2.617, 10.567], [2.65, 11.335], [2.683, 10.942], [2.717, 11.146], [2.75, 10.796], [2.783, 11.02], [2.817, 11.122], [2.85, 11.051], [2.883, 10.696], [2.95, 10.819], [2.983, 11.157], [3.017, 11.138], [3.05, 10.834], [3.083, 10.939], [3.117, 10.759], [3.15, 11.233], [3.183, 11.11], [3.217, 10.749], [3.25, 11.029], [3.283, 10.926], [3.317, 11.2], [3.35, 11.149], [3.383, 11.176], [3.417, 10.916], [3.45, 10.898], [3.483, 10.894], [3.517, 10.739], [3.55, 10.822], [3.583, 10.992], [3.617, 11.037], [3.65, 10.699], [3.683, 10.916], [3.717, 10.935], [3.75, 10.845], [3.783, 10.665], [3.817, 10.858], [3.85, 10.759], [3.883, 10.528], [3.95, 10.417], [3.983, 10.817], [4.017, 10.284], [4.05, 10.773], [4.083, 10.4], [4.117, 10.47], [4.15, 10.512], [4.183, 10.594], [4.217, 10.51], [4.25, 10.325], [4.283, 10.342], [4.317, 10.508], [4.35, 9.992], [4.383, 10.49], [4.417, 10.58], [4.45, 10.76], [4.483, 10.316], [4.517, 10.214], [4.55, 10.433], [4.583, 10.295], [4.617, 10.363], [4.65, 10.287], [4.683, 9.974], [4.717, 10.257], [4.75, 10.365], [4.783, 10.409], [4.817, 10.33], [4.85, 10.183], [4.883, 10.016], [4.95, 10.04], [4.983, 10.263], [5.017, 9.874], [5.05, 9.923], [5.083, 9.922], [5.117, 9.92], [5.15, 9.651], [5.183, 10.036], [5.217, 9.943], [5.25, 9.964], [5.283, 9.9], [5.317, 9.947], [5.35, 9.868], [5.383, 9.687], [5.417, 9.729], [5.45, 9.771], [5.483, 9.084], [5.517, 9.696], [5.55, 9.851], [5.583, 9.417], [5.617, 9.739], [5.65, 9.194], [5.683, 9.712], [5.717, 9.516], [5.75, 9.508], [5.783, 9.442], [5.817, 9.477], [5.85, 9.621], [5.883, 9.574], [5.95, 9.737], [5.983, 9.289], [6.017, 9.162], [6.05, 9.61], [6.083, 9.911], [6.117, 9.135], [6.15, 9.484], [6.183, 9.236], [6.217, 9.442], [6.25, 9.122], [6.283, 9.363], [6.317, 9.408], [6.35, 9.028], [6.383, 9.455], [6.417, 9.22], [6.45, 9.076], [6.483, 9.299], [6.517, 8.866], [6.55, 8.934], [6.583, 9.094], [6.617, 8.821], [6.65, 8.712], [6.683, 8.967], [6.717, 9.022], [6.75, 8.755], [6.783, 8.792], [6.817, 8.957], [6.85, 8.828], [6.883, 8.72], [6.95, 9.004], [6.983, 8.633], [7.017, 8.087], [7.05, 8.574], [7.083, 8.485], [7.117, 8.278], [7.15, 8.476], [7.183, 8.435], [7.217, 8.395], [7.25, 8.445], [7.283, 8.201], [7.317, 8.479], [7.35, 8.285], [7.383, 8.493], [7.417, 8.424], [7.45, 8.512], [7.483, 8.434], [7.517, 7.915], [7.55, 7.947], [7.583, 8.299], [7.617, 8.151], [7.65, 7.963], [7.683, 8.077], [7.717, 8.028], [7.75, 8.191], [7.783, 7.969], [7.817, 7.785], [7.85, 7.557], [7.883, 7.831], [7.95, 7.912], [7.983, 7.892], [8.017, 7.575], [8.05, 7.477], [8.083, 7.665], [8.117, 5.935], [8.15, 7.112], [8.183, 7.728], [8.217, 7.485], [8.25, 7.17], [8.283, 7.649], [8.317, 7.499], [8.35, 7.545], [8.383, 7.621], [8.417, 7.373], [8.45, 6.991], [8.483, 7.116], [8.517, 7.441], [8.55, 7.02], [8.583, 7.371], [8.617, 6.994], [8.65, 7.483], [8.683, 6.875], [8.717, 7.013], [8.75, 6.811], [8.783, 6.861], [8.817, 6.681], [8.85, 6.734], [8.883, 6.204], [8.95, 6.675], [8.983, 6.718], [9.017, 6.455], [9.05, 6.226], [9.083, 6.364], [9.117, 6.835], [9.15, 6.337], [9.183, 6.402], [9.217, 5.614], [9.25, 5.794], [9.283, 6.295], [9.317, 5.95], [9.35, 6.213], [9.383, 5.919], [9.417, 6.306], [9.45, 6.179], [9.483, 5.871], [9.517, 6.833], [9.55, 6.015], [9.583, 5.801], [9.617, 6.233], [9.65, 5.155], [9.683, 5.674], [9.717, 5.494], [9.75, 5.187], [9.783, 5.159], [9.817, 5.249], [9.85, 5.13], [9.883, 5.56], [9.95, 5.567], [9.983, 4.234], [10.017, 4.679], [10.05, 4.198], [10.083, 4.668], [10.117, 4.082], [10.15, 3.866], [10.183, 4.248], [10.217, 3.329], [10.25, 3.723], [10.283, 3.295], [10.317, 3.31], [10.35, 3.56], [10.383, 4.353], [10.417, 2.641], [10.45, 3.218], [10.483, 2.744], [10.517, 3.456], [10.55, 1.36], [10.583, 2.592], [10.617, 2.246], [10.65, 2.321], [10.683, 1.885], [10.717, 2.046]], "burn": 10.8, "d0": 2.59};
+const css=getComputedStyle(document.documentElement),V=n=>css.getPropertyValue(n).trim();
+const pts=DATA.d2.filter(p=>p[0]>=0&&p[0]<=DATA.burn);
+// fit window: from max d2 in first 40% to flame out
+const t0=pts[0][0],tl=pts[pts.length-1][0],hz=t0+(tl-t0)*.4;let pk=0;for(let i=1;i<pts.length&&pts[i][0]<=hz;i++)if(pts[i][1]>pts[pk][1])pk=i;
+const W2=pts.slice(pk);let n=W2.length,sx=0,sy=0,sxx=0,sxy=0;for(const[x,y]of W2){sx+=x;sy+=y;sxx+=x*x;sxy+=x*y;}
+const b=(n*sxy-sx*sy)/(n*sxx-sx*sx),a=(sy-b*sx)/n,K=-b;let st=0,sr=0;const m=sy/n;for(const[x,y]of W2){st+=(y-m)**2;sr+=(y-(a+b*x))**2;}const R2=1-sr/st;
+const ts=DATA.d2.map(p=>p[0]);const steps=ts.slice(1).map((t,i)=>t-ts[i]).sort((x,y)=>x-y),med=steps[steps.length>>1];
+const gaps=[];for(let i=1;i<ts.length;i++){const d=ts[i]-ts[i-1];if(d>Math.max(.3,10*med))gaps.push([ts[i-1],ts[i]]);}
+const all=DATA.d2.filter(p=>p[0]>=0);const X1=Math.max(...all.map(p=>p[0]))*1.02,Y1=Math.max(...all.map(p=>p[1]))*1.08;
+const ticks=(mx,c)=>{const raw=mx/c,mag=10**Math.floor(Math.log10(raw)),e=raw/mag,s=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag;const o=[];for(let v=0;v<=mx+1e-9;v+=s)o.push(+v.toFixed(6));return o;};
+const NS='http://www.w3.org/2000/svg';
+function svg(w,h){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`0 0 ${w} ${h}`);return s;}
+function el(p,tag,at,txt){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e;}
+const fx=t=>a+b*t;
+
+// ---------- A: instrument ----------
+(()=>{const w=860,h=360,M={l:52,r:20,t:20,b:40};const s=svg(w,h),X=t=>M.l+t/X1*(w-M.l-M.r),Y=v=>h-M.b-v/Y1*(h-M.t-M.b);
+const defs=el(s,'defs',{});const pat=el(defs,'pattern',{id:'hatch',width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'});el(pat,'line',{x1:0,y1:0,x2:0,y2:6,stroke:V('--line'),'stroke-width':2});
+for(const t of ticks(X1,10)){el(s,'line',{x1:X(t),x2:X(t),y1:M.t,y2:h-M.b,stroke:V('--line'),'stroke-dasharray':'1 3'});el(s,'text',{x:X(t),y:h-M.b+16,'text-anchor':'middle'},t);}
+for(const v of ticks(Y1,6)){el(s,'line',{x1:M.l,x2:w-M.r,y1:Y(v),y2:Y(v),stroke:V('--line'),'stroke-dasharray':'1 3'});el(s,'text',{x:M.l-8,y:Y(v)+4,'text-anchor':'end'},v);}
+el(s,'rect',{x:M.l,y:M.t,width:w-M.l-M.r,height:h-M.t-M.b,fill:'none',stroke:V('--ash')});
+for(const[g0,g1]of gaps){el(s,'rect',{x:X(g0),y:M.t,width:X(g1)-X(g0),height:h-M.t-M.b,fill:'url(#hatch)'});el(s,'text',{x:(X(g0)+X(g1))/2,y:M.t+14,'text-anchor':'middle'},'no data');}
+el(s,'line',{x1:X(DATA.burn),x2:X(DATA.burn),y1:M.t,y2:h-M.b,stroke:V('--flame')});el(s,'text',{x:X(DATA.burn)-6,y:M.t+28,'text-anchor':'end',fill:V('--flame')},'flame out');
+for(const[t,v]of all)el(s,'circle',{cx:X(t),cy:Y(v),r:2.2,fill:'none',stroke:V('--ink'),'stroke-width':1});
+const f0=W2[0][0],f1=W2[W2.length-1][0];el(s,'line',{x1:X(f0),y1:Y(fx(f0)),x2:X(f1),y2:Y(fx(f1)),stroke:V('--flame'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+el(s,'text',{x:X((f0+f1)/2)+8,y:Y(fx((f0+f1)/2))-10,fill:V('--flame')},'fit · our estimate');
+const bx=w-M.r-190,by=M.t+12;el(s,'rect',{x:bx,y:by,width:178,height:52,fill:V('--void'),stroke:V('--ink')});
+el(s,'text',{x:bx+10,y:by+20,fill:V('--ink'),style:'font-size:13px'},`K ≈ ${K.toFixed(2)} mm²/s`);el(s,'text',{x:bx+10,y:by+38},`R² ${R2.toFixed(3)} · NASA 0.49`);
+el(s,'text',{x:(M.l+w-M.r)/2,y:h-6,'text-anchor':'middle'},'time, s');el(s,'text',{x:M.l,y:M.t-6},'d², mm²');
+// crosshair
+const cx=el(s,'line',{y1:M.t,y2:h-M.b,stroke:V('--ash'),'stroke-dasharray':'2 2',visibility:'hidden'}),lab=el(s,'text',{fill:V('--ink'),visibility:'hidden'});
+s.addEventListener('mousemove',e=>{const r=s.getBoundingClientRect(),x=(e.clientX-r.left)*w/r.width,t=(x-M.l)/(w-M.l-M.r)*X1;if(t<0||t>X1){cx.setAttribute('visibility','hidden');lab.setAttribute('visibility','hidden');return;}
+let best=all[0];for(const p of all)if(Math.abs(p[0]-t)<Math.abs(best[0]-t))best=p;cx.setAttribute('x1',X(best[0]));cx.setAttribute('x2',X(best[0]));cx.setAttribute('visibility','visible');
+lab.setAttribute('x',X(best[0])+6);lab.setAttribute('y',Y(best[1])-8);lab.textContent=`t ${best[0].toFixed(2)} s · d² ${best[1].toFixed(2)}`;lab.setAttribute('visibility','visible');});
+document.getElementById('A').appendChild(s);})();
+
+// ---------- B: ASCII terminal ----------
+(()=>{const cols=96,rows=26,cw=9,ch=15,M={l:6,b:2};const w=(cols+2)*cw,h=(rows+3)*ch;const s=svg(w,h);
+const grid=Array.from({length:rows},()=>Array(cols).fill(' ')),col=Array.from({length:rows},()=>Array(cols).fill('ash'));
+const pc=t=>Math.round(M.l+t/X1*(cols-M.l-1)),pr=v=>Math.round((rows-M.b-1)-v/Y1*(rows-M.b-1));
+for(let r=0;r<rows-M.b;r++)grid[r][M.l-1]='│';for(let c=M.l-1;c<cols;c++)grid[rows-M.b][c]='─';grid[rows-M.b][M.l-1]='└';
+for(const t of ticks(X1,10)){const c=pc(t);if(c<cols){grid[rows-M.b][c]='┴';const sTxt=String(t);for(let i=0;i<sTxt.length&&c+i<cols;i++)grid[rows-M.b+1][c+i]=sTxt[i];}}
+for(const v of ticks(Y1,5)){const r=pr(v);if(r>=0){grid[r][M.l-1]='┤';const sTxt=String(v).padStart(4);for(let i=0;i<4;i++)grid[r][i]=sTxt[i];for(let c=M.l;c<cols;c+=3)if(grid[r][c]===' ')grid[r][c]='·';}}
+for(const[g0,g1]of gaps)for(let c=pc(g0);c<=pc(g1);c++)for(let r=0;r<rows-M.b;r++)if(grid[r][c]===' '||grid[r][c]==='·'){grid[r][c]='░';col[r][c]='line';}
+const bc=pc(DATA.burn);for(let r=0;r<rows-M.b;r++){grid[r][bc]='┊';col[r][bc]='flame';}
+const f0=W2[0][0],f1=W2[W2.length-1][0];for(let c=pc(f0);c<=pc(f1);c++){const t=(c-M.l)/(cols-M.l-1)*X1,r=pr(fx(t));if(r>=0&&r<rows-M.b){grid[r][c]='·';col[r][c]='flame';}}
+const dens={};for(const[t,v]of all){const k=pr(v)+','+pc(t);dens[k]=(dens[k]||0)+1;}
+for(const k in dens){const[r,c]=k.split(',').map(Number);if(r>=0&&c<cols){grid[r][c]=dens[k]>2?'●':dens[k]>1?'•':'∙';col[r][c]='ink';}}
+const head=`d² mm²  ── FLEX-013 · fit K≈${K.toFixed(2)} mm²/s (R² ${R2.toFixed(3)}) · NASA 0.49 · ░ no data · ┊ flame out`;
+el(s,'text',{x:0,y:ch-3,fill:V('--ink'),style:`font-size:12px`},head);
+for(let r=0;r<rows;r++){let x=0;for(let c=0;c<cols;c++){const g=grid[r][c];if(g!==' ')el(s,'text',{x:x+c*cw,y:(r+2)*ch,fill:V('--'+col[r][c]),style:'font-size:13px'},g);}}
+el(s,'text',{x:w-60,y:(rows+2)*ch,fill:V('--ash')},'time, s');
+document.getElementById('B').appendChild(s);})();
+
+// ---------- C: explanatory ----------
+(()=>{const w=860,h=380,M={l:56,r:150,t:30,b:44};const s=svg(w,h),X=t=>M.l+t/X1*(w-M.l-M.r),Y=v=>h-M.b-v/Y1*(h-M.t-M.b);
+const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]);el(s,'line',{x1:X(Math.min(...xs)),x2:X(Math.max(...xs)),y1:h-M.b+6,y2:h-M.b+6,stroke:V('--ash')});el(s,'line',{x1:M.l-6,x2:M.l-6,y1:Y(Math.min(...ys)),y2:Y(Math.max(...ys)),stroke:V('--ash')});
+for(const t of ticks(X1,6))el(s,'text',{x:X(t),y:h-M.b+22,'text-anchor':'middle'},t);for(const v of ticks(Y1,4))el(s,'text',{x:M.l-12,y:Y(v)+4,'text-anchor':'end'},v);
+for(const[g0,g1]of gaps){el(s,'rect',{x:X(g0),y:M.t,width:X(g1)-X(g0),height:h-M.t-M.b,fill:V('--deep')});const gx=(X(g0)+X(g1))/2;el(s,'text',{x:gx,y:M.t-8,'text-anchor':'middle',fill:V('--ink')},'no measurements');el(s,'line',{x1:gx,x2:gx,y1:M.t-4,y2:M.t+10,stroke:V('--ash')});}
+for(const[t,v]of all)el(s,'rect',{x:X(t)-1.5,y:Y(v)-1.5,width:3,height:3,fill:V('--ink')});
+const f0=W2[0][0],f1=W2[W2.length-1][0];el(s,'line',{x1:X(f0),y1:Y(fx(f0)),x2:X(f1),y2:Y(fx(f1)),stroke:V('--ash'),'stroke-width':1.25});
+// slope triangle
+const ta=f0+(f1-f0)*.45,tb=ta+(f1-f0)*.25;el(s,'path',{d:`M${X(ta)},${Y(fx(ta))} L${X(tb)},${Y(fx(ta))} L${X(tb)},${Y(fx(tb))}`,fill:'none',stroke:V('--flame')});
+el(s,'text',{x:(X(ta)+X(tb))/2,y:Y(fx(ta))+16,'text-anchor':'middle',fill:V('--flame')},'Δt');el(s,'text',{x:X(tb)+6,y:(Y(fx(ta))+Y(fx(tb)))/2+4,fill:V('--flame')},`Δ(d²) → K ≈ ${K.toFixed(2)}`);
+// annotations
+const hp=all.slice(0,Math.max(3,pk+1));const hx=X(hp[hp.length-1][0]),hy=Y(hp[hp.length-1][1]);el(s,'line',{x1:hx+2,y1:hy+4,x2:hx+40,y2:hy+60,stroke:V('--ash')});el(s,'text',{x:hx+44,y:hy+64,fill:V('--ink')},'heat-up: droplet swells first');
+el(s,'line',{x1:X(DATA.burn),x2:X(DATA.burn),y1:M.t+20,y2:h-M.b,stroke:V('--flame'),'stroke-dasharray':'3 3'});el(s,'text',{x:X(DATA.burn)+6,y:M.t+30,fill:V('--flame')},'flame out');
+el(s,'text',{x:X(f1)+8,y:Y(fx(f1))+4,fill:V('--ash')},'d² = d₀² − K·t');el(s,'text',{x:w-M.r+8,y:Y(all[0][1])+4,fill:V('--ink')},'measured d²');
+el(s,'text',{x:(M.l+w-M.r)/2,y:h-4,'text-anchor':'middle'},'time since ignition, s');el(s,'text',{x:M.l-6,y:M.t-14},'droplet d², mm²');
+el(s,'text',{x:w-M.r+8,y:h-M.b-4,fill:V('--ash')},`NASA K = 0.49 · R² ${R2.toFixed(3)}`);
+document.getElementById('C').appendChild(s);})();
+</script>
+</body>
+</html>

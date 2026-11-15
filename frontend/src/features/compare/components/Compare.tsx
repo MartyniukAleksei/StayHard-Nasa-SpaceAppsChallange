@@ -160,7 +160,7 @@ function Column({ id, detail: t, replay, error, domain, onRemove }: ColumnProps)
       <MediaBlock t={t} compact />
       {d2.length > 0 ? (
         <TimeChart
-          series={[{ id: "d2", label: "d²", points: d2 }]}
+          series={[{ id: "d2", label: "d² measured", points: d2 }]}
           xLabel="time, s"
           yLabel="d², mm²"
           height={180}

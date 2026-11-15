@@ -2,15 +2,28 @@
 .tchart { width: 100%; overflow: hidden; }
 .tchart svg { display: block; }
 .tchart text, .chart text { font: var(--chart-font); fill: var(--ash); }
+.tchart .frame { fill: none; stroke: var(--ash); }
+.tchart .grid { stroke-dasharray: 1 3; }
+.tchart .hatch { stroke: var(--line); stroke-width: 2; }
+.tchart .crosshair line { stroke: var(--ash); stroke-dasharray: 2 2; }
+.tchart .crosshair circle { fill: none; stroke: var(--ink); stroke-width: 1.25; }
+.tchart .crosshair text { fill: var(--ink); paint-order: stroke; stroke: var(--void); stroke-width: 3px; }
 .tchart .axlabel, .chart .axlabel { fill: var(--ash); font-size: 12px; }
 .tchart .ax, .chart .ax { stroke: var(--chart-grid); }
 .tchart .grid, .chart .grid { stroke: var(--chart-grid); }
 .tchart polyline { fill: none; stroke-width: 1.5; }
-.tchart polyline.dashed { stroke-dasharray: 5 4; stroke-width: 1.25; }
+.tchart polyline.dashed { stroke-dasharray: 6 4; stroke-width: 1.5; }
+/* measured points: hollow circles in the series colour */
+.measured circle { fill: none; stroke-width: 1; }
+.tone-ink.measured circle { stroke: var(--ink); } .tone-ash.measured circle { stroke: var(--ash); }
+.tone-flame.measured circle { stroke: var(--flame); } .tone-uv.measured circle { stroke: var(--series-uv); }
+.tone-ext.measured circle { stroke: var(--end-ext); } .tone-dis.measured circle { stroke: var(--end-dis); }
+.tone-com.measured circle { stroke: var(--end-com); } .tone-s1.measured circle { stroke: var(--series-1); }
+.tone-s2.measured circle { stroke: var(--series-2); }
 .tchart .cursor { stroke: var(--flame); stroke-dasharray: 3 3; }
 .tchart .marker line { stroke: var(--flame); }
 .tchart .marker text { fill: var(--flame); }
-.tchart .gap, .legend-swatch .band { fill: var(--deep); stroke: var(--line); stroke-dasharray: 2 3; }
+.legend-swatch .band-hatch { stroke: var(--ash); stroke-width: 1.5; }
 
 /* tones: text + dots fill, lines stroke */
 .tone-ink rect, .tone-ink text { fill: var(--ink); } .tone-ink polyline { stroke: var(--ink); }
@@ -42,6 +55,11 @@
 }
 .chart-legend button.off { color: var(--ash); text-decoration: line-through; opacity: .6; }
 .legend-swatch { flex: none; }
+.chart-legend.right { justify-content: flex-end; }
+.legend-swatch circle { fill: none; stroke-width: 1; }
+.legend-swatch.tone-ink circle { stroke: var(--ink); } .legend-swatch.tone-flame circle { stroke: var(--flame); }
+.legend-swatch.tone-ash circle { stroke: var(--ash); } .legend-swatch.tone-uv circle { stroke: var(--series-uv); }
+.legend-swatch.tone-s1 circle { stroke: var(--series-1); } .legend-swatch.tone-s2 circle { stroke: var(--series-2); }
 .legend-swatch polyline { fill: none; stroke-width: 1.5; }
 .legend-swatch polyline.dashed { stroke-dasharray: 4 3; }
 
