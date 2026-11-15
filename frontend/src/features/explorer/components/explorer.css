@@ -21,16 +21,31 @@
 .ex-ends { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; }
 .ex-note { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--ash); }
 
-/* map */
-.ex-map { border: var(--rule); padding: 8px 0 0; overflow: hidden; }
-.ex-map svg { display: block; }
-.ex-map text { font: 11px var(--mono); fill: var(--ash); }
-.ex-map-row { stroke: var(--line); }
-.ex-dot { cursor: pointer; }
-.ex-dot.end-ext { fill: var(--end-ext); } .ex-dot.end-dis { fill: var(--end-dis); } .ex-dot.end-com { fill: var(--end-com); }
+/* map (chart theme: shared/ui/chart/chart.css) */
+.ex-mapbox { display: grid; gap: 8px; }
+.ex-map { position: relative; border: var(--rule); padding: 8px 0 0; overflow: hidden; }
+.ex-map svg { display: block; overflow: visible; }
+.ex-dot { cursor: pointer; transition: transform .08s; transform-box: fill-box; transform-origin: center; }
+.ex-dot:focus { outline: none; }
 .ex-dot.off { opacity: .14; }
-.ex-dot.sel { stroke: var(--flame); stroke-width: 2; }
-.ex-legend { margin: -8px 0 0; color: var(--ash); }
+.ex-dot.hot, .ex-dot:focus-visible { transform: scale(1.6); }
+.ex-dot.hot circle, .ex-dot.hot polygon, .ex-dot:focus-visible circle, .ex-dot:focus-visible polygon { stroke: var(--ink); stroke-width: 1.5; }
+.ex-dot.sel circle, .ex-dot.sel polygon { stroke: var(--flame); stroke-width: 2; }
+.ex-legend { margin: 0; color: var(--ash); }
+
+/* axis filters above the map */
+.ex-axis { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: end; }
+.ex-axis-set { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.ex-axis-set legend { font: 12px var(--mono); color: var(--ash); padding: 0; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.ex-axis-opt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; min-height: 32px; cursor: pointer; }
+.ex-axis-opt input { accent-color: var(--flame); margin: 0; }
+.ex-o2 input {
+  width: 6.5em; min-height: 36px; padding: 0 8px; font: 14px var(--mono); color: var(--ink);
+  background: var(--deep); border: var(--rule); border-radius: 0;
+}
+.ex-o2 input:focus-visible { border-color: var(--ink); }
+.ex-th-plain { min-width: 3em; }
+.ex-media .ex-3d { font-size: 11px; padding: 1px 6px; }
 
 /* table */
 .ex-table-wrap { overflow-x: auto; border: var(--rule); max-height: 560px; overflow-y: auto; }
@@ -62,6 +77,9 @@
   background: var(--deep); border: 1px solid var(--ink); padding: 4px 16px; max-width: calc(100vw - 32px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ex-dot { transition: none; }
+}
 @media (max-width: 1100px) {
   .ex-grid.with-preview { grid-template-columns: 240px minmax(0, 1fr); }
   .ex-preview {

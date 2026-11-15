@@ -42,6 +42,9 @@ export function Explorer() {
   return (
     <div className="wrap ex">
       <header className="ex-head">
+        <p className="ov-kicker mono">
+          <Link to="/studies/flex">FLEX</Link> / Tests
+        </p>
         <h1 className="h-display">Test explorer</h1>
         <p className="lede">
           {tests.length} FLEX tests. Narrow them down with the filters; every number below is counted
@@ -52,11 +55,14 @@ export function Explorer() {
         <Facets tests={tests} filters={filters} onChange={setFilters} />
         <div className="ex-main">
           <AnswerCard all={tests} rows={rows} filters={filters} />
-          <TestMap tests={tests} matching={matching} selected={selected} onSelect={select} />
-          <p className="ex-legend mono small">
-            <span className="end-ext">■ Extinction</span> <span className="end-dis">■ Disruption</span>{" "}
-            <span className="end-com">■ Completion</span> · faint = filtered out · click a square to preview
-          </p>
+          <TestMap
+            tests={tests}
+            filters={filters}
+            onFilters={setFilters}
+            matching={matching}
+            selected={selected}
+            onSelect={select}
+          />
           <TestTable
             rows={rows}
             selected={selected}

@@ -4,7 +4,8 @@
 import type { TestSummary } from "@/features/flex-tests";
 
 export type FacetKey = "fuel" | "diluent" | "pressure" | "o2" | "fiber" | "end" | "tag";
-export type Filters = Record<FacetKey, string[]>;
+/** Facet selections plus an exact O₂ range in percent (null = open end). */
+export type Filters = Record<FacetKey, string[]> & { o2min: number | null; o2max: number | null };
 export type Option = { value: string; label: string };
 export type Facet = {
   key: FacetKey;
@@ -104,10 +105,11 @@ export const FACETS: Facet[] = [
     options: [
       { value: "series", label: "Droplet + flame series" },
       { value: "video", label: "Video" },
+      { value: "3d", label: "3D replay" },
       { value: "cool", label: "Cool flame (derived)" },
     ],
     values: (t) =>
-      [t.has_series && "series", t.has_video && "video", t.cool_flame && "cool"].filter(
+      [t.has_series && "series", t.has_video && "video", t.has_3d && "3d", t.cool_flame && "cool"].filter(
         (v): v is string => Boolean(v),
       ),
   },
@@ -118,8 +120,15 @@ const KEYS = FACETS.map((f) => f.key);
 export const DEFAULT_FIBER = ["free"];
 const ALL = "all";
 
+const pctParam = (sp: URLSearchParams, key: string): number | null => {
+  const raw = sp.get(key);
+  if (raw == null || raw.trim() === "") return null;
+  const v = Number(raw);
+  return Number.isFinite(v) ? v : null;
+};
+
 export function fromParams(sp: URLSearchParams): Filters {
-  const f = {} as Filters;
+  const f = { o2min: pctParam(sp, "o2min"), o2max: pctParam(sp, "o2max") } as Filters;
   for (const key of KEYS) {
     const raw = sp.get(key);
     f[key] = raw ? raw.split(",").filter(Boolean) : [];
@@ -138,6 +147,10 @@ export function toParams(f: Filters, base?: URLSearchParams): URLSearchParams {
   }
   const isDefault = f.fiber.length === 1 && f.fiber[0] === DEFAULT_FIBER[0];
   if (!isDefault) sp.set("fiber", f.fiber.length ? f.fiber.join(",") : ALL);
+  for (const key of ["o2min", "o2max"] as const) {
+    sp.delete(key);
+    if (f[key] != null) sp.set(key, String(f[key]));
+  }
   return sp;
 }
 
@@ -149,8 +162,16 @@ function facetMatches(facet: Facet, t: TestSummary, selected: string[]): boolean
     : selected.some((s) => vals.includes(s));
 }
 
+/** Exact O₂ range in percent; a test without O₂ only passes when no range is set. */
+export function inO2Range(t: TestSummary, f: Pick<Filters, "o2min" | "o2max">): boolean {
+  if (f.o2min == null && f.o2max == null) return true;
+  if (t.x_o2 == null) return false;
+  const p = t.x_o2 * 100;
+  return (f.o2min == null || p >= f.o2min - 1e-9) && (f.o2max == null || p <= f.o2max + 1e-9);
+}
+
 export function matches(t: TestSummary, f: Filters, skip?: FacetKey): boolean {
-  return FACETS.every((facet) => facet.key === skip || facetMatches(facet, t, f[facet.key]));
+  return inO2Range(t, f) && FACETS.every((facet) => facet.key === skip || facetMatches(facet, t, f[facet.key]));
 }
 
 export function applyFilters(tests: TestSummary[], f: Filters): TestSummary[] {
@@ -166,6 +187,20 @@ export function facetCounts(tests: TestSummary[], f: Filters, key: FacetKey): Ma
     for (const v of facet.values(t)) counts.set(v, (counts.get(v) ?? 0) + 1);
   }
   return counts;
+}
+
+const END_ALL = ["Extinction", "Disruption", "Completion"];
+
+/** Legend toggle for an end type: no selection means "all shown". */
+export function endShown(f: Filters, end: string): boolean {
+  return f.end.length === 0 || f.end.includes(end);
+}
+
+export function toggleEnd(f: Filters, end: string): Filters {
+  const shown = END_ALL.filter((e) => endShown(f, e));
+  const next = shown.includes(end) ? shown.filter((e) => e !== end) : [...shown, end];
+  if (next.length === 0) return f; // keep at least one outcome visible
+  return { ...f, end: next.length === END_ALL.length ? [] : next };
 }
 
 export type EndCounts = { Extinction: number; Disruption: number; Completion: number };
