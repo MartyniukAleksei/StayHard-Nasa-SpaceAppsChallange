@@ -122,7 +122,7 @@ def get_full_series(cur: DuckDBPyConnection, test_no: int) -> list[tuple[str, fl
 
 SUMMARY_COLUMNS = (
     "test_no", "fuel", "p_atm", "x_o2", "diluent", "d0_mm", "dext_mm", "k_mm2_s",
-    "burn_time_s", "end_type", "ts_fiber", "has_series", "cool_flame",
+    "burn_time_s", "end_type", "ts_fiber", "has_series", "has_3d", "cool_flame",
 )  # fmt: skip
 
 
@@ -132,6 +132,7 @@ def list_tests(cur: DuckDBPyConnection) -> list[dict[str, Any]]:
         SELECT test_no, fuel, p_atm, x_o2, diluent, d0_mm, dext_mm, k_mm2_s, burn_time_s,
                end_type, ts_fiber,
                coalesce(has_droplet_ts AND has_flame_uv_ts, false) AS has_series,
+               coalesce(has_droplet_ts, false) AS has_3d,
                coalesce(regexp_matches(lower(ts_comment), '{COOL_FLAME_PATTERN}'), false)
         FROM tests ORDER BY test_no
         """

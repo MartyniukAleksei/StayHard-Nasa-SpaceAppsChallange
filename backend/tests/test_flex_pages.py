@@ -109,3 +109,28 @@ def test_media_serves_pdf_and_video_range() -> None:
     v = client.get(f"/api/studies/flex/tests/{videos[0]['test_no']}/report").json()["videos"][0]
     r = client.get(f"/api/media/flex/files/{v['path']}", headers={"Range": "bytes=0-99"})
     assert r.status_code == 206 and len(r.content) == 100
+
+
+@needs_db
+def test_has_3d_follows_droplet_series() -> None:
+    rows = client.get("/api/studies/flex/explorer").json()
+    assert sum(t["has_3d"] for t in rows) == 254
+    no_3d = next(t for t in rows if not t["has_3d"])
+    detail = client.get(f"/api/studies/flex/tests/{no_3d['test_no']}/report").json()
+    assert detail["has_3d"] is False
+    assert client.get("/api/studies/flex/tests/35/report").json()["has_3d"] is True
+
+
+@needs_db
+def test_videos_list_mp4_with_test_conditions() -> None:
+    videos = client.get("/api/studies/flex/videos").json()
+    with_video = {
+        t["test_no"] for t in client.get("/api/studies/flex/explorer").json() if t["has_video"]
+    }
+    if not with_video:
+        pytest.skip("no local videos")
+    assert {v["test_no"] for v in videos} == with_video
+    v = videos[0]
+    assert v["path"].endswith(".mp4") and v["fuel"] and v["end_type"]
+    r = client.get(f"/api/media/flex/files/{v['path']}", headers={"Range": "bytes=0-9"})
+    assert r.status_code == 206

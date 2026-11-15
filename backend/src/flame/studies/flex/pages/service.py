@@ -27,6 +27,7 @@ from flame.studies.flex.pages.schemas import (
     Replay,
     TestDetail,
     TestSummary,
+    VideoItem,
 )
 
 STUDY = "flex"
@@ -187,6 +188,33 @@ def list_tests(cur: DuckDBPyConnection) -> list[TestSummary]:
     ]
 
 
+def list_videos(cur: DuckDBPyConnection) -> list[VideoItem]:
+    """Усі mp4 з data/flex/media, з умовами їхніх тестів (порядок — за номером тесту)."""
+    rows = {r["test_no"]: r for r in repo.list_tests(cur)}
+    items = []
+    for test_no in sorted(media.tests_with_video()):
+        r = rows.get(test_no)
+        if r is None:
+            continue
+        for v in media.list_videos(test_no):
+            if not str(v["name"]).lower().endswith(".mp4"):
+                continue
+            items.append(
+                VideoItem(
+                    test_no=test_no,
+                    fuel=r["fuel"],
+                    diluent=r["diluent"],
+                    x_o2=r["x_o2"],
+                    p_atm=r["p_atm"],
+                    end_type=r["end_type"],
+                    name=str(v["name"]),
+                    path=str(v["path"]),
+                    bytes=int(str(v["bytes"])),
+                )
+            )
+    return items
+
+
 def _str(v: object) -> str | None:
     return None if v is None else str(v)
 
@@ -218,6 +246,7 @@ def get_test(cur: DuckDBPyConnection, test_no: int) -> TestDetail | None:
         comment=comment,
         cool_flame=bool(re.search(repo.COOL_FLAME_PATTERN, comment.lower())),
         has_series=bool(t.get("has_droplet_ts")),
+        has_3d=bool(t.get("has_droplet_ts")),
         neighbors=[Neighbor(**n) for n in repo.find_neighbors(cur, test_no, NEIGHBORS)],
         files=[FileItem(**f) for f in media.list_test_files(test_no)],
         videos=[FileItem(**f) for f in media.list_videos(test_no)],
