@@ -91,7 +91,7 @@ export function AgentPanel() {
       {!full && <ResizeHandle width={width} onChange={(w) => setWidth(clampWidth(w))} />}
       <header className="ag-head">
         <p className="ag-context" title="What the agent sees: the page and the section you are looking at">
-          <span className="ag-prompt-sign" aria-hidden="true">●</span> AI Agent <span className="muted">·</span>{" "}
+          <span className="ag-prompt-sign" aria-hidden="true">●</span> SI Agent <span className="muted">·</span>{" "}
           <span className="sr-only">Context: </span>
           {describeContext(context)}
         </p>

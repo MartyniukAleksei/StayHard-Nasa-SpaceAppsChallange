@@ -32,7 +32,7 @@ export function WhatHappened({ comment, files, aiSummary }: Props) {
       <h2 id="tp-what" className="h-section">What happened</h2>
       {useAi ? (
         <p className="tp-what-label mono small">
-          <span className="tag">derived</span> AI-generated summary
+          <span className="tag">derived</span> SI-generated summary
         </p>
       ) : (
         <p className="tp-what-label mono small muted">Researcher comment</p>
