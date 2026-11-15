@@ -3,7 +3,7 @@
 /**
  * What the "What happened" block shows.
  * - "researcher": the researcher comment from the NASA test sheet, verbatim, with its source.
- * - "ai": an AI-generated summary (when one is available), labelled as derived; falls back to
+ * - "ai": an SI-generated summary (when one is available), labelled as derived; falls back to
  *   the researcher comment when there is no summary for the test.
  * The team has not decided yet; switch here, nowhere else.
  */
