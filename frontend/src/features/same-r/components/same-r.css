@@ -104,7 +104,8 @@
 .sr-pick input { margin: 0; accent-color: var(--ink); }
 
 .sr-cmp-add { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 24px; }
-.sr-cmp-cols { display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: 24px; }
+/* always 3 slots: one or two tests keep the column width (no full-width TEM image), columns do not jump */
+.sr-cmp-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .sr-cmp-col { display: grid; gap: 12px; align-content: start; border-top: var(--rule); padding-top: 12px; min-width: 0; }
 .sr-cmp-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .sr-cmp-head .h-section { margin: 0; }
