@@ -48,8 +48,12 @@ function Header() {
     <header className="top">
       <div className="top-row">
         <Link to="/" className="brand">
-          {/* the site icon is the favicon: one drawing for the tab and the header */}
-          <img src="/favicon.svg" width={24} height={24} alt="" className="brand-icon" />
+          <svg width="24" height="24" viewBox="0 0 4 4" aria-hidden="true" fill="currentColor" className="brand-icon">
+            <rect x="0" y="0" width="2" height="2" />
+            <rect x="2" y="2" width="1" height="1" />
+            <rect x="3" y="1" width="1" height="1" />
+            <rect x="1" y="3" width="1" height="1" />
+          </svg>
           <span className="h-brand">StayHard</span>
         </Link>
         {study && (
