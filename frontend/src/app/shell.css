@@ -17,6 +17,7 @@
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-height: var(--hit); }
 .brand-icon { display: block; flex: none; }
+.tag.top-study { border-style: solid; border-color: var(--flame); color: var(--flame); }
 .top-nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .top-nav a {
   color: var(--ash);

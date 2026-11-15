@@ -53,6 +53,11 @@ function Header() {
           <span className="h-brand">StayHard</span>
         </Link>
         {study && (
+          <span className="tag top-study" aria-label={`Current study: ${study.tag}`}>
+            {study.tag}
+          </span>
+        )}
+        {study && (
           <nav aria-label={`${study.tag} sections`} className="top-nav">
             {study.nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end}>
