@@ -91,11 +91,12 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | `/` | лендінг, вибір дослідження | `features/landing` (ASCII-небо, `StudyCards` з `/api/studies`) |
 | `/studies/flex` | Огляд 1A | `features/study-overview` (+ `replay`) |
 | `/studies/flex/tests` | Дослідник 2B | `features/explorer` (фасети, стан у URL; пресети Огляду ведуть сюди через `presetHref`) |
-| `/studies/flex/tests/:id` | Тест 3A | `features/test-page` |
+| `/studies/flex/tests/:id` | Тест 3A | `features/test-page` (+ `replay`, `experiment-3d`: вкладка «3D replay» у блоці Watch) |
 | `/studies/flex/compare?ids=` | Порівняння 4A | `features/compare` (≤ 3 тести) |
 | `/studies/flex/library` | Бібліотека 5B | `features/library` |
 
-Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`. Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
+Спільні дані FLEX (типи, хуки, `mediaUrl`, `compareHref`) — у `features/flex-tests`.
+`features/experiment-3d` — 3D-відтворення тесту з виміряних рядів (React Three Fiber) поруч із реальними кадрами камер; three.js вантажиться окремим чанком лише при відкритті вкладки ([ADR 0007](decisions/0007-3d-replay.md)). Юніт-тести чистих функцій — `*.test.ts` поруч із кодом, `node:test` (`npm test`), окремий `tsconfig.test.json`.
 Імпорти через alias `@/`. Фічі не імпортують одна одну всередину — тільки через `index.ts`.
 
 ## Деплой

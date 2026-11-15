@@ -1,0 +1,85 @@
+/* 3D replay. The scene inside the frame is realistic on purpose (docs/design/README.md);
+   everything around it follows StayHard: straight corners, no shadows, mono numbers. */
+.x3d {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 12px 16px;
+  align-items: stretch;
+}
+/* the stage is as tall as the frames column next to it */
+.x3d-stage { margin: 0; position: relative; min-height: 420px; background: var(--void); border: var(--rule); overflow: hidden; }
+.x3d-stage > div:first-child { position: absolute !important; inset: 0; }
+.x3d-stage canvas { display: block; touch-action: none; }
+.x3d-empty {
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  color: var(--ash);
+  font: 13px var(--mono);
+}
+.x3d-stage .x3d-empty { position: absolute; inset: 0; border: 0; aspect-ratio: auto; }
+.x3d-fallback { display: grid; gap: 8px; max-width: 760px; }
+
+.x3d-phase {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 8px 12px; font-size: 13px; color: var(--ink);
+  background: var(--void); border-top: var(--rule);
+  pointer-events: none;
+}
+.x3d-live { color: var(--flame); }
+.x3d-scale { position: absolute; left: 12px; bottom: 44px; font-size: 11px; color: var(--ash); pointer-events: none; }
+.x3d-scale div { height: 5px; border: 1px solid var(--ash); border-top: 0; margin-bottom: 4px; min-width: 2px; }
+
+.x3d-under { grid-column: 1 / -1; display: grid; gap: 8px; }
+.x3d-timeline { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.x3d-controls { display: grid; justify-items: start; }
+.x3d-speeds { display: flex; }
+.x3d-speeds button {
+  background: none; border: 0; border-bottom: 2px solid transparent; color: var(--ash);
+  font: 12px var(--mono); padding: 6px 8px; min-height: 32px; cursor: pointer;
+}
+.x3d-speeds button.on { color: var(--ink); border-bottom-color: var(--flame); }
+.x3d-timeline svg { width: 100%; display: block; cursor: ew-resize; touch-action: none; border: var(--rule); background: var(--deep); }
+.x3d-timeline svg text { font: 11px var(--mono); fill: var(--ash); user-select: none; }
+.x3d-timeline svg text.ink { fill: var(--ink); }
+.x3d-timeline svg text.live { fill: var(--flame); }
+.x3d-timeline svg text.uv { fill: #a99bf0; }
+.x3d-timeline svg .tick { stroke: var(--line); }
+.x3d-timeline svg .tick.zero { stroke: var(--ash); }
+.x3d-timeline svg .tick.event { stroke: var(--ash); stroke-dasharray: 2 3; }
+.x3d-timeline svg .tick.end { stroke: var(--flame); stroke-dasharray: 3 3; }
+.x3d-timeline svg .line { fill: none; stroke-width: 1.5; }
+.x3d-timeline svg .line.d2 { stroke: var(--ink); }
+.x3d-timeline svg .line.vis { stroke: var(--flame); }
+.x3d-timeline svg .line.uv { stroke: #a99bf0; }
+.x3d-timeline svg .cursor { stroke: var(--ink); }
+
+.x3d-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.x3d-layer { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 32px; }
+.x3d-layer input { margin: 0; accent-color: currentColor; }
+.x3d-vis { color: var(--flame); }
+.x3d-uv { color: #a99bf0; }
+.x3d-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ash); max-width: 110ch; }
+
+.x3d-frames { display: grid; gap: 10px; align-content: start; }
+.x3d-frames-title { margin: 0; font-size: 12px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; }
+.x3d-feed { margin: 0; display: grid; gap: 4px; }
+.x3d-feed-image { position: relative; aspect-ratio: 4 / 3; background: #000; border: var(--rule); display: grid; place-items: center; overflow: hidden; }
+.x3d-feed-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.x3d-feed-image span { font: 12px var(--mono); color: var(--ash); padding: 0 12px; text-align: center; }
+.x3d-feed-image.stale img { opacity: 0.4; }
+.x3d-feed-progress { position: absolute; left: 0; bottom: 0; height: 1px; background: var(--flame); }
+.x3d-feed figcaption { display: grid; font-size: 11px; color: var(--ash); }
+.x3d-feed-name { color: var(--ink); font-size: 12px; }
+.x3d-feed-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
+
+@media (max-width: 860px) {
+  .x3d { grid-template-columns: minmax(0, 1fr); }
+  .x3d-stage { min-height: 0; aspect-ratio: 4 / 3; }
+  .x3d-empty { aspect-ratio: 4 / 3; }
+  .x3d-frames { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .x3d-frames-title, .x3d-frames > .x3d-note { grid-column: 1 / -1; }
+  .x3d-timeline { grid-template-columns: minmax(0, 1fr); }
+  .x3d-controls { display: flex; align-items: center; gap: 12px; }
+}
