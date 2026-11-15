@@ -1,0 +1,79 @@
+[
+ {
+  "id": "ntrs-20140006750",
+  "title": "Cool-flame Extinction During N-Alkane Droplet Combustion in Microgravity (Nayagam et al.)",
+  "url": "https://ntrs.nasa.gov/api/citations/20140006750/downloads/20140006750.pdf",
+  "supports": "cool flame after visible extinction in heptane droplets",
+  "retrieved_utc": "2026-11-15T11:17:47+00:00",
+  "status": "already present",
+  "path": "references/downloaded/ntrs-20140006750/20140006750.pdf",
+  "bytes": 324885,
+  "sha256": "15037323e9a1e546064bb89c452c012a07dfb01daa9c2ec9d9c53eae9490a191"
+ },
+ {
+  "id": "ntrs-20120016855",
+  "title": "Methanol Droplet Extinction in Oxygen/Carbon-dioxide/Nitrogen Mixtures in Microgravity",
+  "url": "https://ntrs.nasa.gov/api/citations/20120016855/downloads/20120016855.pdf",
+  "supports": "methanol FLEX extinction results, CO2 diluent",
+  "retrieved_utc": "2026-11-15T11:17:47+00:00",
+  "status": "already present",
+  "path": "references/downloaded/ntrs-20120016855/20120016855.pdf",
+  "bytes": 240653,
+  "sha256": "397d849c14cf8ff3abe789456aa058f1210b7ca3e2936f6d4b8dabf9b1d85a32"
+ },
+ {
+  "id": "ntrs-20205008449",
+  "title": "Effects of Ambient Inert Gas Properties on Cool-Flame Combustion of Normal-Alkane Droplets",
+  "url": "https://ntrs.nasa.gov/api/citations/20205008449/downloads/Effects%20of%20ambient%20inert%20gas%20properties%20-Combustion%20Science-Nayagam-FAW.pdf",
+  "supports": "role of diluent (He, CO2, N2) in droplet burning and cool flames",
+  "retrieved_utc": "2026-11-15T11:17:47+00:00",
+  "status": "downloaded",
+  "path": "references/downloaded/ntrs-20205008449/Effects-of-ambient-inert-gas-properties-Nayagam-Williams.pdf",
+  "bytes": 909025,
+  "sha256": "7bd5fad64cabb3d780b473a36cfeee4645861e7924814ff7eac722709cced43a"
+ },
+ {
+  "id": "ntrs-20150021491",
+  "title": "Evidence Report: Risk of Hypobaric Hypoxia from the Exploration Atmosphere (NASA HRP)",
+  "url": "https://ntrs.nasa.gov/api/citations/20150021491/downloads/20150021491.pdf",
+  "supports": "exploration atmospheres: 8.2 psia / 34% O2, 10.2 psia / 26.5% O2, flammability margin at maximum O2",
+  "retrieved_utc": "2026-11-15T11:19:21+00:00",
+  "status": "downloaded",
+  "path": "references/downloaded/ntrs-20150021491/20150021491.pdf",
+  "bytes": 725210,
+  "sha256": "4defa6b98de32ea3f5972afc1a4c3c60eaba26bc842259d9946615c4b1c1bc60"
+ },
+ {
+  "id": "nasa-std-6001b-change3",
+  "title": "NASA-STD-6001B with Change 3: Flammability, Offgassing, and Compatibility Requirements and Test Procedures",
+  "url": "https://standards.nasa.gov/sites/default/files/standards/NASA/B-w/CHANGE-3/3/2025_06_25_NASA-STD-6001B_w_Change_3_FINAL_Admin-Change-FINAL.pdf",
+  "supports": "normal-gravity flammability tests (Test 1 upward flame propagation) that FLEX/BASS-II results are compared against",
+  "retrieved_utc": "2026-11-15T11:20:28+00:00",
+  "status": "downloaded",
+  "path": "references/downloaded/nasa-std-6001b-change3/NASA-STD-6001B_Change3.pdf",
+  "bytes": 2249435,
+  "sha256": "8a8d6fca9a3bbe5c3728146a72424aa905346f1db0471a162ddd853e0c0f2394"
+ },
+ {
+  "id": "nasa-efield-srd",
+  "title": "E-FIELD Flames: Science Requirements Document (NASA GRC, 2010)",
+  "url": "https://www1.grc.nasa.gov/wp-content/uploads/E-FIELD_Flames_SRD_20100402.pdf",
+  "supports": "what ACME E-FIELD actually investigates (ion production, ion-driven wind)",
+  "retrieved_utc": "2026-11-15T11:20:31+00:00",
+  "status": "downloaded",
+  "path": "references/downloaded/nasa-efield-srd/E-FIELD_Flames_SRD_20100402.pdf",
+  "bytes": 9895960,
+  "sha256": "3b0ebda0276fd4603c367ed9b5f85f951270337175ffddad9bfb975d672f91b4"
+ },
+ {
+  "id": "ntrs-20210021781",
+  "title": "Recent Research on Flames of Gaseous Fuel Aboard the ISS (ACME, JASMAC)",
+  "url": "https://ntrs.nasa.gov/api/citations/20210021781/downloads/JASMAC%20ACME%20paper%2020210921.pdf",
+  "supports": "ACME E-FIELD results and scope",
+  "retrieved_utc": "2026-11-15T11:28:56+00:00",
+  "status": "downloaded",
+  "path": "references/downloaded/ntrs-20210021781/JASMAC-ACME-paper-20210921.pdf",
+  "bytes": 1336135,
+  "sha256": "ee2b103565143c225042c52f9ca3c4938b16f61aec90035f054d9b13ef00df60"
+ }
+]
