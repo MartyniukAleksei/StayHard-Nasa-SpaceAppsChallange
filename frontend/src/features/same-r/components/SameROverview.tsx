@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useSameROverview, useSameRTests } from "../api";
 import { PTRAK_LIMIT, SameR3D } from "@/features/same-r-3d";
 import { HERO_LEDE, HERO_QUESTION, HOW, TRAPS, WHY } from "../content";
-import { LIBRARY_PATH, testHref, TESTS_PATH } from "../lib/compare";
+import { testHref, TESTS_PATH } from "../lib/compare";
 import { readFirst, type Pick } from "../lib/picks";
 import { groupTests, materials, type TestGroup } from "../lib/tests";
 import type { Overview } from "../types";
@@ -23,16 +23,17 @@ export function SameROverview() {
   return (
     <div className="sr">
       <Hero o={overview.data} groups={groups} />
+      {picks[0] && <Example pick={picks[0]} />}
+      <ReadFirst picks={picks} />
+      <How />
       <section className="band" aria-labelledby="sr-iss">
         <div className="wrap">
           <h2 id="sr-iss" className="h-section">On the ISS</h2>
           <IssPhotos bursts />
         </div>
       </section>
-      <How />
-      <ReadFirst picks={picks} />
-      {picks[0] && <Example pick={picks[0]} />}
       <Why />
+      <BrowseTests />
       <Cite o={overview.data} />
     </div>
   );
@@ -56,10 +57,7 @@ function Hero({ o, groups }: { o: Overview; groups: TestGroup[] }) {
         </div>
         <div className="sr-actions">
           <Link className="btn" to={TESTS_PATH}>
-            Browse all tests
-          </Link>
-          <Link className="btn ghost" to={LIBRARY_PATH}>
-            Documents and photos
+            Browse all tests →
           </Link>
         </div>
         <p className="sr-meta mono small">
@@ -166,6 +164,20 @@ function Example({ pick }: { pick: Pick }) {
           Test #{pick.g.main.test_id}, {pick.g.main.material}. <Link to={testHref(pick.g.test_no)}>Open the full test →</Link>
         </p>
         <SameR3D testNo={pick.g.test_no} />
+      </div>
+    </section>
+  );
+}
+
+/** Link to the tests, at the end of the story (as on the FLEX overview). */
+function BrowseTests() {
+  return (
+    <section className="band" aria-label="All tests">
+      <div className="wrap sr-browse">
+        <p className="lede">Every test, filterable by material, heater level and what was measured.</p>
+        <Link className="btn" to={TESTS_PATH}>
+          Browse all tests →
+        </Link>
       </div>
     </section>
   );

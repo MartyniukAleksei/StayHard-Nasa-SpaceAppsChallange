@@ -182,3 +182,5 @@ div.sr-cmp-tem { aspect-ratio: 4 / 3; display: grid; place-items: center; }
 .sr-toc a { display: inline-flex; align-items: center; min-height: var(--hit); font: 14px var(--mono); color: var(--ash); text-decoration: none; }
 .sr-toc a:hover { color: var(--ink); }
 .sr-anchor { scroll-margin-top: 12px; }
+.sr-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
+.sr-browse .lede { margin: 0; }

@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { DETECTOR_LABELS, PTRAK_LIMIT } from "@/features/same-r-3d";
+import { TimeChart } from "@/shared/ui/chart/TimeChart";
+import { useSameRSeries } from "../api";
 import { testHref } from "../lib/compare";
-import type { TestGroup } from "../lib/tests";
+import { column, heaterOff, type TestGroup } from "../lib/tests";
 import { Mark } from "./Mark";
 
 type Props = {
@@ -27,6 +29,9 @@ export function Preview({ g, mark, inCompare, compareFull, onToggleCompare, onCl
   const { main, aged } = g;
   const peak = main.ptrak_peak_per_cc;
   const detectors = (main.active_detectors ?? []).map((d) => DETECTOR_LABELS[d] ?? d);
+  const { data: s } = useSameRSeries(g.test_no, main.has_timeseries);
+  const ptrak = s ? column(s, "ptrak_per_cc") : [];
+  const off = s ? heaterOff(s) : null;
 
   return (
     <dialog
@@ -63,6 +68,16 @@ export function Preview({ g, mark, inCompare, compareFull, onToggleCompare, onCl
         <dt>TEM images</dt>
         <dd>{main.has_tem ? "yes" : "no"}</dd>
       </dl>
+      {ptrak.length > 0 && (
+        <TimeChart
+          series={[{ id: "p", label: "P-Trak", points: ptrak, kind: "line", tone: "s2" }]}
+          xLabel="time, s"
+          yLabel="particles / cm³"
+          height={150}
+          ariaLabel={`Particle count over time, test ${main.test_id}`}
+          markers={[{ x: 0, label: off != null ? `heater on 0–${off} s` : "heater on" }]}
+        />
+      )}
       <div className="sr-preview-actions">
         <Link to={testHref(g.test_no)} className="btn">
           Open test
