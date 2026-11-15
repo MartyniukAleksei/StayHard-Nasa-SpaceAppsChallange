@@ -8,12 +8,25 @@ import hashlib
 import re
 from dataclasses import dataclass
 
+from flame.core.citations import doi_url, media_url
 from flame.rag.sources import Document
+from flame.rag.sources import flex as flex_sources
 
 MAX_WORDS = 300  # ≈ 400 токенів; bge-small обрізає після 512
 OVERLAP_WORDS = 40
 
 STUDY_LABELS = {"PSI-69": "FLEX"}
+GLOSSARIES = {"PSI-69": flex_sources.GLOSSARY}
+
+
+def glossary_terms(study: str, text: str) -> str:
+    """Розшифровки абревіатур, що трапляються в тексті (ціле слово, з урахуванням регістру)."""
+    found = [
+        f"{abbr} = {full}"
+        for abbr, full in GLOSSARIES.get(study, {}).items()
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(abbr)}(?![A-Za-z0-9])", text)
+    ]
+    return f"\n[terms: {'; '.join(found)}]" if found else ""
 
 
 @dataclass(frozen=True)
@@ -27,12 +40,14 @@ class Chunk:
     title: str
     text: str
     citation: str
+    url: str
 
     @property
     def embed_text(self) -> str:
         """Текст для ембеддингу й BM25: з міткою дослідження й заголовком."""
         label = STUDY_LABELS.get(self.study, "")
-        return f"[{self.study} {label}] {self.title}\n{self.text}"
+        body = f"{self.title}\n{self.text}"
+        return f"[{self.study} {label}] {body}{glossary_terms(self.study, body)}"
 
     def text_hash(self, model: str) -> str:
         return hashlib.sha256(f"{model}\n{self.embed_text}".encode()).hexdigest()[:32]
@@ -53,6 +68,17 @@ def citation(doc: Document) -> str:
             return f"{authors}. {doc.title}" + (f". DOI {pub}" if pub else f" (via DOI {doi})")
         case _:
             return f"{doc.title} ({doc.source_path})"
+
+
+def source_url(doc: Document) -> str:
+    """Посилання на джерело документа (контракт — flame.core.citations)."""
+    match doc.source_type:
+        case "about":
+            return doi_url(doc.meta["doi"])
+        case "publication":
+            return doi_url(doc.meta.get("publication_doi") or doc.meta["doi"])
+        case _:
+            return media_url(doc.study, doc.source_path, doc.page)
 
 
 def _split(text: str, max_words: int, overlap: int) -> list[str]:
@@ -81,6 +107,7 @@ def chunk_document(
     doc: Document, max_words: int = MAX_WORDS, overlap: int = OVERLAP_WORDS
 ) -> list[Chunk]:
     cite = citation(doc)
+    url = source_url(doc)
     loc = f"{doc.test_no}" if doc.test_no is not None else f"{doc.page or 0}"
     section = doc.meta.get("section") or doc.meta.get("field") or ""
     if doc.source_type == "publication":
@@ -99,6 +126,7 @@ def chunk_document(
             title=doc.title,
             text=part,
             citation=cite,
+            url=url,
         )
         for i, part in enumerate(_split(doc.text, max_words, overlap))
     ]

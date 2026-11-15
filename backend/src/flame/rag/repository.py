@@ -6,7 +6,7 @@ import duckdb
 
 from flame.rag.schemas import SearchFilters
 
-COLUMNS = "chunk_id, study, source_type, source_path, test_no, page, title, text, citation"
+COLUMNS = "chunk_id, study, source_type, source_path, test_no, page, title, text, citation, url"
 
 
 def _where(f: SearchFilters) -> tuple[str, list[Any]]:

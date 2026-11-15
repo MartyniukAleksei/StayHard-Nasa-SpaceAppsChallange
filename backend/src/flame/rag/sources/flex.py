@@ -24,6 +24,28 @@ MIN_PAGE_CHARS = 40  # сторінки з меншою кількістю те�
 
 log = logging.getLogger(__name__)
 
+# Абревіатури домену → розшифровка. Додається до тексту для пошуку (не до цитованого тексту),
+# щоб запит звичайними словами («ultraviolet camera») знаходив «LLUV» і навпаки.
+GLOSSARY = {
+    "LLUV": "low-light ultraviolet (UV, OH*) flame camera",
+    "HiBMS": "high bit-depth backlit droplet camera",
+    "IPSU": "image processing and storage unit (camera recorder)",
+    "FOV": "field of view",
+    "LOI": "limiting oxygen index",
+    "MEC": "minimum extinguishing concentration",
+    "SF6": "sulfur hexafluoride",
+    "CO2": "carbon dioxide",
+    "N2": "nitrogen",
+    "He": "helium",
+    "Xe": "xenon",
+    "MeOH": "methanol",
+    "CIR": "Combustion Integrated Rack",
+    "MDCA": "Multi-user Droplet Combustion Apparatus",
+    "FCF": "Fluids and Combustion Facility",
+    "ZGF": "Zero Gravity Facility drop tower",
+    "FSR": "flame standoff ratio",
+}
+
 
 def flex_doi(flex_dir: Path) -> str:
     about = flex_dir / "about.json"

@@ -71,7 +71,7 @@ def build(
         CREATE OR REPLACE TABLE chunks (
             chunk_id VARCHAR PRIMARY KEY, study VARCHAR, source_type VARCHAR,
             source_path VARCHAR, test_no INTEGER, page INTEGER, title VARCHAR,
-            text VARCHAR, search_text VARCHAR, citation VARCHAR, text_hash VARCHAR,
+            text VARCHAR, search_text VARCHAR, citation VARCHAR, url VARCHAR, text_hash VARCHAR,
             embedding FLOAT[{int(dim)}]
         )
         """
@@ -79,12 +79,12 @@ def build(
     rows = [
         (
             c.chunk_id, c.study, c.source_type, c.source_path, c.test_no, c.page,
-            c.title, c.text, c.embed_text, c.citation, h, cache[h],
+            c.title, c.text, c.embed_text, c.citation, c.url, h, cache[h],
         )
         for c, h in zip(chunks, hashes, strict=True)
     ]  # fmt: skip
     if rows:
-        con.executemany("INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+        con.executemany("INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
     load_fts(con)
     con.execute("PRAGMA create_fts_index('chunks', 'chunk_id', 'search_text', overwrite=1)")
     return {"embed_model": model, "embed_dim": str(dim), "n_chunks": str(len(chunks))}

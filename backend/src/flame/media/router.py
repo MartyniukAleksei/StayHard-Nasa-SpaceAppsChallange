@@ -7,9 +7,10 @@ from typing import Annotated
 
 from duckdb import DuckDBPyConnection
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import FileResponse
 
 from flame.db.duckdb import get_cursor
-from flame.media import psi, service
+from flame.media import files, psi, service
 from flame.media.schemas import CameraOut, CamerasOut, FramesOut
 
 router = APIRouter(prefix="/media/flex", tags=["media"])
@@ -92,3 +93,12 @@ def get_frame(
     except psi.PsiUnavailable as e:
         raise HTTPException(502, f"NASA PSI unavailable: {e}") from e
     return Response(jpeg, media_type="image/jpeg", headers={"Cache-Control": _IMMUTABLE})
+
+
+@router.get("/files/{path:path}")
+def get_file(path: str) -> FileResponse:
+    """Файл знімка FLEX (raw/…, docs/…, media/…) inline, з Range — для PDF і mp4."""
+    target = files.resolve("flex", path)
+    if target is None:
+        raise HTTPException(404, "file not found")
+    return FileResponse(target, content_disposition_type="inline", filename=target.name)

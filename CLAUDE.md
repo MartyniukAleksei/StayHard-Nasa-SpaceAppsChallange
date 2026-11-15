@@ -28,7 +28,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run python -m flame.ingest.psi_flex --verify # check data/flex against manifest.json
 uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb (force rebuild)
 uv run python -m flame.ingest.bootstrap         # rebuild only if build version changed
-uv run python -m flame.rag.eval --k 5           # RAG recall@k on rag/evalsets/psi69.jsonl
+uv run python -m flame.rag.eval --k 5           # RAG recall@k on rag/evalsets/psi69.jsonl (--set psi69_holdout)
 ```
 
 Frontend (run from `frontend/`):
@@ -44,7 +44,7 @@ Both production images together: `docker compose up --build` (backend :8000, fro
 
 Data flow: PSI API → `flame.ingest.psi_flex` (offline) → `data/flex/` (snapshot, read-only source) → `flame.ingest.build_db` → `data/build/flame.duckdb` → FastAPI → React SPA.
 
-- **The data is static and there is no server database.** The API opens a single DuckDB file `read_only` (`flame/db/duckdb.py`, dependency `get_cursor`). RAG chunks and their embeddings live in the same file (a `chunks` table with a local `bge-small-en-v1.5` embedding and an FTS index, hybrid vector + BM25 search; see `docs/rag/`), and they are built offline, never at runtime. Chat history is not stored. Rationale: `docs/decisions/0001-*`.
+- **The data is static and there is no server database.** The API opens a single DuckDB file `read_only` (`flame/db/duckdb.py`, dependency `get_cursor`). RAG chunks and their embeddings live in the same file (a `chunks` table with a local `bge-small-en-v1.5` embedding and an FTS index, hybrid vector + BM25 search with cross-encoder reranking; see `docs/rag/`), and they are built offline, never at runtime. Chat history is not stored. Rationale: `docs/decisions/0001-*`.
 - **`data/` is gitignored.** It holds `flex/` (~540 MB: CSV tables, time series, raw txt/pdf, mp4) and `build/`. In production it lives on a Railway Volume mounted at `/data` (`DATA_DIR`). Never edit `data/flex` by hand; derived data is produced only by `flame/ingest` scripts. Data schema and quirks: `docs/data/flex.md`.
 - **The DB is never edited, only rebuilt.** Data processing lives in `flame/ingest/build_db.py` (plus modules listed in its `BUILD_SOURCES`, currently `flame/rag/`). `BUILD_VERSION` is a hash of that code, stored in the DB's `meta` table. `flame.ingest.bootstrap` runs before uvicorn in the container and rebuilds the DB when the version or `DATA_ARCHIVE_URL` changes, so merged processing changes reach production automatically. If you add a module that affects DB contents, add it to `BUILD_SOURCES`. The raw snapshot changes only through a new `data-flex-vN` GitHub Release.
 - **All data paths come from `flame.core.config.settings`** (`data_dir`, `flex_dir`, `duckdb_path`; env vars via pydantic-settings, listed in `.env.example`). The local default is `<repo>/data`.
@@ -57,5 +57,6 @@ Data flow: PSI API → `flame.ingest.psi_flex` (offline) → `data/flex/` (snaps
 - Numbers shown in the UI or in agent answers must come from the data. Anything we compute ourselves (for example K from a d² fit) is labelled as an estimate.
 - Test `end_type` is Extinction, Completion or Disruption. Disruption means "self-extinction not observed", **never** "would burn forever".
 - Tests with a fiber (`ts_fiber`) must not be mixed with free-floating droplets.
-- The agent answers only from tool output and cites every claim (test, file, page or DOI). When data is missing, it says so.
+- The agent answers only from tool output and cites every claim (test, file, page or DOI). When data is missing, it says so. Every tool result carries `sources` (`flame/core/citations.py`, ADR 0006); build source URLs only with that module.
+- Test conditions come from the `tests` table, not from TestSheet comments (35 comments name the wrong fuel); `fiber_conflict` marks 8 tests whose fiber flag contradicts the comment.
 - PSI data is CC0, but the FLEX DOI must be cited (`data/flex/about.json`).

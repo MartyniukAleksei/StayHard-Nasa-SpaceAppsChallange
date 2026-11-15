@@ -9,7 +9,7 @@
 
 ## 2. Контрольні питання — ⏳ заповнює власник продукту
 - [x] Формат і 2 приклади: `backend/src/flame/rag/evalsets/psi69.jsonl` (`"example": true` пропускаються).
-- [ ] 20–30 питань з очікуваними джерелами: `{"q": "...", "expected": [{"test_no": 2}] | [{"source_path": "...", "page": 5}], "note": "..."}`.
+- [x] 28 питань з очікуваними джерелами (`psi69.jsonl`) + 10 відкладених (`psi69_holdout.jsonl`), написаних до тюнінгу й не використаних для нього. Очікувані джерела знайдено пошуком фраз у тексті чанків, а не видачею пошуку. Підтримується `filters` (як у `search_docs`).
 
 ## 3. Чанкінг, ембеддинги, таблиця `chunks` — ✅
 - [x] `chunking.py`, `embed.py` (fastembed + bge-small), `index.py` (кеш ембеддингів, FTS).
@@ -19,13 +19,19 @@
 ## 4. Пошук, API, eval — ✅ (тюнинг після кроку 2)
 - [x] `repository.py` (vector + BM25, фільтри), `service.py` (RRF), `router.py` → `GET /api/rag/search`.
 - [x] `eval.py`: recall@k, MRR, список промахів.
-- [ ] Прогнати eval на заповненому наборі, підібрати `MAX_WORDS`/`OVERLAP_WORDS`/`CANDIDATES`, ціль recall@5 ≥ 0.8.
+- [x] Eval і тюнінг (recall@5 / MRR): гібрид 0.79 / 0.62 → глосарій абревіатур 0.86 / 0.69 → cross-encoder 0.93 / 0.88; відкладений набір 0.90 / 0.85. Промахи, що лишилися: питання про моделі кінетики (сторінка з таблицею моделей), SF6-матриця (дубль EIRD/Test Plan), №179 (схожі коментарі CO2-тестів).
+
+## 6. Контракт джерел і API для агента — ✅
+- [x] `core/citations.py`, ADR 0006; `url` у `chunks` і `Hit`, `Hit.to_source()`.
+- [x] `media`: `GET /api/media/flex/files/{path}` (поруч із кадрами камер з PSI, ADR 0005).
+- [x] `studies/flex`: `fields`, `tests` з фільтрами, картка тесту, часові ряди, `neighbors`, `compare`; `sources` у кожному результаті; `fiber_conflict`.
+- [x] Прод після автодеплою перевірено: `/api/health` ok, `/api/rag/search` на проді дає ту саму видачу, що локально. Під час перезбирання БД бекенд ~кілька хвилин віддає 502 (див. deployment.md).
 
 ## 5. Тести й документація — ✅
 - [x] `tests/test_rag_{chunking,sources,search}.py` з фейковим embedder (CI не качає модель).
 - [x] `docs/rag/*`, ADR 0004, оновлено `architecture.md`, `data/flex.md`, `README.md`.
 
 ## Далі (поза цим PR)
-- `studies/flex`: `query_tests` з whitelist полів (паралельна задача).
-- Агент: `search_docs` як tool над `rag.service.search`, промпт цитування, стрімінг.
+- Агент: інструменти над `rag.service.search` і `studies.flex.service` (кожен повертає `sources` → `search_result`), промпт, перевірка цитат за ADR 0006, стрімінг `POST /api/agent`. Потрібен ключ Claude API у змінних Railway (рішення власника).
+- Фронт: сторінка тесту за `/api/studies/flex/tests/{n}`, рендер цитат.
 - Нове дослідження: `rag/sources/<study>.py` + `evalsets/<study>.jsonl` + підключення в `build_db`.

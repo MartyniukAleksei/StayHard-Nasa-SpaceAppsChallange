@@ -1,4 +1,5 @@
-"""Гібридний пошук: вектор (зміст) + BM25 (ключові слова), злиття Reciprocal Rank Fusion.
+"""Гібридний пошук: вектор (зміст) + BM25 (ключові слова), злиття Reciprocal Rank Fusion,
+далі переранжування top-RERANK_TOP cross-encoder-ом.
 
 Цю функцію агент обгортає як інструмент `search_docs`.
 """
@@ -6,11 +7,12 @@
 import duckdb
 
 from flame.rag import repository
-from flame.rag.embed import Embedder, get_embedder
+from flame.rag.embed import Embedder, Reranker, get_embedder, get_reranker
 from flame.rag.schemas import Hit, SearchFilters
 
 CANDIDATES = 30  # скільки кандидатів бере кожен із двох пошуків
 RRF_K = 60  # стандартна константа RRF: score = Σ 1 / (RRF_K + rank)
+RERANK_TOP = 20  # скільки кандидатів після RRF переранжовує cross-encoder (~0.4 с на CPU)
 
 
 class IndexNotBuilt(RuntimeError):
@@ -23,6 +25,8 @@ def search(
     k: int = 8,
     filters: SearchFilters | None = None,
     embedder: Embedder | None = None,
+    rerank: bool = True,
+    reranker: Reranker | None = None,
 ) -> list[Hit]:
     filters = filters or SearchFilters()
     if not repository.has_chunks(cur):
@@ -42,12 +46,20 @@ def search(
     def rrf(cid: str) -> float:
         return sum(1 / (RRF_K + r) for r in ranks[cid].values())
 
-    top = sorted(rows, key=rrf, reverse=True)[:k]
+    fused = sorted(rows, key=rrf, reverse=True)
+    rerank_scores: dict[str, float] = {}
+    if rerank and fused:
+        pool = fused[:RERANK_TOP]
+        reranker = reranker or get_reranker()
+        texts = [f"{rows[cid]['title']}\n{rows[cid]['text']}" for cid in pool]
+        rerank_scores = dict(zip(pool, reranker.scores(query, texts), strict=True))
+        fused = sorted(pool, key=lambda cid: rerank_scores[cid], reverse=True)
     return [
         Hit(
             **{key: v for key, v in rows[cid].items() if key != "score"},
             score=round(rrf(cid), 6),
+            rerank_score=round(rerank_scores[cid], 4) if cid in rerank_scores else None,
             **ranks[cid],
         )
-        for cid in top
+        for cid in fused[:k]
     ]

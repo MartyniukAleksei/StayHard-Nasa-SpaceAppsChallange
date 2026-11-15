@@ -7,9 +7,10 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv \
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
-# RAG: модель ембеддингів (= flame.rag.embed.MODEL_NAME) і DuckDB fts запікаються в образ до
-# копіювання коду (кешований шар) — у рантаймі й bootstrap мережа для них не потрібна
+# RAG: моделі ембеддингів і переранжування (= flame.rag.embed.MODEL_NAME / RERANK_MODEL) і DuckDB fts
+# запікаються в образ до копіювання коду (кешований шар) — у рантаймі мережа для них не потрібна
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5', cache_dir='/app/models')" \
+ && python -c "from fastembed.rerank.cross_encoder import TextCrossEncoder as T; T('Xenova/ms-marco-MiniLM-L-6-v2', cache_dir='/app/models')" \
  && python -c "import duckdb; duckdb.sql('INSTALL fts')"
 COPY src ./src
 COPY README.md ./
