@@ -3,9 +3,10 @@ import type { ExplorerParams, PageContext } from "../types.ts";
 
 const FACETS = ["fuel", "diluent", "pressure", "o2", "fiber", "end", "tag"] as const;
 
-export function pageContext(pathname: string, search: string): PageContext {
+export function pageContext(pathname: string, search: string, section?: string | null): PageContext {
   const sp = new URLSearchParams(search);
   const ctx: PageContext = { route: pathname };
+  if (section) ctx.section = section;
   const test = /^\/studies\/flex\/tests\/(\d+)$/.exec(pathname);
   if (test) ctx.test_no = Number(test[1]);
   if (pathname === "/studies/flex/compare") {
@@ -23,4 +24,24 @@ export function pageContext(pathname: string, search: string): PageContext {
     ctx.explorer = explorer;
   }
   return ctx;
+}
+
+const CHEM: Record<string, string> = { N2: "N₂", CO2: "CO₂", He: "He", air: "21% O₂", "30+": "≥ 30% O₂" };
+
+/** Human-readable "what the assistant sees": shown under the panel title. */
+export function describeContext(ctx: PageContext): string {
+  const r = ctx.route;
+  let page: string;
+  if (/^\/studies\/flex\/tests\/\d+$/.test(r)) page = `Test #${ctx.test_no}`;
+  else if (r === "/studies/flex/tests") {
+    const vals = Object.values(ctx.explorer ?? {}).flat();
+    const shown = vals.slice(0, 3).map((v) => CHEM[v] ?? v);
+    page = vals.length ? `Tests · ${shown.join(", ")}${vals.length > 3 ? ` +${vals.length - 3}` : ""}` : "Tests";
+    if (ctx.test_no) page += ` · preview #${ctx.test_no}`;
+  } else if (r === "/studies/flex/compare") page = ctx.ids?.length ? `Compare ${ctx.ids.map((n) => `#${n}`).join(", ")}` : "Compare";
+  else if (r === "/studies/flex") page = "FLEX overview";
+  else if (r === "/studies/flex/library") page = "Library";
+  else if (r === "/") page = "Home";
+  else page = r;
+  return ctx.section ? `${page} · ${ctx.section}` : page;
 }

@@ -1,17 +1,37 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { proposalHref } from "../lib/actions";
-import type { AssistantItem, ChatItem, Proposal, Source } from "../types";
+import { describeContext } from "../lib/context";
+import type { AssistantItem, ChatItem, PageContext, Proposal, Source } from "../types";
 import { useAgent } from "./AgentProvider";
 import { AnswerText, SourceCard } from "./AnswerText";
 import { ChartBlock } from "./ChartBlock";
 import "./agent.css";
 
+const W_KEY = "ag-width";
+const W_DEFAULT = 420;
+const W_MIN = 320;
+const W_MAX_SHARE = 0.7;
+const W_STEP = 24;
+
+const clampWidth = (w: number) => Math.round(Math.max(W_MIN, Math.min(window.innerWidth * W_MAX_SHARE, w)));
+
+function storedWidth(): number {
+  try {
+    const v = Number(window.localStorage.getItem(W_KEY));
+    return Number.isFinite(v) && v > 0 ? v : W_DEFAULT;
+  } catch {
+    return W_DEFAULT;
+  }
+}
+
 /** Бічна панель чату. Змонтована в Layout поза Outlet — не закривається під час навігації. */
 export function AgentPanel() {
-  const { items, busy, open, setOpen, ask, stop, reset } = useAgent();
+  const { items, busy, open, setOpen, ask, stop, reset, context, jumpTo } = useAgent();
   const [text, setText] = useState("");
   const [cited, setCited] = useState<Source | null>(null);
+  const [width, setWidth] = useState(storedWidth);
+  const [full, setFull] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const end = useRef<HTMLDivElement>(null);
 
@@ -20,10 +40,31 @@ export function AgentPanel() {
     if (open) input.current?.focus();
   }, [open]);
   useEffect(() => {
+    document.documentElement.classList.toggle("ag-full", open && full);
+  }, [open, full]);
+  useEffect(() => {
+    const w = clampWidth(width);
+    document.documentElement.style.setProperty("--ag-w", `${w}px`);
+    try {
+      window.localStorage.setItem(W_KEY, String(w));
+    } catch {
+      /* private mode: the width just is not remembered */
+    }
+  }, [width]);
+  useEffect(() => {
     if (open) end.current?.scrollIntoView({ block: "end" });
   }, [items, open]);
 
   if (!open) return null;
+  const onCite = (src: Source) => {
+    setCited(src);
+    if (full) setFull(false); // the cited place is on the page: make room for it
+    jumpTo(src);
+  };
+  const close = () => {
+    if (full) setFull(false);
+    else setOpen(false);
+  };
   const send = (e?: FormEvent) => {
     e?.preventDefault();
     if (!text.trim()) return;
@@ -32,14 +73,22 @@ export function AgentPanel() {
   };
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) send(e);
-    if (e.key === "Escape") setOpen(false);
+    if (e.key === "Escape") close();
   };
 
   return (
-    <aside className={cited ? "ag-panel with-src" : "ag-panel"} aria-label="FLEX assistant" onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
+    <aside
+      className={`ag-panel${cited ? " with-src" : ""}${full ? " full" : ""}`}
+      aria-label="FLEX assistant"
+      onKeyDown={(e) => e.key === "Escape" && close()}
+    >
+      {!full && <ResizeHandle width={width} onChange={(w) => setWidth(clampWidth(w))} />}
       <header className="ag-head">
         <span className="h-section ag-title">Assistant</span>
         <span className="ag-head-actions">
+          <button type="button" className="btn ghost" onClick={() => setFull((f) => !f)} aria-pressed={full}>
+            {full ? "Collapse" : "Expand"}
+          </button>
           <button type="button" className="btn ghost" onClick={reset} disabled={!items.length}>
             New chat
           </button>
@@ -47,11 +96,14 @@ export function AgentPanel() {
             Close
           </button>
         </span>
+        <p className="ag-context mono small" title="What the assistant sees: the page and the section you are looking at">
+          <span className="muted">Context:</span> {describeContext(context)}
+        </p>
       </header>
       <div className="ag-log" aria-live="polite">
         {items.length === 0 && <Intro />}
         {items.map((it) =>
-          it.role === "user" ? <UserMsg key={it.id} text={it.text} /> : <Reply key={it.id} it={it} onCite={setCited} />,
+          it.role === "user" ? <UserMsg key={it.id} text={it.text} context={it.context} /> : <Reply key={it.id} it={it} onCite={onCite} />,
         )}
         <div ref={end} />
       </div>
@@ -89,8 +141,48 @@ function Intro() {
   );
 }
 
-function UserMsg({ text }: { text: string }) {
-  return <p className="ag-user">{text}</p>;
+function UserMsg({ text, context }: { text: string; context?: PageContext }) {
+  return (
+    <div className="ag-user-wrap">
+      <p className="ag-user">{text}</p>
+      {context && <span className="ag-user-ctx mono">asked on {describeContext(context)}</span>}
+    </div>
+  );
+}
+
+/** Drag the left edge (or use ← →) to change the panel width; double-click resets it. */
+function ResizeHandle({ width, onChange }: { width: number; onChange: (w: number) => void }) {
+  const drag = (e: PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
+    const move = (ev: globalThis.PointerEvent) => onChange(window.innerWidth - ev.clientX);
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      document.documentElement.classList.remove("ag-resizing");
+    };
+    document.documentElement.classList.add("ag-resizing");
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+  };
+  return (
+    <div
+      className="ag-resize"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the assistant panel"
+      aria-valuenow={Math.round(width)}
+      aria-valuemin={W_MIN}
+      tabIndex={0}
+      onPointerDown={drag}
+      onDoubleClick={() => onChange(W_DEFAULT)}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft") onChange(width + W_STEP);
+        if (e.key === "ArrowRight") onChange(width - W_STEP);
+      }}
+    />
+  );
 }
 
 function Reply({ it, onCite }: { it: AssistantItem; onCite: (s: Source) => void }) {

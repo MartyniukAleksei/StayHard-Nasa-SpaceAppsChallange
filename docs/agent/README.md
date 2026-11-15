@@ -70,8 +70,14 @@ uv run python -m flame.agent.eval --only trap-no-data
 ## Фронтенд (`frontend/src/features/agent`)
 - `AgentProvider` (у `app/Layout.tsx`) — стан чату, стрім `POST /api/agent` (`api.ts`), історія в `sessionStorage` (`lib/history.ts`), `page_context` з URL (`lib/context.ts`).
 - `AgentSearch` — поле в шапці замість заглушки: Enter відкриває панель і надсилає питання.
-- `AgentPanel` — права панель (420 px; на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран), живий текст і статуси, позначки «general knowledge» / «no source», номери `[n]` → картка джерела внизу панелі (назва, дослівні цитати, `[Open source]`: рядок тесту й порівняння ведуть на сторінки застосунку, файли й PDF — на бекенд, DOI — на doi.org; `lib/links.ts`), кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
-- Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`; `highlight` — DOM.
+- `AgentPanel` — права панель (на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран):
+  - **розмір**: лівий край тягнеться мишею або ← → (320 px … 70 % екрана, подвійний клік — 420 px), ширина в `localStorage` (`ag-width`) і CSS-змінній `--ag-w`; `[Expand]` / `[Collapse]` — на весь екран (розмова в колонці ≤ 860 px), `Esc` згортає;
+  - **контекст**: під заголовком «Context: Test #35 · Watch» — сторінка й розділ (`h2`), який користувач бачить (`lib/useSection.ts`, `describeContext` у `lib/context.ts`); те саме йде в `page_context.section`; під кожним питанням — «asked on …»;
+  - **цитати як у NotebookLM**: наведення/фокус на `[n]` — попап з дослівною цитатою; клік — картка джерела внизу панелі **і** перехід до місця на сайті (`lib/jump.ts` → `focusOnPage` у `lib/highlight.ts`): рядок таблиці → сторінка тесту, розділ Parameters, підсвічені поля з цитати; коментар TestSheet → «What happened» з підсвіченою фразою (CSS Custom Highlight API); часовий ряд → потрібний графік; порівняння → сторінка порівняння; PDF/файли/DOI — нова вкладка (PDF на сторінці `#page`);
+  - подія `highlight` підсвічує й прокручує до першого значення;
+  - позначка «no source» лишається; «general knowledge» у UI не показується;
+  - кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
+- Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`, `jump`; `highlight`, `useSection` — DOM.
 
 ## Графіки (`studies/flex/charts.py`, `make_chart`)
 - **line** — одна величина в часі для 1–3 тестів на спільних осях: `droplet_diameter`, `droplet_d2` (derived), `droplet_d2_normalized` ((d/d₀)² від t/d₀², derived), `flame_diameter_uv`, `flame_diameter_color`, `standoff_uv`. Лише t ≥ 0 (після запалювання), ≤ 300 точок на серію. Тест без ряду чи без d₀ пропускається з приміткою.
