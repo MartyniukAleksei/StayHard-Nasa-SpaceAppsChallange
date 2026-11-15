@@ -64,3 +64,109 @@ def test_bootstrap_replaces_snapshot_on_new_release(
     monkeypatch.setattr(settings, "data_archive_url", _make_archive(tmp_path, "flex-v2"))
     bootstrap.main()
     assert build_db.read_meta(settings.duckdb_path)["dataset"] == "flex-v2"
+
+
+def _make_studies_archive(tmp: Path, dataset: str) -> str:
+    """zip як psi-studies-vN: каталог cfi/ з cfi.duckdb і manifest + README.md у корені."""
+    root = tmp / f"src-{dataset}"
+    cfi = root / "cfi"
+    cfi.mkdir(parents=True)
+    (cfi / "manifest.json").write_text(json.dumps({"dataset": dataset}))
+    with duckdb.connect(str(cfi / "cfi.duckdb")) as con:
+        con.execute("CREATE TABLE tests AS SELECT 1206 AS test_no")
+    (root / "README.md").write_text("readme")
+    archive = tmp / f"{dataset}.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        for p in root.rglob("*"):
+            z.write(p, p.relative_to(root))
+    return archive.as_uri()
+
+
+@pytest.fixture
+def installs(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Записує, які URL bootstrap справді качав."""
+    calls: list[str] = []
+    real = bootstrap._install
+
+    def spy(url: str, data: Path) -> list[str]:
+        calls.append(url)
+        return real(url, data)
+
+    monkeypatch.setattr(bootstrap, "_install", spy)
+    return calls
+
+
+def test_bootstrap_installs_several_archives_and_updates_one(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, installs: list[str]
+) -> None:
+    flex, studies = _make_archive(tmp_path, "flex-v1"), _make_studies_archive(tmp_path, "cfi-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, studies])
+    bootstrap.main()
+    assert installs == [flex, studies]
+    assert json.loads(build_db.read_meta(settings.duckdb_path)["datasets"]) == {
+        "flex": "flex-v1",
+        "cfi": "cfi-v1",
+    }
+    assert json.loads((data_dir / bootstrap.STATE).read_text()) == {
+        flex: ["flex"],
+        studies: ["cfi"],
+    }
+
+    (data_dir / "flex" / "local.txt").write_text("kept")
+    bootstrap.main()  # нічого не змінилось
+    assert installs == [flex, studies]
+
+    studies_v2 = _make_studies_archive(tmp_path, "cfi-v2")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, studies_v2])
+    bootstrap.main()
+    assert installs == [flex, studies, studies_v2]  # FLEX не перекачувався
+    assert (data_dir / "flex" / "local.txt").exists()
+    assert json.loads(build_db.read_meta(settings.duckdb_path)["datasets"])["cfi"] == "cfi-v2"
+
+
+def test_bootstrap_keeps_flex_from_legacy_marker(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, installs: list[str]
+) -> None:
+    flex = _make_archive(tmp_path, "flex-v1")
+    monkeypatch.setattr(settings, "data_archive_url", flex)
+    bootstrap.main()
+    (data_dir / bootstrap.STATE).unlink()  # Volume, заповнений старим bootstrap
+    (data_dir / bootstrap.LEGACY_MARKER).write_text(flex)
+
+    studies = _make_studies_archive(tmp_path, "cfi-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, studies])
+    bootstrap.main()
+    assert installs == [flex, studies]  # FLEX качався лише першим запуском
+    assert not (data_dir / bootstrap.LEGACY_MARKER).exists()
+    assert (data_dir / "cfi" / "cfi.duckdb").exists()
+
+
+def test_bootstrap_starts_with_current_data_when_download_fails(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    flex = _make_archive(tmp_path, "flex-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex])
+    bootstrap.main()
+    built_at = build_db.read_meta(settings.duckdb_path)["built_at"]
+
+    missing = (tmp_path / "missing.zip").as_uri()  # як 404 приватного релізу
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, missing])
+    bootstrap.main()  # не падає
+    assert build_db.read_meta(settings.duckdb_path)["built_at"] == built_at  # без перезбірки
+    assert json.loads((data_dir / bootstrap.STATE).read_text()) == {flex: ["flex"]}
+    assert not list(data_dir.glob("*.part"))
+
+
+def test_bootstrap_rebuilds_from_what_is_left_when_extract_fails(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    flex = _make_archive(tmp_path, "flex-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex])
+    bootstrap.main()
+
+    broken = tmp_path / "broken.zip"
+    broken.write_bytes(b"not a zip")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, broken.as_uri()])
+    bootstrap.main()  # не падає, FLEX лишився
+    assert build_db.read_meta(settings.duckdb_path)["dataset"] == "flex-v1"
+    assert broken.as_uri() not in json.loads((data_dir / bootstrap.STATE).read_text())

@@ -3,6 +3,7 @@
 ## Огляд
 ```
 NASA PSI API ──(офлайн: flame.ingest.psi_flex)──► data/flex/            знімок FLEX, read-only
+             ──(офлайн; реліз data-psi-studies-v1)─► data/{cfi,cfig,bass2,samer,saffire2}/  інші дослідження
                                                      │ (flame.ingest.build_db)
                                                      ▼
                                               data/build/flame.duckdb   таблиці + ряди + RAG-чанки
@@ -20,7 +21,7 @@ NASA PSI API ──(офлайн: flame.ingest.psi_flex)──► data/flex/    
 backend/   FastAPI, uv, src-layout: src/flame/…
 frontend/  React + Vite + TS
 docs/      ця документація
-data/      (gitignored) flex/ — джерело, build/ — згенерована БД
+data/      (gitignored) flex/, cfi/, cfig/, bass2/, samer/, saffire2/ — джерела, build/ — згенерована БД
 docker-compose.yml  локальний запуск прод-образів
 ```
 
@@ -38,7 +39,7 @@ docker-compose.yml  локальний запуск прод-образів
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
 | `agent/` | LLM-агент (Claude Sonnet 5.5; фронтенд — `frontend/src/features/agent`, бічна панель чату): інструменти даних над `studies/flex` і `rag`, цикл зі стрімінгом SSE, цитати й «No source», ліміти, eval ([docs/agent/](agent/README.md), [ADR 0007](decisions/0007-agent-architecture.md)) |
 | `ingest/replay3d_coverage.py` | офлайн-звіт: у яких тестів є дані для 3D replay (`uv run python -m flame.ingest.replay3d_coverage [--missing]`) |
-| `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `build_db` (data/flex → flame.duckdb). API його не імпортує |
+| `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `psi_cfi` (PSI → data/cfi), `psi_studies` (знімки інших досліджень → схеми БД, `--verify`), `build_db` (data/* → flame.duckdb), `bootstrap` (архіви релізів → Volume). API його не імпортує |
 
 Залежності між шарами: `router → service → repository → db`. `agent` викликає `service`-и доменів і `rag`, а не SQL напряму.
 
@@ -71,8 +72,9 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | POST | `/api/agent` | ✅ SSE: `text_delta`, `status`, `limit`, `done` (відповідь із сегментами й джерелами) — [docs/agent](agent/README.md) |
 
 ## Дані — `flame.duckdb`
-Збирається `flame.ingest.build_db` з `data/flex`. Зараз містить копію таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)), а також `study_about(study, about JSON)` — вміст `about.json`. Нормалізація при збірці: `tests.test_date` з дворозрядним роком (у джерелі змішані `11/27/09` і `11/27/2009`, тож 50 рядків читались як рік 9–11) переноситься в 20xx. Також таблиця `chunks` (RAG): тексти з метаданими й цитатою, `embedding FLOAT[384]` (`bge-small-en-v1.5`) і FTS-індекс; пошук `array_cosine_similarity` + BM25 зі злиттям RRF ([rag/techstack.md](rag/techstack.md), [ADR 0004](decisions/0004-rag-local-embeddings.md)). Ембеддинги перевикористовуються зі старої БД за хешем тексту.
-**БД не редагується — перезбирається.** Будь-яка обробка даних = код у `build_db` (або модулі з `BUILD_SOURCES`). Версія збірки (хеш цього коду) пишеться в таблицю `meta`; `flame.ingest.bootstrap` перезбирає БД локально й на проді, коли версія змінилась (деталі — [deployment.md](deployment.md)). Сирий знімок змінюється лише новим релізом `data-flex-vN`.
+Збирається `flame.ingest.build_db` з `data/flex` і знімків інших досліджень. **FLEX** лежить у схемі `main` — копія таблиць знімка: `tests`, `test_files`, `ts_droplet`, `ts_flame_color`, `ts_flame_uv`, `ts_chamber` (схема — [data/flex.md §3](data/flex.md)), а також `study_about(study, about JSON)` — вміст `about.json`. Нормалізація при збірці: `tests.test_date` з дворозрядним роком (у джерелі змішані `11/27/09` і `11/27/2009`, тож 50 рядків читались як рік 9–11) переноситься в 20xx. Також таблиця `chunks` (RAG): тексти з метаданими й цитатою, `embedding FLOAT[384]` (`bge-small-en-v1.5`) і FTS-індекс; пошук `array_cosine_similarity` + BM25 зі злиттям RRF ([rag/techstack.md](rag/techstack.md), [ADR 0004](decisions/0004-rag-local-embeddings.md)). Ембеддинги перевикористовуються зі старої БД за хешем тексту.
+**Інші дослідження** (CFI, ACME CFI-G, BASS-II, SAME-R, Saffire-II) — кожне в своїй схемі (`cfi.tests`, `cfig.ts_telemetry`, …), таблиці 1:1 з `data/<slug>/<slug>.duckdb` без нормалізації; схема `flex` — view на таблиці FLEX у `main`. Реєстр `studies` (slug, accession, DOI, ключ тесту, таблиці), `meta.datasets` — версії знімків. Знімка, якого немає на диску, у збірці просто немає. Опис і приклади запитів — [data/psi-studies.md](data/psi-studies.md), рішення — [ADR 0008](decisions/0008-multi-study-db.md). API, RAG і агент поки працюють лише з FLEX.
+**БД не редагується — перезбирається.** Будь-яка обробка даних = код у `build_db` (або модулі з `BUILD_SOURCES`). Версія збірки (хеш цього коду) пишеться в таблицю `meta`; `flame.ingest.bootstrap` перезбирає БД локально й на проді, коли версія змінилась (деталі — [deployment.md](deployment.md)). Сирий знімок змінюється лише новим релізом (`data-flex-vN`, `data-psi-studies-vN`).
 
 Похідні прапорці для UI (рахуються в SQL, у UI підписані *derived*): **cool flame** — `ts_comment` відповідає `cool[- ]?flame` (без урахування регістру); **clean** — вільна крапля, не Disruption, є ряди краплі й UV-полум'я.
 

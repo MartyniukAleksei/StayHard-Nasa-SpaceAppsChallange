@@ -18,22 +18,27 @@
 - **Ручний деплой** (якщо треба): `railway redeploy --service <backend|frontend> --from-source --yes`.
 
 ## backend
-- **Volume** `backend-volume` змонтовано в `/data`. Вміст: `/data/flex/…` (знімок FLEX) і `/data/build/flame.duckdb`.
-- Змінні: `PORT=8000`, `DATA_DIR=/data`, `DATA_ARCHIVE_URL=https://github.com/MartyniukAleksei/nasa-2026/releases/download/data-flex-v1/flex-v1.zip`, `ENV=production`, `CORS_ORIGINS=["https://frontend-production-6436668c.up.railway.app"]`; далі — ключі LLM, коли з'явиться агент.
+- **Volume** `backend-volume` змонтовано в `/data`. Вміст: `/data/flex/…` (знімок FLEX), `/data/{cfi,cfig,bass2,samer,saffire2}/…` (інші дослідження, [data/psi-studies.md](data/psi-studies.md)), `/data/build/flame.duckdb` і `/data/.archives.json` (які архіви вже розпаковано).
+- Змінні: `PORT=8000`, `DATA_DIR=/data`, `DATA_ARCHIVE_URL=https://github.com/MartyniukAleksei/nasa-2026/releases/download/data-flex-v1/flex-v1.zip` (або `DATA_ARCHIVE_URLS` — JSON-список архівів, див. нижче), `ENV=production`, `CORS_ORIGINS=["https://frontend-production-6436668c.up.railway.app"]`; далі — ключі LLM, коли з'явиться агент.
 - Healthcheck: `/api/health` (поля `db` і `flex_data` показують, чи Volume заповнений).
 
 ### Як заповнюється і оновлюється Volume (автоматично)
 Контейнер стартує з `python -m flame.ingest.bootstrap && uvicorn …`. Bootstrap ідемпотентний:
-1. **Знімок FLEX.** Якщо `/data/flex` немає або `DATA_ARCHIVE_URL` відрізняється від записаного в `/data/.archive_url` — качає zip (GitHub Release [`data-flex-v1`](https://github.com/MartyniukAleksei/nasa-2026/releases/tag/data-flex-v1)) і замінює `/data/flex`.
+1. **Знімки.** Список архівів — `DATA_ARCHIVE_URL` + `DATA_ARCHIVE_URLS` (GitHub Releases [`data-flex-v1`](https://github.com/MartyniukAleksei/nasa-2026/releases/tag/data-flex-v1), `data-psi-studies-v1`). Кожен URL, якого ще немає в `/data/.archives.json`, качається по черзі: замінюються лише каталоги верхнього рівня з цього архіву (`flex/`, `cfi/`, …), zip видаляється одразу після розпакування. Старий маркер `/data/.archive_url` (лише FLEX) розпізнається, тож FLEX повторно не качається. Архів, прибраний зі списку, забувається, але його файли лишаються на Volume. Якщо архів не вдалося скачати (мережа, 404 — наприклад, коли репо приватне й релізи без логіну недоступні), `bootstrap` пише `ERROR downloading …` у лог і стартує з поточними даними; наступний старт пробує знову.
 2. **БД.** Якщо `flame.duckdb` немає, знімок оновився або `build_db.BUILD_VERSION` (хеш коду збірки) не збігається з записаним у таблиці `meta` — перезбирає `build/flame.duckdb`. Разом із БД будується RAG-індекс: модель ембеддингів запечена в образ (`MODELS_DIR=/app/models`), тож мережа не потрібна; вектори перевикористовуються зі старої БД, тому повна векторизація (~хвилини CPU) буває лише на першій збірці або при зміні моделі.
 
 > **Простій під час перезбирання.** Volume монтується лише в один контейнер, тож Railway зупиняє старий до старту нового, а uvicorn стартує лише після bootstrap. Поки БД перезбирається, бекенд віддає **502** (на деплої з RAG, 2026-11-15, — кілька хвилин). Якщо це стане проблемою: запускати uvicorn одразу, а перезбирання — у фоні з атомарною заміною файлу й перевідкриттям підключення (пропозиція, рішення за власником інфраструктури).
 
 Тобто:
 - **змінили обробку даних** (`flame/ingest/build_db.py`, `flame/rag/*`) → PR → мердж → деплой сам перезбере БД;
-- **новий знімок** → опублікувати реліз `data-flex-vN`, змінити `DATA_ARCHIVE_URL` у Railway → редеплой скачає й перезбере.
+- **новий знімок** → опублікувати реліз (`data-flex-vN`, `data-psi-studies-vN`; кожен asset ≤ 2 ГіБ), замінити його URL у `DATA_ARCHIVE_URL(S)` у Railway → редеплой скачає лише цей архів і перезбере БД.
 
-Перевірити, що на проді: `GET /api/health` → `db_build` (версія коду збірки) і `dataset` (версія знімка).
+**Підключення `data-psi-studies-v1` (робить власник даних та інфраструктури):**
+1. Реліз `data-psi-studies-v1` з asset-ом `psi-studies-v1.zip` (1.6 ГБ; усередині `cfi/ cfig/ bass2/ samer/ saffire2/ README.md`).
+2. Місце на Volume: при першому старті одночасно лежать FLEX (0.54 ГБ), zip (1.6 ГБ), розпаковані знімки (1.98 ГБ) і БД (≈ 0.05 ГБ) — ≈ 4.3 ГБ піку, далі ≈ 2.6 ГБ.
+3. `DATA_ARCHIVE_URLS=["…/data-flex-v1/flex-v1.zip","…/data-psi-studies-v1/psi-studies-v1.zip"]` (а `DATA_ARCHIVE_URL` прибрати або лишити тим самим FLEX-URL) → редеплой. У логах: `bootstrap: extracting bass2, cfi, cfig, saffire2, samer`, `studies: flex=flex-v1, cfi=cfi-v1, …`.
+
+Перевірити, що на проді: `GET /api/health` → `db_build` (версія коду збірки) і `dataset` (версія знімка FLEX); версії інших знімків — у `meta.datasets` і таблиці `studies` БД.
 Перший старт довший (~265 МБ), тому `healthcheckTimeout` = 600 с.
 
 ## frontend
