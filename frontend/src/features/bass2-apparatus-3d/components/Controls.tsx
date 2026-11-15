@@ -1,51 +1,98 @@
-import { CONFIGS, FLOW, MODES, O2, REPORT, ROD_RADII_CM, type ConfigId, type ModeId } from "../content";
+import { usePlayback } from "@/shared/three/playback";
+import { CONFIGS, FLAME_VISIBLE_PX, FLOW, MODES, O2, REPORT, ROD_RADII_CM, STORY, VIEWS, type ConfigId, type ModeId } from "../content";
 import { boundaryO2, flowLabel, flowToSlider, sliderToFlow } from "../lib/boundary";
-import { useSim, type Sim } from "../lib/sim";
+import { useSim, type Mode, type Sim } from "../lib/sim";
 import type { Layers } from "./Scene";
 
 const page = (p: number) => `p.${p}`;
 
-/** Mode switch: three sample types; the rod has a sub-toggle for the flow direction. */
-export function ModeSwitch({ sim }: { sim: Sim }) {
+/** Top row: schematic model or a replayed test; in the model, the sample type and the rod's flow direction. */
+export function ModeSwitch({ sim, mode, onMode }: { sim: Sim; mode: Mode; onMode: (m: Mode) => void }) {
   const { config } = useSim(sim);
-  const mode: ModeId = CONFIGS[config].mode;
+  const sampleMode: ModeId = CONFIGS[config].mode;
   return (
     <div className="b3d-modes">
-      <div className="b3d-tags" role="group" aria-label="Sample">
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className={`tag ${m.id === mode ? "on" : ""}`}
-            aria-pressed={m.id === mode}
-            onClick={() => m.id !== mode && sim.setConfig(m.configs[0])}
-          >
-            {m.label}
+      <div className="b3d-tags" role="group" aria-label="What the scene shows">
+        <button type="button" className={`tag ${mode === "model" ? "on" : ""}`} aria-pressed={mode === "model"} onClick={() => onMode("model")}>
+          schematic model
+        </button>
+        <button type="button" className={`tag ${mode === "replay" ? "on" : ""}`} aria-pressed={mode === "replay"} onClick={() => onMode("replay")}>
+          replay a real test
+        </button>
+      </div>
+      {mode === "model" && (
+        <>
+          <div className="b3d-tags" role="group" aria-label="Sample">
+            <span className="b3d-label">sample</span>
+            {MODES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={`tag ${m.id === sampleMode ? "on" : ""}`}
+                aria-pressed={m.id === sampleMode}
+                onClick={() => m.id !== sampleMode && sim.setConfig(m.configs[0])}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          {sampleMode === "rod" && (
+            <div className="b3d-tags" role="group" aria-label="Flow direction for the rod">
+              {(["rod-concurrent", "rod-opposed"] as ConfigId[]).map((id) => (
+                <button key={id} type="button" className={`tag ${id === config ? "on" : ""}`} aria-pressed={id === config} onClick={() => sim.setConfig(id)}>
+                  {id === "rod-concurrent" ? "concurrent / stagnation flow" : "opposed flow"}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The story in four moves, so a first-time visitor knows what to do. */
+export function StoryStrip({ mode }: { mode: Mode }) {
+  if (mode === "replay") {
+    return (
+      <ol className="b3d-story mono" aria-label="How to read the replay">
+        <li>pick a test</li>
+        <li>play: the air speed and the flame follow the NASA video, second by second</li>
+        <li>watch the flame shrink and go out as the crew lowers the fan</li>
+      </ol>
+    );
+  }
+  return (
+    <ol className="b3d-story mono" aria-label="How to use the model">
+      {STORY.map((s) => (
+        <li key={s}>{s}</li>
+      ))}
+    </ol>
+  );
+}
+
+/** Camera presets. Keyboard: tab to a button, Enter. */
+export function ViewButtons({ view, onView }: { view: string; onView: (id: string) => void }) {
+  const current = VIEWS.find((v) => v.id === view);
+  return (
+    <div className="b3d-views">
+      <div className="b3d-tags" role="group" aria-label="Camera view">
+        <span className="b3d-label">view</span>
+        {VIEWS.map((v) => (
+          <button key={v.id} type="button" className={`tag ${v.id === view ? "on" : ""}`} aria-pressed={v.id === view} onClick={() => onView(v.id)}>
+            {v.label}
           </button>
         ))}
       </div>
-      {mode === "rod" && (
-        <div className="b3d-tags" role="group" aria-label="Flow direction for the rod">
-          {(["rod-concurrent", "rod-opposed"] as ConfigId[]).map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`tag ${id === config ? "on" : ""}`}
-              aria-pressed={id === config}
-              onClick={() => sim.setConfig(id)}
-            >
-              {id === "rod-concurrent" ? "concurrent / stagnation flow" : "opposed flow"}
-            </button>
-          ))}
-        </div>
-      )}
+      {current && <p className="b3d-viewnote mono">{current.note}</p>}
     </div>
   );
 }
 
 /** What is happening now, in one line. Wording follows the report; the timing is schematic. */
 export function Phase({ sim }: { sim: Sim }) {
-  const { flame, config, regime, o2 } = useSim(sim);
+  const { flame, config, regime, o2, mode, replay } = useSim(sim);
+  if (mode === "replay") return replay ? <ReplayPhase sim={sim} /> : <>Loading the test's timeline…</>;
   const rod = config === "rod-concurrent";
   switch (flame.phase) {
     case "igniting":
@@ -57,7 +104,7 @@ export function Phase({ sim }: { sim: Sim }) {
         <span className="b3d-live">
           {rod
             ? "Quenching: the flame shrinks to a hemisphere and oscillates at about 1.1 Hz (p.72)"
-            : "Quenching: the flame shrinks and fades at too little flow"}
+            : "Quenching: the flame shrinks, loses its yellow and fades at too little flow (p.13)"}
         </span>
       );
     case "blowing":
@@ -73,11 +120,47 @@ export function Phase({ sim }: { sim: Sim }) {
   }
 }
 
+function ReplayPhase({ sim }: { sim: Sim }) {
+  const r = sim.replay!;
+  const { t } = usePlayback(r.playback);
+  const air = sim.replayAir();
+  const px = sim.replayScenePx();
+  const m = r.model;
+  const airText = air == null ? "air display unreadable" : `air display ${Math.round(air)} cm/s`;
+  if (t >= m.tMax - 0.5) return <>End of the record ({Math.round(m.tMax)} s of video)</>;
+  if (m.flameOnAt != null && t < m.flameOnAt) return <>Before the flame shows in the video · {airText}</>;
+  if (px != null && px >= FLAME_VISIBLE_PX) {
+    return (
+      <span className="b3d-live">
+        Flame visible in the video ({Math.round(px)} bright px) · {airText}
+      </span>
+    );
+  }
+  if (m.flameOutAt != null && t > m.flameOutAt) return <>Flame no longer visible since {Math.round(m.flameOutAt)} s · {airText}</>;
+  return <>No flame visible in this frame (below {FLAME_VISIBLE_PX} bright px) · {airText}</>;
+}
+
+/** Settings from the acceptance list: one click to see each outcome. The verdict is still Eq. 6.1. */
+const TRIES: { label: string; u: number; o2: number; hint: string }[] = [
+  { label: "burns", u: 5, o2: 15.5, hint: "5 cm/s, 15.5 % O₂: above the curve" },
+  { label: "quench", u: FLOW.minCmS, o2: 15.5, hint: "fan almost off: left branch" },
+  { label: "blowoff", u: FLOW.maxCmS, o2: 15, hint: "55 cm/s, 15 % O₂: right branch" },
+  { label: "no ignition", u: 5, o2: 14, hint: `below ~${O2.ignitionLimit} % O₂ (p.68)` },
+];
+
 /** Sliders for the rod in concurrent flow: the only configuration with a boundary equation. */
 function RodControls({ sim }: { sim: Sim }) {
   const { u, o2, radiusIndex, stretch } = useSim(sim);
   return (
     <div className="b3d-sliders">
+      <div className="b3d-tags b3d-try" role="group" aria-label="Try a setting">
+        <span className="b3d-label">try</span>
+        {TRIES.map((x) => (
+          <button key={x.label} type="button" className="tag" title={x.hint} onClick={() => sim.preset(x.u, x.o2)}>
+            {x.label}
+          </button>
+        ))}
+      </div>
       <label className="b3d-slider">
         <span>flow</span>
         <input
@@ -158,14 +241,7 @@ export function Controls({ sim, layers, onLayers }: { sim: Sim; layers: Layers; 
         <button type="button" className="btn" onClick={() => sim.ignite()} disabled={flame.phase === "igniting"}>
           ignite
         </button>
-        <label className="b3d-layer">
-          <input type="checkbox" checked={layers.tracers} onChange={(e) => onLayers({ ...layers, tracers: e.target.checked })} />
-          flow tracers
-        </label>
-        <label className="b3d-layer">
-          <input type="checkbox" checked={layers.cameras} onChange={(e) => onLayers({ ...layers, cameras: e.target.checked })} />
-          cameras
-        </label>
+        <LayerToggles layers={layers} onLayers={onLayers} />
       </div>
       <ul className="b3d-facts">
         {c.facts.map((f) => (
@@ -178,18 +254,34 @@ export function Controls({ sim, layers, onLayers }: { sim: Sim; layers: Layers; 
   );
 }
 
-/** Confidence levels of what is drawn; must match the scene passport. */
-export function Note() {
+export function LayerToggles({ layers, onLayers }: { layers: Layers; onLayers: (l: Layers) => void }) {
+  return (
+    <>
+      <label className="b3d-layer">
+        <input type="checkbox" checked={layers.tracers} onChange={(e) => onLayers({ ...layers, tracers: e.target.checked })} />
+        flow tracers
+      </label>
+      <label className="b3d-layer">
+        <input type="checkbox" checked={layers.cameras} onChange={(e) => onLayers({ ...layers, cameras: e.target.checked })} />
+        cameras
+      </label>
+    </>
+  );
+}
+
+/** Confidence levels of what is drawn; must match the scene passport (ADR 0012). */
+export function Note({ mode }: { mode: Mode }) {
   return (
     <p className="b3d-note">
-      A schematic simulation of the BASS-II apparatus, not a recording and not a replay of any test. From the report (
-      {REPORT.title}): duct 7.6 × 7.6 × 17 cm and the order of its parts (fan, honeycomb, air-speed probe, inlet
-      screen, perforated copper plate, brass screen), sample sizes, igniter, camera and radiometer positions, flow
-      range up to ~55 cm/s, the flammability boundary Eq. 6.1 and every number with a page. Estimate: whether a chosen
-      setting burns, quenches or blows off (Eq. 6.1 applied to your values, rod in concurrent flow only). Schematic:
-      flame shape and size, how fast it travels, all timing (a loop, not to time scale), holders, fan, honeycomb
-      cells, camera bodies. Illustrative: flame colour and flicker, flow tracers. Flow below ~{FLOW.calibratedMinCmS}{" "}
-      cm/s is shown without a number: it is below the fan's calibrated range. Data:{" "}
+      {mode === "replay"
+        ? "A replay of one BASS-II test driven by numbers we read from the data overlay of its NASA video (1 point per second): the air-speed display, the fan display, the radiometer and a count of bright pixels as a flame-visibility proxy. Estimate: those four series (template OCR of the overlay) and the two events we derive from them, “air reads 0” and “flame fades”. From the tests table: material, thickness or diameter, O₂ at ignition, outcome. Schematic: the flame's shape, where it sits on the sample (its spread was not tracked), the igniter, holders. Illustrative: flame colour and flicker, flow tracers. "
+        : "A schematic simulation of the BASS-II apparatus, not a recording and not a replay of any test. "}
+      From the report ({REPORT.title}): duct 7.6 × 7.6 × 17 cm and the order of its parts (fan, honeycomb, air-speed probe, inlet screen,
+      perforated copper plate, brass screen), windows, sample sizes, igniter, camera and radiometer positions, flow range up to ~55 cm/s,
+      the flammability boundary Eq. 6.1 and every number with a page.
+      {mode === "model" &&
+        " Estimate: whether a chosen setting burns, quenches or blows off (Eq. 6.1 applied to your values, rod in concurrent flow only). Schematic: flame shape and size, how fast it travels, all timing (a loop, not to time scale), holders, fan, honeycomb cells, camera bodies. Illustrative: flame colour (blue is the site's colour for a live measurement; the yellow stands for the luminous sooty part the report describes at higher flow, p.48, Fig. 1.2) and flicker, flow tracers."}{" "}
+      Flow below ~{FLOW.calibratedMinCmS} cm/s is shown without a number in the model: it is below the fan's calibrated range. Data:{" "}
       <a href={REPORT.doiUrl} target="_blank" rel="noreferrer">
         {REPORT.accession}, DOI {REPORT.doi}
       </a>

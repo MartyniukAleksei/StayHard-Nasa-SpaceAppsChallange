@@ -10,6 +10,8 @@ export interface FlameGeometry {
   preQuenchHz: number;
   /** Stretch rate at the minimum of Eq. 6.1, 1/s. */
   aAtMinimum: number;
+  /** Rod in concurrent flow: stretch rates between which the flame turns from blue to luminous (illustrative). */
+  rodSoot: { fromA: number; toA: number };
 }
 
 // State machine of the schematic flame. Phase order and what triggers each change follow the report;
@@ -87,9 +89,11 @@ export interface FlameShape {
   /** 0..1: fraction of the flame length opened up from the nose (blowoff hole at the stagnation region). */
   hole: number;
   opacity: number;
+  /** 0..1: how much of the downstream part glows yellow (luminous soot) instead of blue. Illustrative. */
+  soot: number;
 }
 
-const HIDDEN: FlameShape = { visible: false, noseX: 0, length: 1, height: 1, width: 1, closed: false, hole: 0, opacity: 0 };
+const HIDDEN: FlameShape = { visible: false, noseX: 0, length: 1, height: 1, width: 1, closed: false, hole: 0, opacity: 0, soot: 0 };
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
@@ -128,6 +132,9 @@ function rodCup(a: number, r: number, g: FlameGeometry): { noseX: number; length
   return { noseX: LAYOUT.rodConcurrent.tipX - LAYOUT.standoff, length: width * (0.5 + 1.9 * grow), width };
 }
 
+/** Rod in concurrent flow: blue near the quenching limit (Fig. 6.3 a-c), luminous toward blowoff (Fig. 6.3 d, f). */
+const rodSoot = (a: number, g: FlameGeometry) => clamp01((a - g.rodSoot.fromA) / (g.rodSoot.toA - g.rodSoot.fromA));
+
 export function flameShape({ config, flame, a, rodRadiusMm, look, geometry }: ShapeInput): FlameShape {
   if (flame.phase === "out") return HIDDEN;
   const LAYOUT = geometry.layout;
@@ -135,7 +142,7 @@ export function flameShape({ config, flame, a, rodRadiusMm, look, geometry }: Sh
   let base: FlameShape;
   if (config === "rod-concurrent") {
     const cup = rodCup(a, rodRadiusMm, geometry);
-    base = { visible: true, noseX: cup.noseX, length: cup.length, height: cup.width, width: cup.width, closed: false, hole: 0, opacity: 1 };
+    base = { visible: true, noseX: cup.noseX, length: cup.length, height: cup.width, width: cup.width, closed: false, hole: 0, opacity: 1, soot: rodSoot(a, geometry) };
   } else {
     if (!look) return HIDDEN;
     const front = frontX(config, flame.progress, LAYOUT);
@@ -146,7 +153,7 @@ export function flameShape({ config, flame, a, rodRadiusMm, look, geometry }: Sh
       length = LAYOUT.rodOpposed.endX - front + look.length;
       noseX = front - 1.5;
     }
-    base = { visible: true, noseX, length, height: look.height, width: look.width, closed: look.closed, hole: 0, opacity: look.opacity };
+    base = { visible: true, noseX, length, height: look.height, width: look.width, closed: look.closed, hole: 0, opacity: look.opacity, soot: look.soot };
   }
 
   switch (flame.phase) {
@@ -172,6 +179,8 @@ export function flameShape({ config, flame, a, rodRadiusMm, look, geometry }: Sh
         height: base.height * size,
         width: base.width * size,
         opacity: base.opacity * (1 - clamp01((k - 0.86) / 0.14)),
+        // "loses its orange colour, turns completely blue and goes out" (p.13)
+        soot: base.soot * (1 - clamp01(k / 0.6)),
       };
     }
     case "blowing": {
@@ -187,4 +196,46 @@ export function flameShape({ config, flame, a, rodRadiusMm, look, geometry }: Sh
       };
     }
   }
+}
+
+export interface ReplayShapeInput {
+  config: ConfigId;
+  /** 0..1 flame presence from the video's bright-pixel count (estimate); 0 = no flame drawn. */
+  presence: number;
+  /** Air-speed display, cm/s (estimate from the overlay); null while unreadable. */
+  airCmS: number | null;
+  /** Rod in concurrent flow: stretch rate from the air display and the rod's radius. */
+  a: number;
+  rodRadiusMm: number;
+  look: Look | null;
+  geometry: FlameGeometry;
+}
+
+/**
+ * Flame while replaying a real test. Presence and brightness come from the video; everything about the
+ * shape is schematic: the rod cup follows the stretch rate as in the model, a flat flame sits at a fixed
+ * place on the sample (its spread was not tracked) and loses its luminous tail as the flow drops.
+ */
+export function replayFlameShape({ config, presence, airCmS, a, rodRadiusMm, look, geometry }: ReplayShapeInput): FlameShape {
+  if (presence <= 0) return HIDDEN;
+  const LAYOUT = geometry.layout;
+  if (config === "rod-concurrent") {
+    const cup = rodCup(a, rodRadiusMm, geometry);
+    return { visible: true, noseX: cup.noseX, length: cup.length, height: cup.width, width: cup.width, closed: false, hole: 0, opacity: presence, soot: rodSoot(a, geometry) };
+  }
+  if (!look) return HIDDEN;
+  const front = frontX(config, 0.45, LAYOUT);
+  const slow = clamp01((airCmS ?? 0) / 3); // schematic: the yellow tail fades as the flow is lowered (p.13)
+  const size = lerp(0.72, 1, slow);
+  return {
+    visible: true,
+    noseX: front - 2,
+    length: config === "rod-opposed" ? LAYOUT.rodOpposed.endX - front + look.length : look.length * size,
+    height: look.height * size,
+    width: look.width * size,
+    closed: look.closed && slow > 0.5,
+    hole: 0,
+    opacity: presence,
+    soot: look.soot * slow,
+  };
 }

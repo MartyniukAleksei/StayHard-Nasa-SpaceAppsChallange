@@ -71,8 +71,11 @@ export interface Level {
   page: number;
   /** Tracer speed, cm/s: a representative value inside the range the caption quotes. */
   tracerCmS: number;
-  /** Schematic flame look for a burning level. */
-  flame?: { length: number; height: number; width: number; closed: boolean; opacity: number };
+  /**
+   * Schematic flame look for a burning level. `soot` 0..1: how much of the downstream part glows yellow
+   * (luminous soot) instead of blue; 0 = all blue. Illustrative, after the report's descriptions and Fig. 1.2.
+   */
+  flame?: { length: number; height: number; width: number; closed: boolean; opacity: number; soot: number };
 }
 
 export interface Config {
@@ -121,7 +124,7 @@ export const CONFIGS: Record<ConfigId, Config> = {
         caption: "Steady opposed-flow spread along the sample.",
         page: 13,
         tracerCmS: 5,
-        flame: { length: 17, height: 10, width: 25, closed: false, opacity: 1 },
+        flame: { length: 17, height: 10, width: 25, closed: false, opacity: 1, soot: 0.55 }, // orange tail that is lost near extinction (p.13, Fig. 1.2a)
       },
       {
         id: "high",
@@ -182,7 +185,7 @@ export const CONFIGS: Record<ConfigId, Config> = {
         caption: "Flames are very small, blue, faint and open at their downstream ends.",
         page: 48,
         tracerCmS: 1,
-        flame: { length: 6, height: 15, width: 15, closed: false, opacity: 0.6 },
+        flame: { length: 6, height: 15, width: 15, closed: false, opacity: 0.6, soot: 0 }, // "very small, blue, faint" (p.48)
       },
       {
         id: "high",
@@ -191,7 +194,7 @@ export const CONFIGS: Record<ConfigId, Config> = {
         caption: "Flames become much more luminous, with a closed downstream tip.",
         page: 48,
         tracerCmS: 4,
-        flame: { length: 20, height: 19, width: 19, closed: true, opacity: 1 },
+        flame: { length: 20, height: 19, width: 19, closed: true, opacity: 1, soot: 1 }, // "much more luminous" (p.48, Fig. 1.2c)
       },
     ],
     startLevel: 2,
@@ -226,7 +229,7 @@ export const CONFIGS: Record<ConfigId, Config> = {
         caption: "At low flow speed and O₂ the flame became very dim blue and small.",
         page: 94,
         tracerCmS: 5,
-        flame: { length: 13, height: 9, width: 21, closed: false, opacity: 0.6 },
+        flame: { length: 13, height: 9, width: 21, closed: false, opacity: 0.6, soot: 0 }, // "very dim blue and small" (p.94)
       },
       {
         id: "high",
@@ -235,7 +238,7 @@ export const CONFIGS: Record<ConfigId, Config> = {
         caption: "A long flame grows downstream of its base and can reach a limiting length (10 cm/s, 21 % O₂).",
         page: 95,
         tracerCmS: 10,
-        flame: { length: 44, height: 13, width: 26, closed: false, opacity: 1 },
+        flame: { length: 44, height: 13, width: 26, closed: false, opacity: 1, soot: 0.6 }, // yellow tail downstream of the base (Fig. 1.2d)
       },
     ],
     startLevel: 2,
@@ -260,3 +263,74 @@ export const LAYOUT = {
   /** Flame standoff from the rod surface: schematic. */
   standoff: 2.2,
 } as const;
+
+/**
+ * Flame colours. Blue is the design system's "live" colour, as in the FLEX replay; the yellow-orange stands for
+ * the luminous, sooty part the report describes at higher flow ("much more luminous", p.48; Fig. 1.2, 6.3 d, f).
+ * Both are illustrative: nothing in the dataset measures colour.
+ */
+export const FLAME_COLOUR = {
+  blue: { core: "#2b45e0", rim: "#7f97ff" },
+  soot: { core: "#ff7a1f", rim: "#ffd089" },
+} as const;
+
+/** Rod in concurrent flow: the flame turns luminous as the stretch rate climbs toward the blowoff branch (Fig. 6.3 d, f). Illustrative. */
+export const ROD_SOOT = { fromA: 12, toA: 90 } as const;
+
+/** Camera presets, scene millimetres (one unit = 1 mm; x = 0 is the middle of the test section). Positions are schematic. */
+export interface View {
+  id: string;
+  label: string;
+  position: [number, number, number];
+  /** Fixed target, or "sample": the flame's place in the chosen configuration. */
+  target: [number, number, number] | "sample";
+  note: string;
+}
+export const VIEWS: View[] = [
+  { id: "duct", label: "Whole duct", position: [165, 116, 240], target: [-14, 0, 0], note: "fan section, test section and the exit screens (p.4)" },
+  { id: "section", label: "Test section", position: [58, 52, 128], target: [-6, 0, 0], note: "7.6 × 7.6 × 17 cm, black anodized (p.4)" },
+  { id: "sample", label: "Sample close-up", position: [-6, 22, 62], target: "sample", note: "the flame around the sample; shape schematic" },
+  { id: "nikon", label: "What the Nikon saw", position: [0, 112, 0.5], target: [0, 0, 0], note: "still camera above the top window, looking down (p.4, Fig. 6.1)" },
+  { id: "video", label: "What the video camera saw", position: [-4, -6, 118], target: [-4, -6, 0], note: "video camera into the front window via a turning mirror (p.4–5)" },
+];
+
+/** Three tests whose video overlay was read into a 1 Hz series (video_series in the test report). */
+export interface ReplayTest {
+  id: string;
+  config: ConfigId;
+  title: string;
+  /** What the researchers' log says happened (Appendix A, with its printed page). */
+  log: Fact;
+}
+export const REPLAY_TESTS: ReplayTest[] = [
+  {
+    id: "O13a",
+    config: "rod-concurrent",
+    title: "Rod in concurrent flow, lowered step by step until it quenched",
+    log: { text: "Ignited and burned at 5 pot settings, flame self-extinguished after 3+ min at pot 0.31.", page: 110 },
+  },
+  {
+    id: "B13",
+    config: "flat",
+    title: "Thin film in opposed flow, quenched when the flow was turned down",
+    log: { text: "Multiple velocities for steady spread, extinguished at pot 0.35.", page: 103 },
+  },
+  {
+    id: "M19",
+    config: "flat",
+    title: "Thick two-sided slab in opposed flow, went out on its own at 5 cm/s",
+    log: { text: "Burned with decreasing flows until it went out on its own at 5 cm/s.", page: 109 },
+  },
+];
+
+/**
+ * Bright pixels in the video frame at or above this count = a flame is visible. The same threshold the
+ * BASS-II overview cards use for "flame fades". An estimate: the proxy counts anything bright, not only flame.
+ */
+export const FLAME_VISIBLE_PX = 100;
+
+/** Replay speeds; the records run 4 to 26 minutes. */
+export const REPLAY_SPEEDS = [1, 5, 20] as const;
+
+/** The story in four moves, shown above the scene. */
+export const STORY = ["pick a sample", "move the flow", "watch it quench or blow off", "find the point on the U-map"] as const;

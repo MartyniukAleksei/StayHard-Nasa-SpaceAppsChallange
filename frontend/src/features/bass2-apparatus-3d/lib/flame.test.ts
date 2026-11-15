@@ -1,7 +1,7 @@
 // Run: npm test (node:test; Node 24 strips the TS types)
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { DURATION, flameShape, frontX, ignite, step, type FlameGeometry, type FlameState, type StepInput } from "./flame.ts";
+import { DURATION, flameShape, frontX, ignite, replayFlameShape, step, type FlameGeometry, type FlameState, type StepInput } from "./flame.ts";
 
 const geometry: FlameGeometry = {
   layout: {
@@ -13,6 +13,7 @@ const geometry: FlameGeometry = {
   },
   preQuenchHz: 1.1,
   aAtMinimum: 10.4,
+  rodSoot: { fromA: 12, toA: 90 },
 };
 const burn: StepInput = { regime: "burning", ignitable: true, spreads: false, loop: true };
 const run = (s: FlameState, seconds: number, input: StepInput) => {
@@ -86,5 +87,27 @@ describe("flame shape (schematic)", () => {
   test("a spreading configuration without a look draws nothing", () => {
     const lit: FlameState = { phase: "burning", t: 0, progress: 0.2, reason: null };
     assert.equal(flameShape({ config: "fabric", flame: lit, a: 0, rodRadiusMm: 0, look: null, geometry }).visible, false);
+  });
+});
+
+describe("replay flame (presence from the video, shape schematic)", () => {
+  const look = { length: 17, height: 10, width: 25, closed: false, opacity: 1, soot: 0.55 };
+  test("no presence, no flame", () => {
+    assert.equal(replayFlameShape({ config: "flat", presence: 0, airCmS: 5, a: 0, rodRadiusMm: 6.35, look, geometry }).visible, false);
+  });
+  test("the rod cup shrinks to a hemisphere when the air display reads 0", () => {
+    const burning = replayFlameShape({ config: "rod-concurrent", presence: 1, airCmS: 5, a: 23.6, rodRadiusMm: 6.35, look: null, geometry });
+    const dying = replayFlameShape({ config: "rod-concurrent", presence: 0.4, airCmS: 0, a: 0, rodRadiusMm: 6.35, look: null, geometry });
+    assert.ok(burning.length > dying.length);
+    assert.ok(Math.abs(dying.length / dying.width - 0.5) < 1e-6);
+    assert.equal(dying.opacity, 0.4);
+    assert.ok(burning.soot > dying.soot);
+  });
+  test("a flat flame keeps its place and loses the yellow tail at low flow", () => {
+    const fast = replayFlameShape({ config: "flat", presence: 1, airCmS: 10, a: 0, rodRadiusMm: 0, look, geometry });
+    const slow = replayFlameShape({ config: "flat", presence: 1, airCmS: 0, a: 0, rodRadiusMm: 0, look, geometry });
+    assert.equal(fast.noseX, slow.noseX);
+    assert.ok(fast.soot > 0 && slow.soot === 0);
+    assert.ok(fast.length > slow.length);
   });
 });

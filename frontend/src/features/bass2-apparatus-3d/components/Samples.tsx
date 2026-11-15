@@ -61,8 +61,8 @@ function Rod({ x0, x1, radius, tip, clear }: { x0: number; x1: number; radius: n
  * Flat sample lying in the horizontal plane (the top camera looks down on the fuel surface, p.94), held in a
  * U-shaped holder whose open end is where the igniter sits (Fig. 7.1b). Holder profile is schematic.
  */
-function FlatSample({ sim, kind }: { sim: Sim; kind: "flat" | "fabric" }) {
-  const dims = kind === "flat" ? LAYOUT.flat : LAYOUT.fabric;
+function FlatSample({ sim, kind, thickness }: { sim: Sim; kind: "flat" | "fabric"; thickness: number }) {
+  const dims = kind === "flat" ? { ...LAYOUT.flat, thickness } : LAYOUT.fabric;
   const half = dims.halfLength;
   const fuel = useRef<THREE.Mesh>(null);
   const burnt = useRef<THREE.Mesh>(null);
@@ -72,7 +72,8 @@ function FlatSample({ sim, kind }: { sim: Sim; kind: "flat" | "fabric" }) {
 
   useFrame(() => {
     const flame = sim.flame;
-    const lit = flame.phase !== "igniting" && flame.progress > 0;
+    // the consumed length follows the schematic loop only; in a replay the spread was not tracked
+    const lit = sim.mode === "model" && flame.phase !== "igniting" && flame.progress > 0;
     const front = frontX(kind, flame.progress, LAYOUT);
     if (kind === "flat" && fuel.current) {
       // schematic: the film is consumed behind the flame's leading edge
@@ -175,17 +176,18 @@ function Igniter({ sim, config, rodRadius }: { sim: Sim; config: ConfigId; rodRa
   );
 
   useFrame((_, dt) => {
-    const on = sim.flame.phase === "igniting";
+    const v = sim.view();
+    const on = v.igniterOn;
     deployed.current += ((on ? 1 : 0) - deployed.current) * Math.min(1, dt * 7);
     const k = smooth(deployed.current);
     if (group.current) group.current.position.set(x, -(1 - k) * 4, (1 - k) * 16);
-    material.emissiveIntensity = on ? 2.6 * smooth(sim.flame.t / 0.35) : 0;
+    material.emissiveIntensity = on ? 2.6 * smooth(v.igniterT / 0.35) : 0;
   });
 
   return <group ref={group}><mesh geometry={geometry} material={material} /></group>;
 }
 
-export function Sample({ sim, config, rodRadius }: { sim: Sim; config: ConfigId; rodRadius: number }) {
+export function Sample({ sim, config, rodRadius, thickness }: { sim: Sim; config: ConfigId; rodRadius: number; thickness: number }) {
   return (
     <group>
       {config === "rod-concurrent" && (
@@ -194,7 +196,7 @@ export function Sample({ sim, config, rodRadius }: { sim: Sim; config: ConfigId;
       {config === "rod-opposed" && (
         <Rod x0={LAYOUT.rodOpposed.startX} x1={LAYOUT.rodOpposed.endX} radius={LAYOUT.rodOpposed.radiusMm} tip="downstream" clear={false} />
       )}
-      {(config === "flat" || config === "fabric") && <FlatSample key={config} sim={sim} kind={config} />}
+      {(config === "flat" || config === "fabric") && <FlatSample key={`${config}-${thickness}`} sim={sim} kind={config} thickness={thickness} />}
       <Igniter key={`${config}-${rodRadius}`} sim={sim} config={config} rodRadius={rodRadius} />
     </group>
   );
