@@ -33,14 +33,14 @@ _urls: dict[tuple[str, str], tuple[str, float]] = {}
 _urls_lock = threading.Lock()
 
 
-def _signed_url(name: str, version: str, *, fresh: bool = False) -> str:
-    key = (name, version)
+def _signed_url(name: str, version: str, *, fresh: bool = False, study: str = STUDY) -> str:
+    key = (f"{study}/{name}", version)
     with _urls_lock:
         cached = _urls.get(key)
     if cached and not fresh and cached[1] > time.time():
         return cached[0]
     q = urllib.parse.urlencode({"file": name, "version": version, "redirect": "false"})
-    req = urllib.request.Request(f"{API}/studies/{STUDY}/download?{q}", headers=_UA)
+    req = urllib.request.Request(f"{API}/studies/{study}/download?{q}", headers=_UA)
     try:
         with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
             url = r.read().decode().strip().strip('"')
@@ -51,6 +51,11 @@ def _signed_url(name: str, version: str, *, fresh: bool = False) -> str:
     with _urls_lock:
         _urls[key] = (url, valid_until)
     return url
+
+
+def signed_url(study: str, name: str, version: str) -> str:
+    """Тимчасове (≈1 год) пряме посилання S3 на файл дослідження PSI — для <video> у браузері."""
+    return _signed_url(name, version, study=study)
 
 
 def fetch_range(name: str, version: str, start: int, end: int) -> bytes:

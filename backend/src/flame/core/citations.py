@@ -16,7 +16,7 @@ from urllib.parse import quote
 from pydantic import BaseModel
 
 API_PREFIX = "/api"
-STUDY_SLUGS = {"PSI-69": "flex"}  # PSI accession → slug у шляхах API
+STUDY_SLUGS = {"PSI-69": "flex", "PSI-25": "bass2"}  # PSI accession → slug у шляхах API
 
 
 class Source(BaseModel):
@@ -35,7 +35,7 @@ def media_url(study: str, path: str, page: int | None = None) -> str:
     return f"{url}#page={page}" if page else url
 
 
-def test_url(study: str, test_no: int) -> str:
+def test_url(study: str, test_no: int | str) -> str:
     return f"{API_PREFIX}/studies/{STUDY_SLUGS[study]}/tests/{test_no}"
 
 

@@ -9,7 +9,7 @@ ALLOWED_DIRS = ("raw", "docs", "media")  # що з каталогу знімка
 
 
 def study_dirs() -> dict[str, Path]:
-    return {"flex": settings.flex_dir}
+    return {"flex": settings.flex_dir, "bass2": settings.study_dir("bass2")}
 
 
 def resolve(study: str, path: str) -> Path | None:

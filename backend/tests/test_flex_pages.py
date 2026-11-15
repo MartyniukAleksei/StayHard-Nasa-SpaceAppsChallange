@@ -39,7 +39,9 @@ def test_studies_catalog_has_flex_active_first() -> None:
     cards = r.json()
     assert cards[0]["acronym"] == "FLEX" and cards[0]["status"] == "active"
     assert cards[0]["route"] == "/studies/flex"
-    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[1:])
+    active = {c["acronym"]: c["route"] for c in cards if c["status"] == "active"}
+    assert active == {"FLEX": "/studies/flex", "BASS-II": "/studies/bass2"}
+    assert all(c["route"] is None for c in cards if c["status"] == "coming_soon")
     assert all(c["doi"] for c in cards)
 
 
