@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { testHref, useTest, type TestSummary } from "@/features/flex-tests";
 import { useReplay } from "@/features/replay";
@@ -15,15 +16,32 @@ type Props = {
   onClose: () => void;
 };
 
-/** E + F: quick look at one test without leaving the explorer. */
+/** E + F: quick look at one test without leaving the explorer, in a modal dialog
+ *  (Esc, the backdrop or Close shut it; focus stays inside while it is open). */
 export function Preview({ test, inCompare, compareFull, onToggleCompare, onClose }: Props) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = dialog.current;
+    if (d && !d.open) d.showModal();
+    return () => d?.close();
+  }, []);
   const detail = useTest(test.test_no);
   const replay = useReplay(test.test_no);
   const comment = detail.data?.comment ?? "";
   const d2 = (replay.data?.droplet ?? []).map(([t, d]) => [t, d * d] as [number, number]);
 
   return (
-    <aside className="ex-preview" aria-label={`Preview of test ${test.test_no}`}>
+    <dialog
+      ref={dialog}
+      className="ex-preview"
+      aria-label={`Preview of test ${test.test_no}`}
+      onCancel={(e) => {
+        // Esc: let React state close it (the dialog's own close event also fires on unmount)
+        e.preventDefault();
+        onClose();
+      }}
+      onClick={(e) => e.target === dialog.current && onClose()}
+    >
       <div className="ex-preview-head">
         <h2 className="h-section">#{test.test_no}</h2>
         <button type="button" className="btn ghost ex-close" onClick={onClose}>
@@ -78,6 +96,6 @@ export function Preview({ test, inCompare, compareFull, onToggleCompare, onClose
           {inCompare ? "Remove from compare" : "Add to compare"}
         </button>
       </div>
-    </aside>
+    </dialog>
   );
 }
