@@ -69,7 +69,6 @@
 .land-mini { margin: 0; display: grid; justify-items: center; gap: 4px; }
 .land-mini canvas { width: 200px; height: 120px; display: block; }
 .land-mini figcaption { font-size: 11px; color: var(--ash); max-width: 200px; text-align: center; }
-.land-card.soon .tag { font-size: 11px; padding: 1px 6px; }
 
 @media (max-width: 960px) {
   .land-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

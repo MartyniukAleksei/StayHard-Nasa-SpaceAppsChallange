@@ -91,7 +91,7 @@ export function AgentPanel() {
       {!full && <ResizeHandle width={width} onChange={(w) => setWidth(clampWidth(w))} />}
       <header className="ag-head">
         <p className="ag-context" title="What the agent sees: the page and the section you are looking at">
-          <span className="ag-prompt-sign" aria-hidden="true">●</span> agent <span className="muted">·</span>{" "}
+          <span className="ag-prompt-sign" aria-hidden="true">●</span> AI Agent <span className="muted">·</span>{" "}
           <span className="sr-only">Context: </span>
           {describeContext(context)}
         </p>
@@ -127,7 +127,7 @@ export function AgentPanel() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKey}
-            placeholder={busy ? "answering…" : items.length ? "ask a follow-up" : "ask about FLEX tests"}
+            placeholder={busy ? "answering…" : items.length ? "ask a follow-up" : "ask a question"}
           />
         </div>
         <p className="ag-hints">
@@ -147,15 +147,19 @@ export function AgentPanel() {
 
 /** Example questions for the welcome block, tuned to the page the user is on. */
 function suggestions(ctx: PageContext): string[] {
+  if (ctx.study === "samer") {
+    if (ctx.test_id) return [`summarise SAME-R test ${ctx.test_id}`, `plot the sensor readings of ${ctx.test_id}`, `find SAME-R tests similar to ${ctx.test_id}`];
+    if (ctx.test_ids?.length) return [`how do SAME-R tests ${ctx.test_ids.join(" and ")} differ?`];
+    return ["what did SAME-R measure?", "which material gave the most smoke?", "how is smoke in microgravity different?"];
+  }
   if (ctx.test_no) {
     return [`why did test #${ctx.test_no} end the way it did?`, `find tests similar to #${ctx.test_no}`, `plot d² over time for #${ctx.test_no}`];
   }
   if (ctx.ids?.length) return [`how do tests ${ctx.ids.map((n) => `#${n}`).join(" and ")} differ?`];
-  return [
-    "does the flame go out by itself in ISS air?",
-    "CO₂ or He: which extinguishes better?",
-    "what are cool flames?",
-  ];
+  if (ctx.route.startsWith("/studies/flex")) {
+    return ["does the flame go out by itself in ISS air?", "CO₂ or He: which extinguishes better?", "what are cool flames?"];
+  }
+  return ["which NASA studies can I explore here?", "does a droplet flame go out by itself in ISS air?", "what did SAME-R learn about smoke detection?"];
 }
 
 /** Like Claude Code on start: who the agent is, where it is looking, how to begin. */
@@ -167,7 +171,6 @@ function Welcome({ context, onPick, empty, busy }: { context: PageContext; onPic
           <p className="ag-welcome-title">
             <span className="ag-prompt-sign" aria-hidden="true">✻</span> Welcome to the <b>StayHard</b> agent
           </p>
-          <p className="muted">Answers only from NASA FLEX data (PSI-69); every number links to its source.</p>
           <p className="muted">
             looking at: <span className="ag-ink">{describeContext(context)}</span>
           </p>

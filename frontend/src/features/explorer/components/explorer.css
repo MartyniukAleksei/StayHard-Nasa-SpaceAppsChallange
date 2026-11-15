@@ -4,7 +4,7 @@
 .ex-main { display: grid; gap: 16px; }
 
 /* facets */
-.ex-facets { border: 0; position: sticky; top: 12px; }
+.ex-facets { border: 0; position: sticky; top: calc(var(--top-h) + 12px); }
 .ex-facets summary { min-height: 36px; }
 .ex-facets-body { display: grid; gap: 14px; }
 .ex-facet { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; }

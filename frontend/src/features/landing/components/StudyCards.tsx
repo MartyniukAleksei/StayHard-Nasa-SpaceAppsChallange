@@ -21,8 +21,7 @@ export function StudyCards() {
       <div className="wrap">
         <h2 id="studies-title" className="sr-only">Choose a study</h2>
         <p className="lede">
-          Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX, SAME-R
-          and SAFFIRE-II are open now; the others are next.
+          Microgravity combustion datasets from NASA Physical Sciences Informatics.
         </p>
         {isPending && <p className="muted mono">Loading studies…</p>}
         {isError && (
@@ -32,7 +31,7 @@ export function StudyCards() {
         )}
         {data && (
           <ul className="land-cards">
-            {data.map((s) => (s.status === "active" && s.route ? <Active key={s.accession} s={s} route={s.route} /> : <Soon key={s.accession} s={s} />))}
+            {data.map((s) => s.status === "active" && s.route && <Active key={s.accession} s={s} route={s.route} />)}
           </ul>
         )}
       </div>
@@ -83,20 +82,6 @@ function Active({ s, route }: { s: StudyCard; route: string }) {
         )}
         <span className="btn">Open {s.acronym}</span>
       </Link>
-    </li>
-  );
-}
-
-function Soon({ s }: { s: StudyCard }) {
-  return (
-    <li className="land-card soon">
-      <Passport s={s} />
-      <p className="mono small">
-        <span className="tag">coming soon</span>{" "}
-        <a className="muted" href={`https://doi.org/${s.doi}`} target="_blank" rel="noreferrer">
-          doi:{s.doi}
-        </a>
-      </p>
     </li>
   );
 }

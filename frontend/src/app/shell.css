@@ -5,7 +5,9 @@
   clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-.top { border-bottom: var(--rule); }
+:root { --top-h: 69px; } /* header height on desktop: 44px hit + 2×12px padding + 1px rule */
+html { scroll-padding-top: var(--top-h); }
+.top { border-bottom: var(--rule); position: sticky; top: 0; z-index: 30; background: var(--void); }
 .top-row {
   max-width: var(--max);
   margin: 0 auto;

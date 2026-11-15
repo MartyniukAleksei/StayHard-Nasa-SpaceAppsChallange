@@ -17,7 +17,7 @@ export function Landing() {
         <canvas ref={sky} className="land-sky" role="img" aria-label="ASCII animation: a satellite orbiting the Moon" />
         <div className="land-txt">
           <div className="land-in" ref={text}>
-            <p className="muted mono small">NASA Space Apps 2026 · StayHard</p>
+            <p className="muted mono small">NASA Space Apps 2026 · Flame in Freefall</p>
             <h1 id="land-title">Fire without gravity</h1>
             <p className="land-sub">
               Flames, smoke and smoke detectors aboard the International Space Station. NASA
