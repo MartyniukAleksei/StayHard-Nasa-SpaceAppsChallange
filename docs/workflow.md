@@ -4,7 +4,7 @@
 1. Нова задача → нова гілка від свіжого `main`: `git switch main && git pull && git switch -c <type>/<short-name>` (`feat/`, `fix/`, `docs/`, `data/`).
 2. Маленькі коміти, PR у `main`. CI (`backend`, `frontend`, `docker (*)`) має бути зеленим — інакше мердж заблоковано.
 3. `main` захищена: прямого пушу й force-push немає ні для кого.
-4. Після мерджу Railway сам деплоїть змінений сервіс (чекає зелений CI). Руками на Railway нічого не міняємо.
+4. Після мерджу CI на `main` сам деплоїть змінений сервіс (job `deploy`, незалежно від того, хто автор коміту). Руками на Railway нічого не міняємо; якщо `deploy` червоний — пишемо власнику інфраструктури.
 
 Один PR = одна задача в межах свого модуля (`flame/studies/flex`, `flame/rag`, `flame/agent`, `frontend/src/features/*`). Зміни спільного (`core/config.py`, `api/router.py`, `shared/`, схема БД у `build_db`) — окремим маленьким PR, щоб не конфліктувати.
 
