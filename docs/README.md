@@ -11,7 +11,7 @@
 | Що будуємо і для кого, демо-сценарій, правила агента | [product/mission.md](product/mission.md), [product/jtbd.md](product/jtbd.md) |
 | UX-флоу студента (FLEX) | [product/student_flow_flex.md](product/student_flow_flex.md) (та сама версія у вигляді сторінки: [.html](product/student_flow_flex.html)) |
 | Макети сторінок, дизайн-система StayHard, будь-яка робота з UI | [design/README.md](design/README.md) → [layouts_flex.html](design/layouts_flex.html), [stayhard-ds.html](design/stayhard-ds.html) |
-| Поточні задачі | [tasks/](tasks/) (у роботі: [0003 · 3D replay SAME-R](tasks/0003-same-r-3d-replay.md); останнє: [0002 · Лендінг + сторінки 1A/2B/3A/4A/5B](tasks/0002-pages-1a-2b-3a-4a-5b.md) — зроблено; що лишилось команді — розділ «Перед демо»; попереднє: [0001](tasks/0001-home-overview-1b.md)) |
+| Поточні задачі | [tasks/](tasks/) (у роботі: [0003 · 3D replay SAME-R](tasks/0003-same-r-3d-replay.md), [0004 · BASS-II: ряди з відео для всіх тестів](tasks/0004-bass2-video-ocr.md); останнє: [0002 · Лендінг + сторінки 1A/2B/3A/4A/5B](tasks/0002-pages-1a-2b-3a-4a-5b.md) — зроблено; що лишилось команді — розділ «Перед демо»; попереднє: [0001](tasks/0001-home-overview-1b.md)) |
 | 3D-відтворення експерименту для нового дослідження (як FLEX replay) | скіл [`.claude/skills/study-3d-replay`](../.claude/skills/study-3d-replay/SKILL.md): опитування → паспорт сцени → побудова → перевірка; у Claude Code — `/study-3d-replay` |
 | Атлас явищ (як групувати дослідження за явищами; 3D-відтворення сажової оболонки) і джерела до нього | [atlas/freefall-atlas.html](atlas/freefall-atlas.html), [atlas/references/](atlas/references/README.md) |
 | Дані FLEX: схема таблиць, якість, як отримати | [data/flex.md](data/flex.md) |
