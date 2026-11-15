@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Link } from "react-router";
 import { StudyCards } from "./StudyCards";
 import { useSky } from "./Sky";
 import "./landing.css";
@@ -19,18 +18,16 @@ export function Landing() {
         <div className="land-txt">
           <div className="land-in" ref={text}>
             <p className="muted mono small">NASA Space Apps 2026 · Flame in Freefall</p>
-            <h1 id="land-title">Deep dive into space</h1>
+            <h1 id="land-title">Fire without gravity</h1>
             <p className="land-sub">
-              How fire behaves without gravity. NASA combustion experiments from the International
-              Space Station: watch, search, compare, and take the data for your lab report.
+              Flames, smoke and smoke detectors aboard the International Space Station. NASA
+              combustion and fire-safety experiments: watch, search, compare, and take the data
+              for your lab report.
             </p>
             <div className="land-cta">
               <a className="btn" href="#studies">
                 Start
               </a>
-              <Link className="btn ghost" to="/studies/flex/tests">
-                Open FLEX tests
-              </Link>
             </div>
           </div>
         </div>

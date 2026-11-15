@@ -54,7 +54,7 @@ function Header() {
             <rect x="3" y="1" width="1" height="1" />
             <rect x="1" y="3" width="1" height="1" />
           </svg>
-          <span className="h-brand">Flame in Freefall</span>
+          <span className="h-brand">StayHard</span>
         </Link>
         {study && (
           <nav aria-label={`${study.tag} sections`} className="top-nav">
@@ -66,9 +66,6 @@ function Header() {
           </nav>
         )}
         <span className="top-actions">
-          <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
-            Cart · 0
-          </button>
           <AgentLauncher />
         </span>
       </div>

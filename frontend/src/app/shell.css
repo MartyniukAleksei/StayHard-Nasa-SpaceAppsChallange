@@ -48,7 +48,6 @@
 
 @media (max-width: 600px) {
   /* brand · agent on one line, then the nav */
-  .top-actions > .btn { display: none; } /* cart is a stub; no room next to the brand */
   .top-nav { order: 4; width: 100%; flex-wrap: nowrap; margin-left: -8px; }
   .top-nav a { font-size: 13px; padding: 0 6px; }
   .top-nav a:not([aria-current])::before, .top-nav a:not([aria-current])::after { display: none; }
