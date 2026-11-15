@@ -31,6 +31,8 @@
 
 ### Бекенд — ✅ готово, 24 тести проходять, ruff чистий
 
+> **Злиття з main (PR #8, агентне API з `sources`).** `main` зайняв `/api/studies/flex/tests`, `/tests/{n}` і `/api/media/flex/…` під агента, тож UI-модуль переїхав у `flame.studies.flex.pages`, а два шляхи змінились: список Дослідника — **`/api/studies/flex/explorer`**, сторінка тесту — **`/api/studies/flex/tests/{n}/report`**. Файли — через спільний `/api/media/flex/files/{path}` (`media/files.py`). Актуальна таблиця — у [architecture.md](../architecture.md).
+
 - [x] `flame.ingest.psi_catalog` → закомічений `studies/catalog.json`. Accession: FLEX PSI-69, CFI PSI-39, BASS-II PSI-25, SAFFIRE-II PSI-99, SPICE PSI-107, SAME PSI-102. Знайдені перебором PSI API. Інші цікаві: FLEX-2 PSI-68, ACME CFI-G PSI-159, SAME-R PSI-101, SAFFIRE-I/III PSI-98/100.
 - [x] `GET /api/studies` — картки досліджень (FLEX active + facts).
 - [x] `GET /api/studies/flex/tests` — 274 `TestSummary`. `has_series` = є ряди краплі **і** UV-полум'я; `has_video` = є локальний mp4.

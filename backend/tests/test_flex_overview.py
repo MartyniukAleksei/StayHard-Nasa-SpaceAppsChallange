@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 
 from flame.db.duckdb import db_available
 from flame.main import app
-from flame.studies.flex import repository as repo
-from flame.studies.flex import service
+from flame.studies.flex.pages import repository as repo
+from flame.studies.flex.pages import service
 
 TESTS_DDL = """
 CREATE TABLE tests (

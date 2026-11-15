@@ -1,0 +1,10 @@
+{"q": "Fiber-mounted methanol droplet at 0.7 atm in 34% oxygen that burned smoothly but started vibrating sideways near the end of the burn", "expected": [{"test_no": 38}], "note": "holdout: written before tuning, not used for tuning"}
+{"q": "Which methanol test in a CO2-rich mixture at 0.7 atm was a very short burn, with the droplet possibly larger than the radiative extinction limit?", "expected": [{"test_no": 140}]}
+{"q": "Methanol test where the droplet drifted out of view after extinction and came back before recording stopped, leaving a gap in the droplet history", "expected": [{"test_no": 143}]}
+{"q": "Heptane droplet in a CO2 mixture at 0.7 atm that stayed in view including after extinction and showed rapid vaporization after the flame went out", "expected": [{"test_no": 179}]}
+{"q": "Test in a helium atmosphere where the flame grew to a maximum size and then shrank until it went out at a very small diameter", "expected": [{"test_no": 265}]}
+{"q": "Planned test matrix for CO2 suppressant with a slow 1.5 cm/s flow", "expected": [{"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 14}, {"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 54}]}
+{"q": "What is the maximum allowed fuel vapor in the chamber atmosphere before each test point?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX Engineering Requirements Document.pdf", "page": 24}]}
+{"q": "How are droplets deployed - what do the deployment needles look like and how are they driven?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX Overall Ext File-2.pdf", "page": 18}]}
+{"q": "Which inert gases were used as environments in the ISS droplet experiments?", "expected": [{"source_path": "docs/Presentations/Presentations_Cool Flames in Space, a Hot Prospect on Earth!.pdf", "page": 3}, {"source_type": "about"}]}
+{"q": "How does the fiber disturb the flow around burning octane droplets?", "expected": [{"source_path": "docs/Presentations/Presentations_2G11-070HE-0310.pdf", "page": 6}]}

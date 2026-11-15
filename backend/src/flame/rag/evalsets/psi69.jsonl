@@ -1,0 +1,28 @@
+{"q": "Why is the LLUV flame data unreliable in the early calibration runs?", "expected": [{"test_no": 2}, {"test_no": 3}, {"test_no": 4}], "note": "calibration runs 2-4"}
+{"q": "In which free-floating methanol test with CO2 in the atmosphere did the droplet break up at the moment the flame went out, so the reported extinction diameter is not the real one?", "expected": [{"test_no": 169}]}
+{"q": "Fiber-supported heptane droplet moved at 3 mm/s in 13% oxygen: which test has no backlit camera images and a very short flame lifetime?", "expected": [{"test_no": 80}]}
+{"q": "Heptane at 0.7 atm and 30% oxygen: the bright yellow sooty flame quickly turned into a dim blue flame partway through the burn", "expected": [{"test_no": 27}]}
+{"q": "Which methanol droplet changed shape into an elongated form with a sharp tip before it disrupted?", "expected": [{"test_no": 22}]}
+{"q": "Heptane droplet in air that drifted out of every camera view while the radiometer still showed the flame burning", "expected": [{"test_no": 47}]}
+{"q": "Helium-diluted test at 0.7 atm with a flame that was hardly visible on the color camera and a very long burn ending in diffusive extinction", "expected": [{"test_no": 268}]}
+{"q": "On a fiber in normal air, the very bright flame of a heptane droplet suddenly vanished halfway through and the droplet oscillated sideways on the fiber", "expected": [{"test_no": 51}]}
+{"q": "Which test saw a small gas bubble pop near extinction and a tiny satellite droplet ejected?", "expected": [{"test_no": 112}]}
+{"q": "Methanol in 13 percent oxygen: flame almost invisible on the ultraviolet camera before radiative extinction", "expected": [{"test_no": 221}]}
+{"q": "Free-floating heptane droplet in air that bumped into the igniter and then left all camera fields of view because it drifted fast", "expected": [{"test_no": 207}]}
+{"q": "What happened in this test?", "filters": {"test_nos": [191]}, "expected": [{"test_no": 191}], "note": "agent-style call with a test filter"}
+{"q": "What gas is used to put out fires in the US modules of the space station?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 6}]}
+{"q": "Define the limiting oxygen index", "expected": [{"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 2}, {"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 11}]}
+{"q": "How effective are CO2, helium and nitrogen as suppressants according to cup burner minimum extinguishing concentration?", "expected": [{"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 3}, {"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 12}]}
+{"q": "How long must the chamber gas settle after filling before a droplet is deployed?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 39}]}
+{"q": "Which pressures and oxygen levels were planned for the quiescent LOI tests without fiber?", "expected": [{"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 6}, {"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 46}]}
+{"q": "Why does the burning rate drop for large droplets where radiation dominates?", "expected": [{"source_path": "docs/Presentations/Presentations_2G11-070HE-0310.pdf", "page": 10}]}
+{"q": "Which chemical kinetic models were used to predict heptane cool flame droplet burning and how did they compare with experiments?", "expected": [{"source_path": "docs/Presentations/Presentations_1G17-070HE-0166.pdf", "page": 5}]}
+{"q": "What phases does a methanol droplet go through from ignition to extinction?", "expected": [{"source_path": "docs/Presentations/Presentations_20130010979.pdf", "page": 10}]}
+{"q": "Why is methanol a good stand-in fuel for studying basic combustion?", "expected": [{"source_path": "docs/Presentations/Presentations_20130010979.pdf", "page": 3}]}
+{"q": "How is the combustion rack isolated from station vibrations?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX Overall Ext File-2.pdf", "page": 3}]}
+{"q": "Who signed off on the FLEX-2 engineering requirements document?", "expected": [{"source_path": "docs/Engineering Documents/Engineering Documents_FLEX Engineering Requirements Document.pdf", "page": 3}]}
+{"q": "Test matrix for sulfur hexafluoride as a suppressant", "expected": [{"source_path": "docs/Science Documents/Science Documents_FLEX_Test_Plan.pdf", "page": 12}, {"source_path": "docs/Engineering Documents/Engineering Documents_FLEX_EIRD_v4.pdf", "page": 52}]}
+{"q": "What is the goal of the FLEX investigation?", "expected": [{"source_type": "about"}]}
+{"q": "What hypothesis was the experiment designed to test?", "expected": [{"source_type": "about"}]}
+{"q": "Is there a paper about methanol droplets absorbing water while they burn?", "expected": [{"source_type": "publication", "title": "Dynamics of Water Absorption and Evaporation During Methanol Droplet Combustion in Microgravity"}, {"source_path": "docs/Presentations/Presentations_20130010979.pdf"}]}
+{"q": "What are cool flames and why are they relevant for fire safety in spacecraft?", "expected": [{"source_path": "docs/Presentations/Presentations_Cool Flames in Space, a Hot Prospect on Earth!.pdf"}]}

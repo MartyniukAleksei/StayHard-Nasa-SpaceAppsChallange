@@ -1,170 +1,104 @@
-"""Pydantic-схеми відповідей /api/studies/flex/*. Фронтенд дзеркалить їх у features/*/types.ts."""
+from datetime import date
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from flame.core.citations import Source
+from flame.studies.flex.fields import FieldInfo
 
-class Contact(BaseModel):
-    name: str
-    affiliation: str
-    role: str
-
-
-class About(BaseModel):
-    title: str
-    acronym: str
-    accession: str
-    objective: str
-    hypothesis: str
-    approach: str
-    research_impacts: str
-    hardware: str
-    flight_program: str
-    contacts: list[Contact]
-    doi: str
-    license_name: str
-    license_link: str
-    n_publications: int
-    n_publications_with_doi: int
-    citation: str
+Op = Literal["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "not_null"]
 
 
-class Facts(BaseModel):
-    n_tests: int
-    fuels: list[str]
-    diluents: list[str]
-    first_year: int
-    last_year: int
+class Filter(BaseModel):
+    """Умова на одне поле з каталогу `fields.FIELDS`."""
 
-
-class EndCounts(BaseModel):
-    extinction: int
-    completion: int
-    disruption: int
-
-
-class PresetGroup(BaseModel):
-    id: str
-    label: str
-    total: int
-    by_end: EndCounts
-    excluded_fiber: int
-    excluded_fiber_unknown: int
-
-
-class Preset(BaseModel):
-    id: str
-    question: str
-    groups: list[PresetGroup]
-    derived: bool
-    note: str | None = None
-
-
-class Overview(BaseModel):
-    about: About
-    facts: Facts
-    presets: list[Preset]
-
-
-class Replay(BaseModel):
-    test_no: int
-    fuel: str
-    end_type: str
-    burn_time_s: float | None
-    d0_mm: float | None
-    droplet: list[tuple[float, float]]
-    flame: list[tuple[float, float]]
-    standoff: list[tuple[float, float]] = []
+    field: str
+    op: Op
+    value: Any = None  # для `in` — список; для is_null/not_null не потрібне
 
 
 class TestSummary(BaseModel):
     test_no: int
-    fuel: str
-    p_atm: float | None
-    x_o2: float | None
-    diluent: str
-    d0_mm: float | None
-    dext_mm: float | None
-    k_mm2_s: float | None
-    burn_time_s: float | None
-    end_type: str
-    fiber: bool | None
-    has_series: bool
-    has_video: bool
-    cool_flame: bool
-
-
-class FileItem(BaseModel):
-    name: str
-    path: str
-    bytes: int
-    kind: str
-    title: str | None = None
-
-
-class Neighbor(BaseModel):
-    test_no: int
-    p_atm: float | None
-    x_o2: float | None
-    d0_mm: float | None
-    end_type: str
-    distance: float
-
-
-class TestDetail(BaseModel):
-    test_no: int
     cir_id: str | None
-    test_date: str | None
-    test_gmt: str | None
-    fuel: str
+    test_date: date | None
+    fuel: str | None
     p_atm: float | None
     x_o2: float | None
     x_n2: float | None
     x_co2: float | None
     x_he: float | None
-    diluent: str
+    diluent: str | None
     d0_mm: float | None
     dext_mm: float | None
     k_mm2_s: float | None
     burn_time_s: float | None
-    end_type: str
-    fiber: bool | None
-    temperature_k: float | None
-    comment: str
-    cool_flame: bool
-    has_series: bool
+    end_type: str | None
+    ts_fiber: bool | None
+    has_droplet_ts: bool | None
+    has_flame_color_ts: bool | None
+    has_flame_uv_ts: bool | None
+    n_videos: int | None
+    fiber_conflict: bool = False  # прапорець нитки суперечить коментарю дослідника
+    url: str
+
+
+class TestQueryResult(BaseModel):
+    total: int  # скільки тестів задовольняють фільтри (до limit)
+    tests: list[TestSummary]
+    sources: list[Source]
+
+
+class FileRef(BaseModel):
+    name: str
+    path: str  # відносно каталогу знімка
+    bytes: int
+    url: str
+
+
+class TestDetail(BaseModel):
+    test: dict[str, Any]  # усі колонки `tests`
+    files: list[FileRef]  # локальні файли тесту (raw/NNN, media/NNN)
+    url: str
+    sources: list[Source]
+
+
+class TimeSeries(BaseModel):
+    test_no: int
+    signal: str
+    columns: list[str]
+    rows: list[list[Any]]
+    n_total: int  # точок у БД; `rows` може бути проріджено до max_points
+    url: str
+    sources: list[Source]
+
+
+class Neighbor(BaseModel):
+    test: TestSummary
+    distance: float = Field(description="Computed similarity of conditions (estimate)")
+
+
+class NeighborsResult(BaseModel):
+    test_no: int
+    features: list[str]
     neighbors: list[Neighbor]
-    files: list[FileItem]
-    videos: list[FileItem]
+    note: str
+    sources: list[Source]
 
 
-class Publication(BaseModel):
-    title: str
-    authors: str
-    doi: str
+class FieldDiff(BaseModel):
+    field: str
+    unit: str | None
+    values: dict[int, Any]  # test_no → значення
+    diff_vs_first: dict[int, float] | None = None  # лише для чисел
 
 
-class DocumentGroup(BaseModel):
-    category: str
-    files: list[FileItem]
+class Comparison(BaseModel):
+    test_nos: list[int]
+    fields: list[FieldDiff]
+    warnings: list[str]
+    sources: list[Source]
 
 
-class Limitations(BaseModel):
-    total: int
-    fiber: int
-    free: int
-    fiber_unknown: int
-    disruption: int
-    missing_d0: int
-    missing_k: int
-    without_series: int
-    with_video: int
-
-
-class Library(BaseModel):
-    citation: str
-    doi: str
-    license_name: str
-    license_link: str
-    publications: list[Publication]
-    documents: list[DocumentGroup]
-    limitations: Limitations
+class FieldsCatalog(BaseModel):
+    fields: list[FieldInfo]
+    signals: list[str]

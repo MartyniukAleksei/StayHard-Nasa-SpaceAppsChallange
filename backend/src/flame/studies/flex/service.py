@@ -1,263 +1,296 @@
-"""Логіка Огляду FLEX: паспорт дослідження, факти, пресети-питання, replay тесту."""
+"""Логіка FLEX: фільтри, картка тесту, часові ряди, сусіди, детерміноване порівняння.
 
-import csv
-import io
-import re
-from dataclasses import dataclass
+Кожен результат несе `sources` (flame.core.citations): агент передає їх у Claude API як
+`search_result`, тож числа у відповіді цитують конкретний тест або файл.
+"""
+
+import math
 from typing import Any
 
-from duckdb import DuckDBPyConnection
+import duckdb
 
-from flame.media import service as media
-from flame.studies.flex import repository as repo
+from flame.core.citations import Source, media_url, test_url, timeseries_url
+from flame.core.config import settings
+from flame.studies.flex import repository
+from flame.studies.flex.fields import FIELDS, NEIGHBOR_FEATURES, SIGNALS
 from flame.studies.flex.schemas import (
-    About,
-    Contact,
-    DocumentGroup,
-    EndCounts,
-    Facts,
-    FileItem,
-    Library,
-    Limitations,
+    Comparison,
+    FieldDiff,
+    FileRef,
+    Filter,
     Neighbor,
-    Overview,
-    Preset,
-    PresetGroup,
-    Publication,
-    Replay,
+    NeighborsResult,
     TestDetail,
+    TestQueryResult,
     TestSummary,
+    TimeSeries,
 )
 
-STUDY = "flex"
-MAX_REPLAY_POINTS = 500
-NEIGHBORS = 5
+STUDY = "PSI-69"
+MAX_LIMIT = 300
+END_TYPE_NOTE = {
+    "Disruption": "Disruption: self-extinction was not observed",
+    "Completion": "Completion: the droplet burned out completely",
+    "Extinction": "Extinction: the flame self-extinguished",
+}
 
 
-class StudyDataMissing(LookupError):
-    """У БД немає даних дослідження (не зібрано build_db)."""
-
-
-@dataclass(frozen=True)
-class PresetDef:
-    id: str
-    question: str
-    groups: tuple[tuple[str, str], ...]  # (group_id із repository.GROUP_WHERE, підпис)
-    derived: bool = False
-    note: str | None = None
-
-
-PRESETS: tuple[PresetDef, ...] = (
-    PresetDef("iss_air", "Does the flame go out by itself in ISS air?", (("iss_air", "ISS air"),)),
-    PresetDef(
-        "lunar",
-        'How does it burn in a "lunar" atmosphere (≈0.7 atm, ≥30% O₂)?',
-        (("lunar", "Lunar-like"),),
-    ),
-    PresetDef(
-        "co2_vs_he",
-        "CO₂ or He: which extinguishes better?",
-        (("co2", "CO₂"), ("he", "He")),
-    ),
-    PresetDef(
-        "cool_flames",
-        "What are cool flames?",
-        (("cool_flames", "Cool flame mentioned"),),
-        derived=True,
-        note="Derived: tests whose researcher comment mentions a cool flame.",
-    ),
-    PresetDef(
-        "clean_d2",
-        'Check the d² law yourself: "clean" tests',
-        (("clean_d2", "Clean tests"),),
-        derived=True,
-        note="Derived: free droplet, not Disruption, droplet and flame series present.",
-    ),
-    PresetDef(
-        "fuel",
-        "Methanol or heptane?",
-        (("methanol", "Methanol"), ("heptane", "Heptane")),
-    ),
+FIBER_CONFLICT_NOTE = (
+    "Data conflict: the TestSheet fiber flag says no, but the researcher comment describes "
+    "a fiber-supported droplet."
 )
 
 
-def _contact(raw: dict[str, Any]) -> Contact:
-    name = " ".join(p for p in (raw.get("firstName"), raw.get("lastName")) if p)
-    roles = ", ".join(r.get("annotationValue", "") for r in raw.get("roles", []) if r)
-    return Contact(name=name, affiliation=raw.get("affiliation", ""), role=roles)
+class NotFound(LookupError):
+    pass
 
 
-def _citation(a: dict[str, Any]) -> str:
-    return (
-        f"NASA Physical Sciences Informatics (PSI). {a['title']} "
-        f"({a['investigationAcronym']}, {a['accession']}). https://doi.org/{a['doi']}. "
-        f"{a['licenseName']}."
+def test_name(test_no: int) -> str:
+    return f"FLEX-{test_no:03d}"
+
+
+def _fmt(v: Any, spec: str = ".3g", unit: str = "") -> str:
+    if v is None:
+        return "not recorded"
+    if isinstance(v, float):
+        return f"{v:{spec}}{unit}"
+    return f"{v}{unit}"
+
+
+def test_source(row: dict[str, Any]) -> Source:
+    """Текст рядка таблиці для цитування: усі числа — як у БД, без обчислень."""
+    n = row["test_no"]
+    fiber = {True: "yes", False: "no", None: "not recorded"}[row.get("ts_fiber")]
+    end = row.get("end_type")
+    text = (
+        f"Test {test_name(n)} (CIR {_fmt(row.get('cir_id'))}, {_fmt(row.get('test_date'))}): "
+        f"fuel {_fmt(row.get('fuel'))}; pressure {_fmt(row.get('p_atm'), '.3f', ' atm')}; "
+        f"O2 {_fmt(row.get('x_o2'), '.3f')}, N2 {_fmt(row.get('x_n2'), '.3f')}, "
+        f"CO2 {_fmt(row.get('x_co2'), '.3f')}, He {_fmt(row.get('x_he'), '.3f')} "
+        f"(mole fractions, diluent {_fmt(row.get('diluent'))}); "
+        f"initial droplet diameter d0 {_fmt(row.get('d0_mm'), '.2f', ' mm')}; "
+        f"extinction diameter {_fmt(row.get('dext_mm'), '.2f', ' mm')}; "
+        f"burning rate constant K {_fmt(row.get('k_mm2_s'), '.3f', ' mm²/s')}; "
+        f"burn time {_fmt(row.get('burn_time_s'), '.2f', ' s')}; "
+        f"end type {END_TYPE_NOTE.get(end, _fmt(end))}; fiber-supported droplet: {fiber}."
+    )
+    if row.get("fiber_conflict"):
+        text += f" {FIBER_CONFLICT_NOTE}"
+    return Source(
+        url=test_url(STUDY, n), title=f"{test_name(n)} — FLEX experiment table", text=text
     )
 
 
-def build_about(a: dict[str, Any]) -> About:
-    pubs = a.get("publications", [])
-    return About(
-        title=a["title"],
-        acronym=a["investigationAcronym"],
-        accession=a["accession"],
-        objective=a.get("objective", ""),
-        hypothesis=a.get("hypothesis", ""),
-        approach=a.get("approach", ""),
-        research_impacts=a.get("researchImpacts", ""),
-        hardware=a.get("experimentHardware", ""),
-        flight_program=a.get("flightProgram", ""),
-        contacts=[_contact(c) for c in a.get("contacts", [])],
-        doi=a["doi"],
-        license_name=a.get("licenseName", ""),
-        license_link=a.get("licenseLink", ""),
-        n_publications=len(pubs),
-        n_publications_with_doi=sum(1 for p in pubs if p.get("doi")),
-        citation=_citation(a),
+def _summary(row: dict[str, Any]) -> TestSummary:
+    fields = {k: v for k, v in row.items() if k in TestSummary.model_fields}
+    return TestSummary(**fields, url=test_url(STUDY, row["test_no"]))
+
+
+def query_tests(
+    cur: duckdb.DuckDBPyConnection,
+    filters: list[Filter] | None = None,
+    sort: str = "test_no",
+    descending: bool = False,
+    limit: int = 50,
+) -> TestQueryResult:
+    filters = filters or []
+    limit = max(1, min(limit, MAX_LIMIT))
+    rows = repository.query_tests(cur, filters, sort, descending, limit)
+    return TestQueryResult(
+        total=repository.count_tests(cur, filters),
+        tests=[_summary(r) for r in rows],
+        sources=[test_source(r) for r in rows],
     )
 
 
-def _group(cur: DuckDBPyConnection, group_id: str, label: str) -> PresetGroup:
-    c = repo.count_group(cur, group_id)
-    return PresetGroup(
-        id=group_id,
-        label=label,
-        total=c["total"],
-        by_end=EndCounts(
-            extinction=c["extinction"], completion=c["completion"], disruption=c["disruption"]
-        ),
-        excluded_fiber=c["fiber"],
-        excluded_fiber_unknown=c["fiber_unknown"],
-    )
+def _local_files(test_no: int) -> list[FileRef]:
+    out = []
+    for sub in ("raw", "media"):
+        folder = settings.flex_dir / sub / f"{test_no:03d}"
+        if not folder.is_dir():
+            continue
+        for p in sorted(folder.iterdir()):
+            if p.is_file():
+                rel = p.relative_to(settings.flex_dir).as_posix()
+                out.append(
+                    FileRef(
+                        name=p.name, path=rel, bytes=p.stat().st_size, url=media_url(STUDY, rel)
+                    )
+                )
+    return out
 
 
-def build_presets(cur: DuckDBPyConnection) -> list[Preset]:
-    return [
-        Preset(
-            id=p.id,
-            question=p.question,
-            groups=[_group(cur, gid, label) for gid, label in p.groups],
-            derived=p.derived,
-            note=p.note,
+def get_test(cur: duckdb.DuckDBPyConnection, test_no: int) -> TestDetail:
+    rows = repository.get_tests(cur, [test_no])
+    if not rows:
+        raise NotFound(f"{test_name(test_no)} not found")
+    row = rows[0]
+    sources = [test_source(row)]
+    comment = (row.get("ts_comment") or "").strip()
+    if comment:
+        path = f"raw/{test_no:03d}/{test_name(test_no)}_TestSheet.txt"
+        sources.append(
+            Source(
+                url=media_url(STUDY, path),
+                title=f"{test_name(test_no)} TestSheet — researcher comment",
+                text=comment,
+            )
         )
-        for p in PRESETS
-    ]
-
-
-def get_overview(cur: DuckDBPyConnection) -> Overview:
-    about = repo.get_about(cur, STUDY)
-    if about is None:
-        raise StudyDataMissing(STUDY)
-    return Overview(
-        about=build_about(about),
-        facts=Facts(**repo.get_facts(cur)),
-        presets=build_presets(cur),
-    )
-
-
-def downsample(points: list[tuple[float, float]], limit: int) -> list[tuple[float, float]]:
-    """Рівномірно проріджує ряд до ≤ limit точок, зберігаючи першу й останню."""
-    if len(points) <= limit:
-        return list(points)
-    step = (len(points) - 1) / (limit - 1)
-    return [points[round(i * step)] for i in range(limit)]
-
-
-def get_replay(cur: DuckDBPyConnection, test_no: int) -> Replay | None:
-    head = repo.get_test_header(cur, test_no)
-    if head is None:
-        return None
-    return Replay(
-        **head,
-        droplet=downsample(repo.get_droplet_series(cur, test_no), MAX_REPLAY_POINTS),
-        flame=downsample(repo.get_flame_series(cur, test_no), MAX_REPLAY_POINTS),
-        standoff=downsample(repo.get_standoff_series(cur, test_no), MAX_REPLAY_POINTS),
-    )
-
-
-def list_tests(cur: DuckDBPyConnection) -> list[TestSummary]:
-    videos = media.tests_with_video()
-    return [
-        TestSummary(
-            **{k: v for k, v in r.items() if k != "ts_fiber"},
-            fiber=r["ts_fiber"],
-            has_video=r["test_no"] in videos,
-        )
-        for r in repo.list_tests(cur)
-    ]
-
-
-def _str(v: object) -> str | None:
-    return None if v is None else str(v)
-
-
-def get_test(cur: DuckDBPyConnection, test_no: int) -> TestDetail | None:
-    t = repo.get_test(cur, test_no)
-    if t is None:
-        return None
-    comment = t.get("ts_comment") or ""
     return TestDetail(
-        test_no=t["test_no"],
-        cir_id=t.get("cir_id"),
-        test_date=_str(t.get("test_date")),
-        test_gmt=_str(t.get("test_gmt")),
-        fuel=t["fuel"],
-        p_atm=t.get("p_atm"),
-        x_o2=t.get("x_o2"),
-        x_n2=t.get("x_n2"),
-        x_co2=t.get("x_co2"),
-        x_he=t.get("x_he"),
-        diluent=t["diluent"],
-        d0_mm=t.get("d0_mm"),
-        dext_mm=t.get("dext_mm"),
-        k_mm2_s=t.get("k_mm2_s"),
-        burn_time_s=t.get("burn_time_s"),
-        end_type=t["end_type"],
-        fiber=t.get("ts_fiber"),
-        temperature_k=t.get("ts_temperature_k"),
-        comment=comment,
-        cool_flame=bool(re.search(repo.COOL_FLAME_PATTERN, comment.lower())),
-        has_series=bool(t.get("has_droplet_ts")),
-        neighbors=[Neighbor(**n) for n in repo.find_neighbors(cur, test_no, NEIGHBORS)],
-        files=[FileItem(**f) for f in media.list_test_files(test_no)],
-        videos=[FileItem(**f) for f in media.list_videos(test_no)],
+        test=row, files=_local_files(test_no), url=test_url(STUDY, test_no), sources=sources
     )
 
 
-def series_csv(cur: DuckDBPyConnection, test_no: int) -> str | None:
-    if repo.get_test_header(cur, test_no) is None:
-        return None
-    raw = repo.get_about(cur, STUDY)
-    source = build_about(raw).citation if raw else "NASA PSI"
-    buf = io.StringIO()
-    w = csv.writer(buf, lineterminator="\n")
-    w.writerow([f"# FLEX test {test_no}. Source: {source}"])
-    w.writerow(["signal", "t_s", "value"])
-    w.writerows(repo.get_full_series(cur, test_no))
-    return buf.getvalue()
+def _stat(rows: list[tuple], idx: int) -> tuple[float, float] | None:
+    vals = [r[idx] for r in rows if r[idx] is not None]
+    return (min(vals), max(vals)) if vals else None
 
 
-def get_library(cur: DuckDBPyConnection) -> Library:
-    raw = repo.get_about(cur, STUDY)
-    if raw is None:
-        raise StudyDataMissing(STUDY)
-    about = build_about(raw)
-    pubs = [
-        Publication(title=p.get("title", ""), authors=p.get("authorList", ""), doi=p.get("doi", ""))
-        for p in raw.get("publications", [])
+def get_timeseries(
+    cur: duckdb.DuckDBPyConnection, test_no: int, signal: str, max_points: int = 2000
+) -> TimeSeries:
+    if signal not in SIGNALS:
+        raise NotFound(f"unknown signal {signal!r}; one of {list(SIGNALS)}")
+    cols, rows = repository.timeseries(cur, test_no, signal)
+    if not rows:
+        raise NotFound(f"no {signal} time series for {test_name(test_no)}")
+    step = max(1, math.ceil(len(rows) / max(1, max_points)))
+    sampled = rows[::step]
+    if sampled[-1] is not rows[-1]:
+        sampled.append(rows[-1])  # кінцева точка (згасання) завжди в даних
+    ranges = []
+    for i, c in enumerate(cols[1:], start=1):
+        st = _stat(rows, i)
+        if st:
+            ranges.append(f"{c} from {st[0]:.4g} to {st[1]:.4g}")
+    first, last = (_fmt(rows[i][0], ".4g") for i in (0, -1))
+    text = (
+        f"{signal} time series of {test_name(test_no)}: {len(rows)} samples, "
+        f"{cols[0]} from {first} to {last}; " + "; ".join(ranges) + "."
+    )
+    sources = [
+        Source(
+            url=timeseries_url(STUDY, test_no, signal),
+            title=f"{test_name(test_no)} {signal} time series",
+            text=text,
+        )
     ]
-    docs = [
-        DocumentGroup(category=g["category"], files=[FileItem(**f) for f in g["files"]])
-        for g in media.list_documents()
-    ]
-    return Library(
-        citation=about.citation,
-        doi=about.doi,
-        license_name=about.license_name,
-        license_link=about.license_link,
-        publications=pubs,
-        documents=docs,
-        limitations=Limitations(
-            **repo.get_limitations(cur), with_video=len(media.tests_with_video())
+    raw_suffix = SIGNALS[signal][2]
+    if raw_suffix:
+        path = f"raw/{test_no:03d}/{test_name(test_no)}_{raw_suffix}"
+        if (settings.flex_dir / path).is_file():
+            sources.append(
+                Source(
+                    url=media_url(STUDY, path),
+                    title=f"{test_name(test_no)} raw file {raw_suffix}",
+                    text=text,
+                )
+            )
+    return TimeSeries(
+        test_no=test_no,
+        signal=signal,
+        columns=cols,
+        rows=[list(r) for r in sampled],
+        n_total=len(rows),
+        url=timeseries_url(STUDY, test_no, signal),
+        sources=sources,
+    )
+
+
+def neighbors(cur: duckdb.DuckDBPyConnection, test_no: int, k: int = 5) -> NeighborsResult:
+    """Найближчі за умовами тести того ж палива і того ж типу (нитка / вільна крапля).
+
+    Відстань — евклідова в z-score по NEIGHBOR_FEATURES; це наша оцінка схожості.
+    """
+    rows = repository.all_tests(cur)
+    by_no = {r["test_no"]: r for r in rows}
+    if test_no not in by_no:
+        raise NotFound(f"{test_name(test_no)} not found")
+    target = by_no[test_no]
+    stats = {}
+    for f in NEIGHBOR_FEATURES:
+        vals = [r[f] for r in rows if r[f] is not None]
+        mean = sum(vals) / len(vals)
+        sd = math.sqrt(sum((v - mean) ** 2 for v in vals) / len(vals)) or 1.0
+        stats[f] = (mean, sd)
+
+    def dist(r: dict[str, Any]) -> float | None:
+        acc = 0.0
+        for f in NEIGHBOR_FEATURES:
+            if r[f] is None or target[f] is None:
+                return None
+            acc += ((r[f] - target[f]) / stats[f][1]) ** 2
+        return math.sqrt(acc)
+
+    cands = []
+    for r in rows:
+        if r["test_no"] == test_no or r["fuel"] != target["fuel"] or r["fiber_conflict"]:
+            continue
+        if bool(r["ts_fiber"]) != bool(target["ts_fiber"]):
+            continue
+        d = dist(r)
+        if d is not None:
+            cands.append((d, r))
+    cands.sort(key=lambda x: (x[0], x[1]["test_no"]))
+    top = cands[:k]
+    return NeighborsResult(
+        test_no=test_no,
+        features=NEIGHBOR_FEATURES,
+        neighbors=[Neighbor(test=_summary(r), distance=round(d, 3)) for d, r in top],
+        note=(
+            "Similarity is our own estimate: same fuel and same fiber status, Euclidean "
+            "distance of z-scored conditions " + ", ".join(NEIGHBOR_FEATURES) + "."
         ),
+        sources=[test_source(target)] + [test_source(r) for _, r in top],
+    )
+
+
+COMPARE_FIELDS = [
+    "fuel", "p_atm", "x_o2", "x_n2", "x_co2", "x_he", "diluent", "d0_mm", "dext_mm",
+    "k_mm2_s", "burn_time_s", "end_type", "ts_fiber",
+]  # fmt: skip
+
+
+def compare_tests(cur: duckdb.DuckDBPyConnection, test_nos: list[int]) -> Comparison:
+    """Детермінований diff параметрів. Різниці — відносно першого тесту в списку."""
+    if len(test_nos) < 2:
+        raise ValueError("need at least two tests to compare")
+    rows = repository.get_tests(cur, test_nos)
+    found = {r["test_no"]: r for r in rows}
+    missing = [n for n in test_nos if n not in found]
+    if missing:
+        raise NotFound(f"not found: {', '.join(test_name(n) for n in missing)}")
+    ordered = [found[n] for n in test_nos]
+    first = ordered[0]
+    diffs = []
+    for f in COMPARE_FIELDS:
+        values = {r["test_no"]: r[f] for r in ordered}
+        diff = None
+        if FIELDS[f].type == "number" and first[f] is not None:
+            diff = {
+                r["test_no"]: round(r[f] - first[f], 6) for r in ordered[1:] if r[f] is not None
+            }
+        diffs.append(FieldDiff(field=f, unit=FIELDS[f].unit, values=values, diff_vs_first=diff))
+
+    warnings = [
+        f"{test_name(r['test_no'])}: {FIBER_CONFLICT_NOTE}" for r in ordered if r["fiber_conflict"]
+    ]
+    fibers = {r["ts_fiber"] for r in ordered}
+    if True in fibers and len(fibers) > 1:
+        warnings.append(
+            "Fiber-supported and free-floating droplets are mixed; they are not comparable."
+        )
+    if len({r["fuel"] for r in ordered}) > 1:
+        warnings.append("Different fuels are compared.")
+    if any(r["end_type"] == "Disruption" for r in ordered):
+        warnings.append(END_TYPE_NOTE["Disruption"] + " (not 'would burn forever').")
+    for r in ordered:
+        gaps = [f for f in ("d0_mm", "k_mm2_s", "end_type") if r[f] is None]
+        if gaps:
+            warnings.append(f"{test_name(r['test_no'])}: missing {', '.join(gaps)}.")
+    return Comparison(
+        test_nos=test_nos,
+        fields=diffs,
+        warnings=warnings,
+        sources=[test_source(r) for r in ordered],
     )

@@ -6,16 +6,43 @@
 1. Копіює таблиці з data/flex/flex.duckdb (tests, test_files, ts_*).
 2. Нормалізує tests.test_date: у джерелі дати змішані «11/27/09» і «11/27/2009», тож
    read_csv_auto частину рядків читає з роком 9/10/11. Такі роки переносимо в 20xx.
-3. Кладе about.json у таблицю study_about (одне джерело для API, без читання файлів у рантаймі).
+3. Кладе about.json (якщо є) у таблицю study_about (одне джерело для API, без читання файлів
+   у рантаймі).
+4. Будує RAG-індекс `chunks` (flame.rag.index; ембеддинги перевикористовуються зі старої БД).
 
-TODO: таблиця `chunks` (RAG) з ембеддингами, індекс vss.
+Версія збірки (`BUILD_VERSION`) — хеш коду, від якого залежить вміст БД (`BUILD_SOURCES`).
+Вона пишеться в таблицю `meta`; bootstrap перезбирає БД на проді, коли версія в коді
+змінилась. Додаєш модуль, що впливає на вміст БД, — додай його в `BUILD_SOURCES`.
 """
 
+import hashlib
+import json
 import shutil
+from datetime import UTC, datetime
+from pathlib import Path
 
 import duckdb
 
 from flame.core.config import settings
+from flame.rag import index as rag_index
+from flame.rag.sources import flex as flex_sources
+
+_PKG = Path(__file__).resolve().parents[1]  # src/flame
+BUILD_SOURCES = [
+    _PKG / "ingest" / "build_db.py",
+    *sorted((_PKG / "rag").rglob("*.py")),
+]
+
+
+def _build_version() -> str:
+    h = hashlib.sha256()
+    for p in BUILD_SOURCES:
+        h.update(p.relative_to(_PKG).as_posix().encode())
+        h.update(p.read_bytes())
+    return h.hexdigest()[:12]
+
+
+BUILD_VERSION = _build_version()
 
 STUDY = "flex"
 TWO_DIGIT_YEAR_LIMIT = 100  # рік < 100 означає, що «09» прочитано як 0009
@@ -23,6 +50,9 @@ TWO_DIGIT_YEAR_LIMIT = 100  # рік < 100 означає, що «09» проч�
 
 def normalize(con: duckdb.DuckDBPyConnection) -> int:
     """Виправляє дворозрядні роки в tests.test_date. Повертає кількість виправлених рядків."""
+    cols = {r[0] for r in con.execute("DESCRIBE tests").fetchall()}
+    if "test_date" not in cols:  # неповний знімок (напр. фікстура тестів)
+        return 0
     (n,) = con.execute(
         "SELECT count(*) FROM tests WHERE year(test_date) < ?", [TWO_DIGIT_YEAR_LIMIT]
     ).fetchone()
@@ -38,13 +68,23 @@ def load_about(con: duckdb.DuckDBPyConnection, about_text: str) -> None:
     con.execute("INSERT INTO study_about VALUES (?, ?)", [STUDY, about_text])
 
 
+def read_meta(path: Path) -> dict[str, str]:
+    """Метадані зібраної БД; {} якщо файлу/таблиці немає або файл битий."""
+    if not path.exists():
+        return {}
+    try:
+        with duckdb.connect(str(path), read_only=True) as con:
+            return dict(con.execute("SELECT key, value FROM meta").fetchall())
+    except duckdb.Error:
+        return {}
+
+
 def main() -> None:
     src = settings.flex_dir / "flex.duckdb"
-    about = settings.flex_dir / "about.json"
-    if not src.exists() or not about.exists():
-        raise SystemExit(
-            f"Немає {src} або {about}. Спершу: uv run python -m flame.ingest.psi_flex --verify"
-        )
+    if not src.exists():
+        raise SystemExit(f"Немає {src}. Спершу: uv run python -m flame.ingest.psi_flex --verify")
+    about = settings.flex_dir / "about.json"  # без нього Огляд і Бібліотека віддають 503
+    manifest = json.loads((settings.flex_dir / "manifest.json").read_text(encoding="utf-8"))
     out = settings.duckdb_path
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".tmp.duckdb")
@@ -52,11 +92,25 @@ def main() -> None:
     shutil.copyfile(src, tmp)
     with duckdb.connect(str(tmp)) as con:
         fixed = normalize(con)
-        load_about(con, about.read_text(encoding="utf-8"))
+        if about.exists():
+            load_about(con, about.read_text(encoding="utf-8"))
+        else:
+            print(f"warning: немає {about}, таблицю study_about не створено")
+        rag_meta = rag_index.build(con, flex_sources.iter_documents(settings.flex_dir), old_db=out)
+        con.execute("CREATE OR REPLACE TABLE meta (key VARCHAR PRIMARY KEY, value VARCHAR)")
+        con.executemany(
+            "INSERT INTO meta VALUES (?, ?)",
+            [
+                ("build_version", BUILD_VERSION),
+                ("dataset", manifest.get("dataset", "")),
+                ("built_at", datetime.now(UTC).isoformat(timespec="seconds")),
+                *rag_meta.items(),
+            ],
+        )
         tables = [r[0] for r in con.execute("SHOW TABLES").fetchall()]
         con.execute("CHECKPOINT")
-    tmp.replace(out)
-    print(f"{out}: {', '.join(tables)} (test_date fixed: {fixed})")
+    tmp.replace(out)  # атомарна заміна: старий файл читачі дочитують, нові бачать новий
+    print(f"{out} [{BUILD_VERSION}]: {', '.join(tables)} (test_date fixed: {fixed})")
 
 
 if __name__ == "__main__":

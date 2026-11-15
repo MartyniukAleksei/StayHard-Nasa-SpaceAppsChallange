@@ -9,8 +9,8 @@ from typing import Any
 from duckdb import DuckDBPyConnection
 from pydantic import BaseModel
 
-from flame.studies.flex import repository as flex_repo
-from flame.studies.flex.schemas import Facts
+from flame.studies.flex.pages import repository as flex_repo
+from flame.studies.flex.pages.schemas import Facts
 
 CATALOG = Path(__file__).with_name("catalog.json")
 

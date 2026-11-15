@@ -1,77 +1,94 @@
-"""HTTP: /api/studies/flex/*."""
-
 from typing import Annotated
 
-from duckdb import DuckDBPyConnection
-from fastapi import APIRouter, Depends, HTTPException, Path
-from fastapi.responses import PlainTextResponse
+import duckdb
+from fastapi import APIRouter, Depends, HTTPException, Query
 
-from flame.db.duckdb import db_available, get_cursor
-from flame.studies.flex import service
-from flame.studies.flex.schemas import Library, Overview, Replay, TestDetail, TestSummary
+from flame.db.duckdb import get_cursor
+from flame.studies.flex import repository, service
+from flame.studies.flex.fields import FIELDS, SIGNALS
+from flame.studies.flex.schemas import (
+    Comparison,
+    FieldsCatalog,
+    Filter,
+    NeighborsResult,
+    TestDetail,
+    TestQueryResult,
+    TimeSeries,
+)
 
-DATA_NOT_BUILT = "FLEX database is not built. Run: uv run python -m flame.ingest.build_db"
-
-
-def require_db() -> None:
-    if not db_available():
-        raise HTTPException(status_code=503, detail=DATA_NOT_BUILT)
-
-
-router = APIRouter(prefix="/studies/flex", tags=["flex"], dependencies=[Depends(require_db)])
-
-Cursor = Annotated[DuckDBPyConnection, Depends(get_cursor)]
-TestNo = Annotated[int, Path(ge=1)]
+router = APIRouter(prefix="/studies/flex", tags=["flex"])
+Cursor = Annotated[duckdb.DuckDBPyConnection, Depends(get_cursor)]
 
 
-def _not_found(test_no: int) -> HTTPException:
-    return HTTPException(status_code=404, detail=f"Test {test_no} not found")
-
-
-@router.get("/overview", response_model=Overview)
-def overview(cur: Cursor) -> Overview:
+def parse_filter(raw: str) -> Filter:
+    """`field:op:value`, напр. `p_atm:lt:0.75`, `fuel:in:Heptane,Methanol`, `dext_mm:is_null`."""
+    parts = raw.split(":", 2)
+    if len(parts) < 2:
+        raise HTTPException(422, f"bad filter {raw!r}; expected field:op[:value]")
+    value = parts[2] if len(parts) == 3 else None
     try:
-        return service.get_overview(cur)
-    except service.StudyDataMissing as e:
-        raise HTTPException(status_code=503, detail=DATA_NOT_BUILT) from e
+        return Filter(field=parts[0], op=parts[1], value=value)
+    except ValueError as e:
+        raise HTTPException(422, f"bad filter {raw!r}: {e}") from e
 
 
-@router.get("/library", response_model=Library)
-def library(cur: Cursor) -> Library:
+@router.get("/fields", response_model=FieldsCatalog)
+def fields() -> FieldsCatalog:
+    """Поля, за якими можна фільтрувати й сортувати тести, та доступні сигнали."""
+    return FieldsCatalog(fields=list(FIELDS.values()), signals=list(SIGNALS))
+
+
+@router.get("/tests", response_model=TestQueryResult)
+def tests(
+    cur: Cursor,
+    f: Annotated[list[str] | None, Query(description="field:op[:value]")] = None,
+    sort: str = "test_no",
+    desc: bool = False,
+    limit: Annotated[int, Query(ge=1, le=service.MAX_LIMIT)] = 50,
+) -> TestQueryResult:
+    filters = [parse_filter(x) for x in f or []]
     try:
-        return service.get_library(cur)
-    except service.StudyDataMissing as e:
-        raise HTTPException(status_code=503, detail=DATA_NOT_BUILT) from e
-
-
-@router.get("/tests", response_model=list[TestSummary])
-def tests(cur: Cursor) -> list[TestSummary]:
-    return service.list_tests(cur)
+        return service.query_tests(cur, filters, sort, desc, limit)
+    except repository.InvalidFilter as e:
+        raise HTTPException(422, str(e)) from e
 
 
 @router.get("/tests/{test_no}", response_model=TestDetail)
-def test_detail(test_no: TestNo, cur: Cursor) -> TestDetail:
-    result = service.get_test(cur, test_no)
-    if result is None:
-        raise _not_found(test_no)
-    return result
+def test(cur: Cursor, test_no: int) -> TestDetail:
+    try:
+        return service.get_test(cur, test_no)
+    except service.NotFound as e:
+        raise HTTPException(404, str(e)) from e
 
 
-@router.get("/tests/{test_no}/replay", response_model=Replay)
-def replay(test_no: TestNo, cur: Cursor) -> Replay:
-    result = service.get_replay(cur, test_no)
-    if result is None:
-        raise _not_found(test_no)
-    return result
+@router.get("/tests/{test_no}/timeseries/{signal}", response_model=TimeSeries)
+def timeseries(
+    cur: Cursor,
+    test_no: int,
+    signal: str,
+    max_points: Annotated[int, Query(ge=10, le=20000)] = 2000,
+) -> TimeSeries:
+    try:
+        return service.get_timeseries(cur, test_no, signal, max_points)
+    except service.NotFound as e:
+        raise HTTPException(404, str(e)) from e
 
 
-@router.get("/tests/{test_no}/series.csv", response_class=PlainTextResponse)
-def series_csv(test_no: TestNo, cur: Cursor) -> PlainTextResponse:
-    body = service.series_csv(cur, test_no)
-    if body is None:
-        raise _not_found(test_no)
-    return PlainTextResponse(
-        body,
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="flex-{test_no:03d}-series.csv"'},
-    )
+@router.get("/tests/{test_no}/neighbors", response_model=NeighborsResult)
+def neighbors(
+    cur: Cursor, test_no: int, k: Annotated[int, Query(ge=1, le=20)] = 5
+) -> NeighborsResult:
+    try:
+        return service.neighbors(cur, test_no, k)
+    except service.NotFound as e:
+        raise HTTPException(404, str(e)) from e
+
+
+@router.get("/compare", response_model=Comparison)
+def compare(
+    cur: Cursor, ids: Annotated[list[int], Query(min_length=2, max_length=8)]
+) -> Comparison:
+    try:
+        return service.compare_tests(cur, ids)
+    except service.NotFound as e:
+        raise HTTPException(404, str(e)) from e

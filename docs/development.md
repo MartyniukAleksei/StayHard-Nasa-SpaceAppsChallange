@@ -8,8 +8,18 @@
 ```bash
 cd backend
 uv run python -m flame.ingest.psi_flex --verify   # N/N OK
-uv run python -m flame.ingest.build_db            # → data/build/flame.duckdb
+uv run python -m flame.ingest.build_db            # → data/build/flame.duckdb (+ RAG-індекс chunks)
 ```
+Перша збірка качає модель ембеддингів (~130 МБ) у `data/models` і векторизує тексти (~1 хв); наступні беруть вектори з кешу.
+
+RAG ([docs/rag/](rag/techstack.md)):
+```bash
+uv run python -m flame.rag.sources.flex --dump /tmp/docs.jsonl   # що витягується з текстів
+uv run python -m flame.rag.eval --k 5                            # recall@k на evalsets/psi69.jsonl
+```
+Пошук у Swagger: `GET /api/rag/search?q=...`.
+
+Після `git pull` зі змінами в `flame/ingest/build_db.py` або `flame/rag/` перезберіть БД: `uv run python -m flame.ingest.bootstrap` (перезбирає лише коли версія коду змінилась).
 
 ## Запуск
 ```bash
@@ -20,6 +30,7 @@ cd frontend && npm install && npm run dev                         # :5173, /api 
 У Claude Code: `.claude/launch.json` має конфіги `backend` і `frontend`.
 
 ## Перевірки перед PR
+Те саме запускає CI (`.github/workflows/ci.yml`); у `main` — лише через PR із зеленим CI.
 ```bash
 cd backend && uv run ruff check . && uv run ruff format --check . && uv run pytest
 cd frontend && npm test && npm run build    # node:test для *.test.ts; build = tsc -b + vite build
