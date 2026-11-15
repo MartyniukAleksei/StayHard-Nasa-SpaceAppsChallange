@@ -26,13 +26,11 @@
 .ag-log { overflow-y: auto; padding: 14px; display: grid; align-content: start; gap: 14px; }
 .ag-ink { color: var(--ink); }
 
-/* welcome block, like Claude Code on start: mascot + who / where */
+/* welcome block, like Claude Code on start: who / where */
 .ag-welcome { display: grid; gap: 10px; }
 .ag-welcome-box {
-  display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 4px 14px; align-items: center;
   padding: 10px 12px; border: 1px solid var(--flame);
 }
-.ag-mascot { width: 112px; height: 100px; border: 0; background: transparent; pointer-events: none; display: block; }
 .ag-welcome-text p { margin: 0; font-size: 12.5px; }
 .ag-welcome-text .ag-welcome-title { color: var(--ink); font-size: 13.5px; margin-bottom: 4px; }
 .ag-tips { display: grid; justify-items: start; font-size: 12.5px; }
@@ -148,8 +146,6 @@ html.ag-resizing, html.ag-resizing * { cursor: col-resize !important; user-selec
 @media (max-width: 600px) {
   .ag-panel { width: 100vw; border-left: 0; }
   .ag-resize, .ag-head-actions .ag-tbtn[aria-pressed] { display: none; }
-  .ag-welcome-box { grid-template-columns: 80px minmax(0, 1fr); }
-  .ag-mascot { width: 80px; height: 72px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ag-status::before, .ag-launch-dot { animation: none; }

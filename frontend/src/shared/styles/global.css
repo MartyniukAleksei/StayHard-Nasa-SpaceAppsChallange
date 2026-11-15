@@ -69,6 +69,24 @@ h3 { font-weight: 500; font-size: 17px; margin: 0 0 6px; }
 .btn.ghost:hover { color: var(--ink); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.35; cursor: not-allowed; }
 
+/* solid button: white plate, black text, for a page's main way forward (e.g. "View this example") */
+.btn-solid {
+  font: 500 15px var(--mono);
+  min-height: var(--hit);
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--ink);
+  color: var(--void);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn-solid:hover { background: #fff; border-color: #fff; }
+.btn-solid:focus-visible { outline-offset: 3px; }
+
 /* tag */
 .tag {
   font: 13px var(--mono);

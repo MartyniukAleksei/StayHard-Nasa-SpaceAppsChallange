@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/shared/api/client";
-import type { Library, TestDetail, TestSummary, VideoItem } from "./types";
+import type { Library, TestDetail, TestSummary } from "./types";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -18,9 +18,6 @@ export const useTestsDetail = (ids: number[]) => useQueries({ queries: ids.map(t
 
 export const useLibrary = () =>
   useQuery({ queryKey: ["flex", "library"], queryFn: () => apiGet<Library>("/studies/flex/library") });
-
-export const useVideos = () =>
-  useQuery({ queryKey: ["flex", "videos"], queryFn: () => apiGet<VideoItem[]>("/studies/flex/videos") });
 
 /** Public URL of a file on the data volume (PDF, txt, mp4). */
 export const mediaUrl = (path: string) =>

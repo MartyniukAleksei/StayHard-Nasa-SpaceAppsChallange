@@ -8,23 +8,14 @@
 .ov-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
 .ov-browse .lede { margin: 0; }
 
-/* G: NASA camera videos — one large player, the rest as a list */
-.ov-videos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-.ov-video { margin: 0; display: grid; gap: 8px; }
-.ov-video video { width: 100%; max-height: 70vh; background: #000; border: var(--rule); display: block; }
-.ov-video figcaption { display: grid; gap: 2px; }
-.ov-video-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
-.ov-video-cap .end-mark { font-family: var(--mono); font-size: 14px; }
-.ov-video-list p { margin: 0 0 6px; }
-.ov-video-list ul { list-style: none; margin: 0; padding: 0; display: grid; border-top: var(--rule); max-height: 60vh; overflow-y: auto; }
-.ov-video-list button {
-  width: 100%; display: grid; gap: 2px; text-align: left; min-height: var(--hit);
-  padding: 8px 10px; background: none; border: 0; border-bottom: var(--rule); border-radius: 0;
-  color: var(--ash); font: 14px var(--sans); cursor: pointer;
-}
-.ov-video-list button:hover { color: var(--ink); background: var(--deep); }
-.ov-video-list button.on { color: var(--ink); box-shadow: inset 2px 0 0 var(--flame); background: var(--deep); }
-.ov-video-empty { display: grid; place-items: center; min-height: 160px; border: 1px dashed var(--line); color: var(--ash); font-size: 13px; }
+/* G: one test as a 3D replay */
+.ov-example { display: grid; gap: 12px; }
+.ov-example .lede { margin: 0; }
+.ov-example-cap { margin: 0; color: var(--ash); }
+.ov-example-cap .end-mark { font-size: 13px; }
+.ov-example-stage { min-height: 420px; }
+.ov-example-wait { display: grid; place-items: center; min-height: 420px; border: 1px dashed var(--line); color: var(--ash); }
+.ov-example-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
 
 /* presets 3×2 */
 .ov-presets {
@@ -62,7 +53,10 @@
 .ov-steps li::marker { font-family: var(--mono); color: var(--ash); }
 .ov-ends-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; color: var(--ash); font-size: 14px; }
 .ov-ends-list .end-mark { font-family: var(--mono); }
-.ov-findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.ov-findings { margin: 0; padding-left: 22px; display: grid; gap: 18px; }
+.ov-findings li::marker { font-family: var(--mono); color: var(--ash); }
+.ov-findings p { margin: 0; }
+.ov-findings p + p { margin-top: 4px; }
 .ov-traps { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ov-traps p { margin: 0; color: var(--ash); font-size: 15px; }
 .ov-quote {
@@ -82,7 +76,6 @@
 .ov-cite + p { margin: 0 0 24px; }
 
 @media (max-width: 960px) {
-  .ov-videos { grid-template-columns: minmax(0, 1fr); }
   .ov-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ov-hero .stats { grid-template-columns: repeat(2, minmax(0, max-content)); }
 }
