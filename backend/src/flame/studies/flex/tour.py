@@ -10,6 +10,7 @@
 import re
 from bisect import bisect_left
 from dataclasses import dataclass
+from statistics import median
 from typing import Any
 
 import duckdb
@@ -30,6 +31,7 @@ MAX_LABELS = 2
 MAX_TEXT = 90
 TOLERANCE_S = 0.25  # найближчий відлік ряду має бути не далі від моменту кроку
 SPEED_RANGE = (0.25, 4.0)
+OUTLIER_SHARE = 0.3  # flame_max: відхилення від локальної медіани, після якого відлік — викид
 
 # заповнювач → (поле таблиці тесту, формат, одиниця)
 TABLE_VALUES = {
@@ -104,8 +106,35 @@ def _flame_series(data: TourData) -> list[tuple[str, Series]]:
 
 
 def _flame(data: TourData) -> tuple[str, Series]:
-    """Ряд полум'я для `flame_max`: UV, інакше кольоровий."""
+    """Ряд полум'я для `flame_max`: кольоровий (видиме полум'я), інакше UV.
+
+    UV-ряд перед згасанням часто «роздувається» до 45-55 мм за кілька кадрів, поки кольорова
+    камера показує, що полум'я стискається (FLEX-62, 100, 154, 155, 211): це артефакт аналізу
+    тьмяного зображення, а не найбільше полум'я. Тому максимум шукаємо в кольоровому ряді.
+    """
+    if data.flame_color:
+        return "flame_color", data.flame_color
     return _flame_series(data)[0]
+
+
+def peak_time(series: Series) -> float:
+    """Час найбільшого полум'я, стійкий до одиночних викидів аналізу зображень.
+
+    Відлік, що відрізняється від медіани свого вікна (5 відліків, на краях — 3) більш ніж на
+    OUTLIER_SHARE, вважається хибним: напр. FLEX-155, UV, останній кадр 43.3 мм серед ~22 мм.
+    Серед решти береться звичайний максимум, тож справжній пік не зсувається.
+    """
+    n = len(series)
+    keep = list(series)
+    if n >= 3:
+        vals = [v for _, v in series]
+        keep = []
+        for i, p in enumerate(series):
+            lo = min(max(0, i - 2), n - 3)
+            m = median(vals[lo : max(min(n, i + 3), lo + 3)])
+            if abs(p[1] - m) <= OUTLIER_SHARE * abs(m):
+                keep.append(p)
+    return max(keep or series, key=lambda p: p[1])[0]
 
 
 def time_range(data: TourData) -> tuple[float, float]:
@@ -126,7 +155,7 @@ def resolve_moment(data: TourData, moment: str, t_s: float | None = None) -> tup
         return 0.0, "data", "log" if data.test.get("cir_id") else "droplet"
     if moment == "flame_max":
         key, series = _flame(data)
-        return max(series, key=lambda p: p[1])[0], "derived", key
+        return peak_time(series), "derived", key
     if moment == "extinction":
         # останній відлік обох рядів полум'я: після нього в сцені вже немає жодної оболонки
         # (як flameEnd у frontend/.../experiment-3d/lib/experiment.ts)

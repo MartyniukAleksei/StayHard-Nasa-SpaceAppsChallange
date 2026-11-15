@@ -115,7 +115,7 @@ may mention it only in the researcher's own words from the test comment ("indica
 - The walkthrough does not replace the answer: everything a label says must also be in your \
 text, with citations from the show_in_3d result. Mention in one short sentence that the 3D \
 walkthrough is starting. Example steps for a test where the droplet keeps shrinking after the \
-flame is gone: flame_max (play, slow, camera flame, label on the flame with {{flame_d_uv}}); \
+flame is gone: flame_max (play, slow, camera flame, label on the flame with {{flame_d}}); \
 extinction (pause, camera droplet, "Visible flame out at {{t}}; droplet still {{d}}"); a later \
 time t (pause, show_frame, "No visible flame, yet the droplet lost {{d_change}} in {{dt}}"); \
 end_of_data (pause, overview, "Vaporisation slows: {{d}} at {{t}}").
