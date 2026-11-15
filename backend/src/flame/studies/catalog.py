@@ -18,6 +18,7 @@ CATALOG = Path(__file__).with_name("catalog.json")
 ACTIVE: dict[str, str] = {
     "PSI-69": "/studies/flex",
     "PSI-101": "/studies/same-r",
+    "PSI-99": "/studies/saffire2",
     "PSI-25": "/studies/bass2",
 }
 
@@ -76,4 +77,5 @@ def list_studies(cur: DuckDBPyConnection | None) -> list[StudyCard]:
                 facts=facts,
             )
         )
-    return cards
+    # відкриті дослідження першими: їхні картки на всю ширину, і сітка «скоро» не рветься
+    return sorted(cards, key=lambda c: c.status != "active")

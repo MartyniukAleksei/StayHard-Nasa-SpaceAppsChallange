@@ -44,6 +44,7 @@ def test_studies_catalog_has_active_studies_first() -> None:
         "FLEX": "/studies/flex",
         "SAME-R": "/studies/same-r",
         "BASS-II": "/studies/bass2",
+        "SAFFIRE-II": "/studies/saffire2",
     }
     assert active["SAME-R"]["facts"] is None  # SAME-R читає знімок, не БД
     assert all(c["route"] is None for c in cards if c["status"] == "coming_soon")
