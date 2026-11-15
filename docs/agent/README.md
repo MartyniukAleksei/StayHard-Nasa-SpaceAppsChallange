@@ -23,7 +23,7 @@
 | `compare_tests(test_nos)` | `compare_tests` | обчислене порівняння (`/compare?ids=`) + рядки |
 | `find_similar_tests(test_no, k)` | `neighbors` | рейтинг схожості (оцінка) + рядки |
 | `get_timeseries_summary(test_no, signal)` | `get_timeseries` | зведення ряду, сирий файл |
-| `search_docs(query, study, test_nos, source_types)` | `rag.service.search` | чанки RAG; `study` = slug або `any` (FLEX: документи й TestSheet; інші — лише опис і публікації з `about.json`) |
+| `search_docs(query, study, test_nos, source_types)` | `rag.service.search` | чанки RAG; `study` = slug або `any` (FLEX: документи й TestSheet; `samer`: ще й NASA-документи (PDF); інші — лише опис і публікації з `about.json`) |
 | `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 | `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |

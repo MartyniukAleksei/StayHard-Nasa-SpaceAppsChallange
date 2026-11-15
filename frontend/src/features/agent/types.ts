@@ -63,6 +63,10 @@ export type PageContext = {
   test_no?: number;
   ids?: number[];
   explorer?: ExplorerParams;
+  /** set on the pages of another study (slug as in the agent tools, e.g. "samer"); test_no/ids stay FLEX-only */
+  study?: string;
+  test_id?: string;
+  test_ids?: string[];
 };
 
 /** Репліка для запиту: стисла історія (текст + джерела), як очікує POST /api/agent. */

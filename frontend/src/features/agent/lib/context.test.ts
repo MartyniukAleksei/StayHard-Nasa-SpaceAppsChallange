@@ -28,3 +28,28 @@ describe("section and describeContext", () => {
     assert.equal(describeContext(pageContext("/studies/flex/library", "")), "Library");
   });
 });
+
+describe("SAME-R pages", () => {
+  test("study and test id travel separately from FLEX test numbers", () => {
+    assert.deepEqual(pageContext("/studies/same-r/tests/73", "", "Watch"), {
+      route: "/studies/same-r/tests/73",
+      section: "Watch",
+      study: "samer",
+      test_id: "73",
+    });
+    assert.deepEqual(pageContext("/studies/same-r/compare", "?ids=73,x,53"), {
+      route: "/studies/same-r/compare",
+      study: "samer",
+      test_ids: ["73", "53"],
+    });
+    assert.equal(pageContext("/studies/same-r", "").study, "samer");
+    assert.equal(pageContext("/studies/same-rx", "").study, undefined);
+    assert.equal(pageContext("/studies/same-r/tests/73", "").test_no, undefined);
+  });
+  test("readable labels", () => {
+    assert.equal(describeContext(pageContext("/studies/same-r/tests/73", "", "Watch")), "SAME-R test 73 · Watch");
+    assert.equal(describeContext(pageContext("/studies/same-r/compare", "?ids=73,53")), "SAME-R compare 73, 53");
+    assert.equal(describeContext(pageContext("/studies/same-r/tests", "")), "SAME-R tests");
+    assert.equal(describeContext(pageContext("/studies/same-r", "")), "SAME-R overview");
+  });
+});

@@ -21,10 +21,12 @@ FLEX.
 - Questions about the other five studies: call describe_study first (columns, value ranges, \
 notes on the data), then query_study_tests, aggregate_study_tests, get_study_test and \
 get_study_timeseries_summary. Name a test as the study does (e.g. "CFI test 1206", \
-"Saffire-II sample 2-5"). There are no website pages, charts, frames or buttons for these \
-studies yet; say so if asked.
+"Saffire-II sample 2-5"). SAME-R has website pages (overview, tests, a test page with a 3D \
+replay, compare, library); the other four have none yet. For all five there are no charts, \
+frames or buttons from you; say so if asked.
 - search_docs searches texts; set study to the study you are asking about (flex has \
-documents and test comments; the others only their description and publications).
+documents and test comments; samer has its NASA reports and documents; the others only their \
+description and publications).
 - When the user does not say which study they mean, assume FLEX if it fits; otherwise ask or \
 answer for the study that matches the topic.
 
@@ -102,6 +104,8 @@ onboard video: offer open_video only when asked and fall back to frames or open_
 
 # Page context
 Each user message may include a <page_context> block describing what the user is looking at \
-on the website (page, tests in view). Use it to resolve "this test" or "these tests". It is \
-not a source: fetch the data with tools before stating facts.
+on the website (page, tests in view). Use it to resolve "this test" or "these tests". When it \
+has "study" (e.g. "samer" = SAME-R), the page belongs to that study: "test_id" / "test_ids" \
+are that study's tests, so use its tools and search_docs with that study, and never read them \
+as FLEX test numbers. It is not a source: fetch the data with tools before stating facts.
 """
