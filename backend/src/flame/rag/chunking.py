@@ -9,14 +9,16 @@ import re
 from dataclasses import dataclass
 
 from flame.core.citations import doi_url, media_url
+from flame.core.studies import ALL_STUDIES
 from flame.rag.sources import Document
 from flame.rag.sources import flex as flex_sources
+from flame.rag.sources import psi_studies as psi_sources
 
 MAX_WORDS = 300  # ≈ 400 токенів; bge-small обрізає після 512
 OVERLAP_WORDS = 40
 
-STUDY_LABELS = {"PSI-69": "FLEX"}
-GLOSSARIES = {"PSI-69": flex_sources.GLOSSARY}
+STUDY_LABELS = {s.accession: s.acronym for s in ALL_STUDIES.values()}
+GLOSSARIES = {"PSI-69": flex_sources.GLOSSARY, **psi_sources.GLOSSARIES}
 
 
 def glossary_terms(study: str, text: str) -> str:
@@ -61,7 +63,8 @@ def citation(doc: Document) -> str:
         case "doc_pdf":
             return f"{doc.title}, p. {doc.page} ({doc.source_path})"
         case "about":
-            return f"FLEX investigation {doc.meta.get('field', '')} (about.json, DOI {doi})"
+            label = STUDY_LABELS.get(doc.study, doc.study)
+            return f"{label} investigation {doc.meta.get('field', '')} (about.json, DOI {doi})"
         case "publication":
             pub = doc.meta.get("publication_doi", "")
             authors = doc.meta.get("authors", "")

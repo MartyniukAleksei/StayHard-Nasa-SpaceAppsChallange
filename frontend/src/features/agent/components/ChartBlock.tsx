@@ -8,9 +8,9 @@ import type { Chart } from "../types";
 
 /** Графік, який побудував агент: дані з бекенду, малюємо тим самим TimeChart, що й сторінки. */
 export function ChartBlock({ chart }: { chart: Chart }) {
-  const doi = useOverview().data?.about.doi;
-  const nos = chart.test_nos;
-  const href = nos.length === 1 ? testHref(nos[0]) : nos.length >= 2 ? compareHref(nos) : null;
+  const flexDoi = useOverview().data?.about.doi;
+  const doi = chart.doi ?? flexDoi;
+  const href = chartHref(chart);
   const download = () => {
     const url = URL.createObjectURL(new Blob([chartCsv(chart, doi)], { type: "text/csv" }));
     const a = Object.assign(document.createElement("a"), { href: url, download: csvName(chart) });
@@ -40,7 +40,7 @@ export function ChartBlock({ chart }: { chart: Chart }) {
       {chart.kind === "scatter" && (
         <p className="small ag-legend">
           {chart.series.map((s) => (
-            <EndMark key={s.id} type={s.id as EndType} count={s.points.length} short />
+            <EndMark key={s.id} type={s.id as EndType} count={s.points.length} />
           ))}
         </p>
       )}
@@ -59,4 +59,15 @@ export function ChartBlock({ chart }: { chart: Chart }) {
       </div>
     </figure>
   );
+}
+
+/** "Open on page": FLEX test / compare, or the same pages of SAME-R for its charts. */
+function chartHref(chart: Chart): string | null {
+  if (chart.study === "samer") {
+    const ids = chart.test_ids ?? [];
+    if (ids.length === 1) return `/studies/same-r/tests/${ids[0]}`;
+    return ids.length >= 2 ? `/studies/same-r/compare?ids=${ids.slice(0, 3).join(",")}` : null;
+  }
+  const nos = chart.test_nos;
+  return nos.length === 1 ? testHref(nos[0]) : nos.length >= 2 ? compareHref(nos) : null;
 }

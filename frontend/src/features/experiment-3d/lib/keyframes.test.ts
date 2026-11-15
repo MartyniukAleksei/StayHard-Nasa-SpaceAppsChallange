@@ -1,7 +1,20 @@
 // Run: npm test (node:test; Node 24 strips the TS types)
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { frameTimes, keyframeStep, nearestKeyframe, pickKeyframes } from "./keyframes.ts";
+import { frameTimes, keyframeStep, nearestKeyframe, pickKeyframes, prioritize } from "./keyframes.ts";
+
+describe("prioritize", () => {
+  const kfs = [0, 1, 2, 3, 4].map((t) => ({ i: t, t }));
+  test("frames of the tour moments load first, the rest keep their order", () => {
+    assert.deepEqual(
+      prioritize(kfs, [3.1, 0.9, 3.2]).map((k) => k.t),
+      [3, 1, 0, 2, 4],
+    );
+  });
+  test("no moments: the order is unchanged", () => {
+    assert.deepEqual(prioritize(kfs, []), kfs);
+  });
+});
 
 describe("frameTimes", () => {
   test("frame time is start + offset − ignition, in seconds", () => {

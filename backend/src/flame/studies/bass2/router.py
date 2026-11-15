@@ -1,13 +1,17 @@
-"""HTTP: /api/studies/bass2/{overview,tests,tests/{id}} і файли знімка /api/media/bass2/files/…"""
+"""HTTP сторінок BASS-II: /api/studies/bass2/{overview,explorer,tests/{id}/report,psi-video}.
+
+Шляхи навмисно не збігаються з загальним API `/api/studies/{slug}/tests…` (flame.studies.psi),
+яким користується агент. Файли знімка віддає загальний `/api/media/{slug}/files/…`.
+"""
 
 from typing import Annotated
 
 from duckdb import DuckDBPyConnection
 from fastapi import APIRouter, Depends, HTTPException, Path
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 
 from flame.db.duckdb import db_available, get_cursor
-from flame.media import files, psi
+from flame.media import psi
 from flame.studies.bass2 import service
 from flame.studies.bass2.schemas import Overview, TestDetail, TestRow
 
@@ -23,7 +27,6 @@ def require_db() -> None:
 
 
 router = APIRouter(prefix="/studies/bass2", tags=["bass2"], dependencies=[Depends(require_db)])
-media_router = APIRouter(prefix="/media/bass2", tags=["bass2"])
 
 Cursor = Annotated[DuckDBPyConnection, Depends(get_cursor)]
 TestId = Annotated[str, Path(pattern=r"^[BFMOPT]\d{1,2}[ab]?$")]
@@ -37,7 +40,7 @@ def overview(cur: Cursor) -> Overview:
         raise HTTPException(status_code=503, detail=DATA_NOT_BUILT) from e
 
 
-@router.get("/tests", response_model=list[TestRow])
+@router.get("/explorer", response_model=list[TestRow])
 def tests(cur: Cursor) -> list[TestRow]:
     try:
         return service.list_tests(cur)
@@ -45,7 +48,7 @@ def tests(cur: Cursor) -> list[TestRow]:
         raise HTTPException(status_code=503, detail=DATA_NOT_BUILT) from e
 
 
-@router.get("/tests/{test_id}", response_model=TestDetail)
+@router.get("/tests/{test_id}/report", response_model=TestDetail)
 def test_detail(test_id: TestId, cur: Cursor) -> TestDetail:
     try:
         result = service.get_test(cur, test_id)
@@ -66,12 +69,3 @@ def psi_video(test_id: TestId, index: Annotated[int, Path(ge=0)], cur: Cursor) -
     if url is None:
         raise HTTPException(404, f"No PSI video {index} for test {test_id}")
     return RedirectResponse(url, status_code=307, headers={"Cache-Control": "no-store"})
-
-
-@media_router.get("/files/{path:path}")
-def get_file(path: str) -> FileResponse:
-    """Файл знімка BASS-II (raw/…, docs/…, media/…) inline, з Range — для PDF і mp4."""
-    target = files.resolve("bass2", path)
-    if target is None:
-        raise HTTPException(404, "file not found")
-    return FileResponse(target, content_disposition_type="inline", filename=target.name)

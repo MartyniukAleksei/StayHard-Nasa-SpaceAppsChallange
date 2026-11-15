@@ -16,6 +16,8 @@
   gap: 8px 16px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-height: var(--hit); }
+.brand-icon { display: block; flex: none; }
+.tag.top-study { border-style: solid; border-color: var(--flame); color: var(--flame); }
 .top-nav { display: flex; gap: 2px; flex-wrap: wrap; }
 .top-nav a {
   color: var(--ash);
@@ -31,19 +33,7 @@
 .top-nav a::after { content: "]"; margin-left: 5px; color: transparent; }
 .top-nav a[aria-current] { color: var(--ink); }
 .top-nav a[aria-current]::before, .top-nav a[aria-current]::after { color: var(--ink); }
-.search { flex: 1 1 200px; display: block; }
-.search input {
-  width: 100%;
-  min-height: var(--hit);
-  padding: 0 14px;
-  font: 14px var(--mono);
-  color: var(--ink);
-  background: var(--deep);
-  border: 1px dashed var(--line);
-  border-radius: 0;
-}
-.search input:disabled { cursor: not-allowed; }
-.search input::placeholder { color: var(--ash); }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 4px 12px; }
 
 .foot { border-top: var(--rule); }
 .foot-row {
@@ -59,10 +49,8 @@
 }
 
 @media (max-width: 600px) {
-  /* brand · chip · cart on one line, then the nav, then the search */
-  .top-row > .btn { display: none; } /* cart is a stub; no room next to the brand */
+  /* brand · agent on one line, then the nav */
   .top-nav { order: 4; width: 100%; flex-wrap: nowrap; margin-left: -8px; }
   .top-nav a { font-size: 13px; padding: 0 6px; }
   .top-nav a:not([aria-current])::before, .top-nav a:not([aria-current])::after { display: none; }
-  .search { order: 5; flex-basis: 100%; }
 }

@@ -15,8 +15,10 @@ from urllib.parse import quote
 
 from pydantic import BaseModel
 
+from flame.core.studies import ALL_STUDIES
+
 API_PREFIX = "/api"
-STUDY_SLUGS = {"PSI-69": "flex", "PSI-25": "bass2"}  # PSI accession → slug у шляхах API
+STUDY_SLUGS = {s.accession: s.slug for s in ALL_STUDIES.values()}  # accession → slug в API
 
 
 class Source(BaseModel):
@@ -35,7 +37,7 @@ def media_url(study: str, path: str, page: int | None = None) -> str:
     return f"{url}#page={page}" if page else url
 
 
-def test_url(study: str, test_no: int | str) -> str:
+def test_url(study: str, test_no: int) -> str:
     return f"{API_PREFIX}/studies/{STUDY_SLUGS[study]}/tests/{test_no}"
 
 
@@ -50,6 +52,25 @@ def neighbors_url(study: str, test_no: int) -> str:
 
 def timeseries_url(study: str, test_no: int, signal: str) -> str:
     return f"{test_url(study, test_no)}/timeseries/{signal}"
+
+
+def study_url(slug: str) -> str:
+    """Огляд дослідження (не FLEX): реєстр, таблиці, колонки — /api/studies/{slug}."""
+    return f"{API_PREFIX}/studies/{slug}"
+
+
+def study_tests_url(slug: str, query: str = "") -> str:
+    return f"{study_url(slug)}/tests" + (f"?{query}" if query else "")
+
+
+def study_test_url(slug: str, test_id: str | int) -> str:
+    """Рядок `<slug>.tests` одного тесту (ключ — `test_no` або `test_id`)."""
+    return f"{study_url(slug)}/tests/{quote(str(test_id), safe='')}"
+
+
+def study_series_url(slug: str, test_id: str | int, series: str) -> str:
+    """Часовий ряд `<slug>.ts_<series>` одного тесту."""
+    return f"{study_test_url(slug, test_id)}/timeseries/{series}"
 
 
 def to_search_result(src: Source, citations: bool = True) -> dict[str, Any]:

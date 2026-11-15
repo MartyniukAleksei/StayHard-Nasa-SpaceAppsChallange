@@ -102,3 +102,17 @@ def get_file(path: str) -> FileResponse:
     if target is None:
         raise HTTPException(404, "file not found")
     return FileResponse(target, content_disposition_type="inline", filename=target.name)
+
+
+# Файли знімків інших досліджень (cfi, cfig, bass2, samer, saffire2): ті самі правила, що й для
+# FLEX вище. Окремий роутер, бо префікс `/media/flex` у FLEX-ендпоінтів зафіксований.
+studies_files_router = APIRouter(prefix="/media", tags=["media"])
+
+
+@studies_files_router.get("/{slug}/files/{path:path}")
+def get_study_file(slug: str, path: str) -> FileResponse:
+    """Файл знімка дослідження (raw/…, docs/…, media/…) inline, з Range."""
+    target = files.resolve(slug, path)
+    if target is None:
+        raise HTTPException(404, "file not found")
+    return FileResponse(target, content_disposition_type="inline", filename=target.name)

@@ -85,7 +85,7 @@ def test_media_bass2_rejects_paths_outside_snapshot() -> None:
 
 @needs_bass2
 def test_tests_list_joins_appendix_and_flags_source_errors() -> None:
-    rows = {r["test_id"]: r for r in client.get("/api/studies/bass2/tests").json()}
+    rows = {r["test_id"]: r for r in client.get("/api/studies/bass2/explorer").json()}
 
     assert len(rows) == 129
     assert sum(r["in_report_log"] for r in rows.values()) == 126
@@ -111,7 +111,7 @@ def test_overview_facts_and_cited_findings() -> None:
 
 @needs_bass2
 def test_test_detail_has_log_files_and_sources() -> None:
-    d = client.get("/api/studies/bass2/tests/O13a").json()
+    d = client.get("/api/studies/bass2/tests/O13a/report").json()
 
     assert d["log"]["table"] == "A.5" and "self-extinguished" in d["log"]["observations"]
     assert d["videos"] and d["videos"][0]["url"].startswith("/api/media/bass2/files/media/O13a/")
@@ -121,35 +121,35 @@ def test_test_detail_has_log_files_and_sources() -> None:
 
 @needs_bass2
 def test_test_detail_errors() -> None:
-    assert client.get("/api/studies/bass2/tests/X1").status_code == 422
-    assert client.get("/api/studies/bass2/tests/B99").status_code == 404
+    assert client.get("/api/studies/bass2/tests/X1/report").status_code == 422
+    assert client.get("/api/studies/bass2/tests/B99/report").status_code == 404
 
 
 @needs_bass2
 def test_psi_video_redirects_to_signed_url(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = []
 
-    def fake(study: str, name: str, version: str) -> str:
-        calls.append((study, name))
+    def fake(name: str, version: str) -> str:
+        calls.append(name)
         return f"https://s3.example/{name}?sig=1"
 
     monkeypatch.setattr(service.psi, "signed_url", fake)
-    d = client.get("/api/studies/bass2/tests/O13a").json()
+    d = client.get("/api/studies/bass2/tests/O13a/report").json()
     main = d["psi_videos"][0]
     r = client.get(main["url"], follow_redirects=False)
 
     assert main["label"].startswith("Experiment video") and "Still" not in main["name"]
     assert r.status_code == 307 and r.headers["location"].startswith("https://s3.example/")
-    assert calls == [("PSI-25", "PSI-25_Raw Data_BASS_GMT202_SAMPLE_221_TEST_O13a.mp4")]
+    assert calls == ["PSI-25_Raw Data_BASS_GMT202_SAMPLE_221_TEST_O13a.mp4"]
     assert client.get(f"{main['url'][:-1]}99", follow_redirects=False).status_code == 404
 
 
 @needs_bass2
 def test_video_series_points_to_its_psi_video() -> None:
-    d = client.get("/api/studies/bass2/tests/O13a").json()
+    d = client.get("/api/studies/bass2/tests/O13a/report").json()
     vs = d["video_series"]
 
     assert vs is not None and vs["columns"][0] == "t_s"
     assert d["psi_videos"][vs["psi_video_index"]]["name"].endswith("TEST_O13a.mp4")
     assert len(vs["points"]) > 1000
-    assert client.get("/api/studies/bass2/tests/B1").json()["video_series"] is None
+    assert client.get("/api/studies/bass2/tests/B1/report").json()["video_series"] is None

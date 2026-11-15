@@ -37,7 +37,9 @@ export function WhatHappened({ comment, files, aiSummary }: Props) {
       ) : (
         <p className="tp-what-label mono small muted">Researcher comment</p>
       )}
-      <blockquote className="tp-comment">{text}</blockquote>
+      <blockquote className="tp-comment" data-source={useAi ? undefined : "comment"}>
+        {text}
+      </blockquote>
       {!useAi && (
         <p className="small muted">
           Source:{" "}

@@ -19,29 +19,16 @@ ts_<kind>), CSV, timeseries/, raw/, docs/, media/, about.json, manifest.json.
 import argparse
 import hashlib
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import duckdb
 
 from flame.core.config import settings
-
-
-@dataclass(frozen=True)
-class Study:
-    accession: str
-    test_key: str  # ключ тесту в tests і ts_*; у samer ряд прив'язаний до run_no
-
+from flame.core.studies import PSI_STUDIES
 
 # Порядок = порядок у реєстрі. FLEX (PSI-69) збирає build_db окремо, у схемі main.
-STUDIES: dict[str, Study] = {
-    "cfi": Study("PSI-39", "test_no"),
-    "cfig": Study("PSI-159", "test_id"),
-    "bass2": Study("PSI-25", "test_id"),
-    "samer": Study("PSI-101", "test_id"),
-    "saffire2": Study("PSI-99", "test_id"),
-}
+STUDIES = PSI_STUDIES
 
 REGISTRY_COLUMNS = (
     "slug",

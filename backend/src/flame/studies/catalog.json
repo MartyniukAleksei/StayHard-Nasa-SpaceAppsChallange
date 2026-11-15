@@ -11,6 +11,17 @@
   "license": "CC0-1.0"
  },
  {
+  "accession": "PSI-101",
+  "acronym": "SAME-R",
+  "title": "Smoke Aerosol Measurement Experiment-Reflight",
+  "doi": "10.60555/2np7-jv14",
+  "research_area": "Combustion Science",
+  "sub_research_area": "Spacecraft Fire Safety",
+  "flight_program": "International Space Station (ISS)",
+  "objective": "Similar to the original SAME investigation, the primary objective of the SAME-R investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment. One of the problems encountered during the SAME investigation was that after the thermal precipitators were returned to the ground, it was found that all the TEM grids were severely contaminated with some unidentified foreign particles, making these grids unusable although some of them showed shapes of certain types of smoke particles. Based on that experience the SAME-R investigation employed several modification covering new materials, extended operating conditions, and diagnostic equipments.",
+  "license": "CC0-1.0"
+ },
+ {
   "accession": "PSI-39",
   "acronym": "CFI",
   "title": "Cool Flames Investigation",
@@ -52,17 +63,6 @@
   "sub_research_area": "Fire Safety",
   "flight_program": "International Space Station (ISS)",
   "objective": "The objective of SPICE is to better understand the complex process of combustion by observing flames in a microgravity environment aboard the International Space Station (ISS) and analogous ground experiments.\n\nSpecific objectives were:\n(1) Identify the laminar smoke-point properties of non-buoyant jet diffusion flames under various co-flow conditions in microgravity.\n(2) Determine the effects of burner diameter and co-flow velocity on the luminous flame lengths and smoke points.\n(3) Quantify the sooting propensity of different fuels, such as ethylene, propane, and propylene mixtures.\n(4) Validate the correlation between luminous flame shape and residence time under microgravity conditions.\n(5) Investigate the impact of air and fuel flow rate variations on smoke point phenomena in space.",
-  "license": "CC0-1.0"
- },
- {
-  "accession": "PSI-102",
-  "acronym": "SAME",
-  "title": "Smoke and Aerosol Measurement Experiment",
-  "doi": "10.60555/gd4k-8h62",
-  "research_area": "Combustion Science",
-  "sub_research_area": "Spacecraft Fire Safety",
-  "flight_program": "International Space Station (ISS)",
-  "objective": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment. A numerical code was to be developed to predict the smoke droplet growth as a function of the fuel pyrolysis rate, the thermodynamic properties of the pyrolysis vapor, and the flow environment.",
   "license": "CC0-1.0"
  }
 ]

@@ -20,3 +20,13 @@
 {"id": "chart-scatter", "q": "Chart the burning-rate constant against oxygen fraction for all heptane tests.", "expect_chart": "scatter"}
 {"id": "frame-extinction", "q": "Show me the UV camera frame of FLEX-100 at the moment the flame went out.", "expect_frame": true, "expect_tests": [100], "min_test_hits": 1}
 {"id": "video-missing", "q": "Can I watch the onboard video of FLEX-100?", "mention_any": ["no onboard video", "no video", "not have", "doesn't have", "does not have"]}
+{"id": "psi-cfi-farnesane", "q": "How many CFI tests burned farnesane, and do they have burning-rate constants?", "expect_url_any": ["/api/studies/cfi"], "mention_any": ["44"]}
+{"id": "psi-cfi-k-free", "q": "What is the average hot-flame burning-rate constant of free-floating dodecane droplets in CFI?", "expect_url_any": ["/api/studies/cfi"], "mention_any": ["0.42"]}
+{"id": "psi-cfig-modes", "q": "In ACME CFI-G, how many tests were normal flames and how many were inverse flames?", "expect_url_any": ["/api/studies/cfig"], "mention_any": ["179"]}
+{"id": "psi-saffire2-materials", "q": "What materials were burned in Saffire-II?", "expect_url_any": ["/api/studies/saffire2"], "mention_any": ["SIBAL", "silicone"]}
+{"id": "psi-samer-aged", "q": "In SAME-R, what is the difference between test 51 and test 51a?", "expect_url_any": ["/api/studies/samer"], "mention_any": ["aged", "aging"]}
+{"id": "tour-155", "q": "What happens in FLEX-155?", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1}
+{"id": "tour-cool-flame-wording", "q": "Show me why the flame went out in FLEX-155 and what happened to the droplet afterwards.", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1, "mention_any": ["indicative", "likely", "suggest"]}
+{"id": "tour-no-series", "q": "Show me in 3D what happens in FLEX-009.", "expect_no_tour": true, "expect_tests": [9], "min_test_hits": 1, "mention_any": ["no measured", "no droplet", "not available", "no 3D", "cannot", "can't", "does not have", "doesn't have"]}
+{"id": "demo-compare-over-time", "q": "Compare how the droplet shrinks after the flame goes out in FLEX-155 and FLEX-129.", "expect_chart": "line", "expect_tests": [155, 129], "min_test_hits": 2}
+{"id": "demo-pick-one-test", "q": "Find me the most surprising experiment in FLEX.", "expect_proposal": "open_test"}

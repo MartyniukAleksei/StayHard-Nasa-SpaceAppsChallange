@@ -14,7 +14,7 @@ from flame.agent.prompt import GENERAL_KNOWLEDGE_PREFIX
 # Виміряне значення: десяткове число або число з одиницею — те, що вимагає джерела.
 # Номери тестів (FLEX-019) самі по собі не факт: це заголовки й посилання.
 _NUM_UNIT = re.compile(
-    r"(?<![\w.-])(\d+(?:\.\d+)?)\s*(?:%|atm|mm²/s|mm2/s|mm|s\b|K\b|psia|°C|mmHg)"
+    r"(?<![\w.-])(\d+(?:\.\d+)?)\s*(?:%|atm|mm²/s|mm2/s|mm|cm/s|cm\b|s\b|K\b|psia|°C|mmHg|bar\b|ppm|W\b|V\b|mg/s)"
 )
 _DECIMAL = re.compile(r"(?<![\w.-])(\d+\.\d+)(?!\w)")
 
@@ -128,8 +128,9 @@ def _mark(segments: list[Segment], known: set[float]) -> None:
 
 
 REWRITE_INSTRUCTION = (
-    "Some statements in your answer contain FLEX facts or numbers without a citation:\n"
-    "{items}\n\nRewrite your complete answer. Cite every FLEX fact and number from the tool "
+    "Some statements in your answer contain facts or numbers about the experiments without a "
+    "citation:\n"
+    "{items}\n\nRewrite your complete answer. Cite every fact and number from the tool "
     "results (call a tool if you need the source), drop numbers you cannot cite, and put "
     f'background physics in a paragraph starting with "{GENERAL_KNOWLEDGE_PREFIX}".'
 )
@@ -137,8 +138,8 @@ REWRITE_INSTRUCTION = (
 
 NO_CITATIONS_INSTRUCTION = (
     "Your final message has no citations, although the tools returned sources. Write your "
-    "complete answer again in one final message, citing the tool results for every FLEX fact "
-    "and number. Do not call tools you already called."
+    "complete answer again in one final message, citing the tool results for every fact and "
+    "number about the experiments. Do not call tools you already called."
 )
 
 

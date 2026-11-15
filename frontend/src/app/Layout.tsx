@@ -1,8 +1,10 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
-import { AgentPanel, AgentProvider, AgentSearch } from "@/features/agent";
+import { AgentLauncher, AgentPanel, AgentProvider } from "@/features/agent";
 import { useBass2Overview } from "@/features/bass2";
+import { useSameROverview } from "@/features/same-r";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
+import { ScrollToTop } from "./ScrollToTop";
 import "./shell.css";
 
 const FLEX_NAV = [
@@ -12,15 +14,34 @@ const FLEX_NAV = [
   { to: "/studies/flex/library", label: "Library", end: true },
 ];
 
-const BASS2_NAV = [
-  { to: "/studies/bass2", label: "Overview", end: true },
-  { to: "/studies/bass2/tests", label: "Tests", end: false },
+// Study sections in the header: tag + nav, shown while the path is inside the study.
+const STUDIES = [
+  { prefix: "/studies/flex", tag: "FLEX", nav: FLEX_NAV },
+  {
+    prefix: "/studies/same-r",
+    tag: "SAME-R",
+    nav: [
+      { to: "/studies/same-r", label: "Overview", end: true },
+      { to: "/studies/same-r/tests", label: "Tests", end: false },
+      { to: "/studies/same-r/compare", label: "Compare", end: true },
+      { to: "/studies/same-r/library", label: "Library", end: true },
+    ],
+  },
+  {
+    prefix: "/studies/bass2",
+    tag: "BASS-II",
+    nav: [
+      { to: "/studies/bass2", label: "Overview", end: true },
+      { to: "/studies/bass2/tests", label: "Tests", end: false },
+    ],
+  },
 ];
 
 export function Layout() {
   return (
     <AgentProvider>
       <a className="skip" href="#main">Skip to content</a>
+      <ScrollToTop />
       <Header />
       <main id="main">
         <Outlet />
@@ -33,45 +54,47 @@ export function Layout() {
 
 function Header() {
   const path = useLocation().pathname;
-  const nav = path.startsWith("/studies/flex") ? FLEX_NAV : path.startsWith("/studies/bass2") ? BASS2_NAV : null;
-  const navLabel = path.startsWith("/studies/bass2") ? "BASS-II sections" : "FLEX sections";
+  const study = STUDIES.find((s) => path.startsWith(s.prefix));
   return (
     <header className="top">
       <div className="top-row">
         <Link to="/" className="brand">
-          <svg width="24" height="24" viewBox="0 0 4 4" aria-hidden="true" fill="currentColor">
-            <rect x="0" y="0" width="2" height="2" />
-            <rect x="2" y="2" width="1" height="1" />
-            <rect x="3" y="1" width="1" height="1" />
-            <rect x="1" y="3" width="1" height="1" />
-          </svg>
-          <span className="h-brand">Flame in Freefall</span>
+          {/* the site icon is the favicon: one drawing for the tab and the header */}
+          <img src="/favicon.svg" width={24} height={24} alt="" className="brand-icon" />
+          <span className="h-brand">StayHard</span>
         </Link>
-        {nav && (
-          <nav aria-label={navLabel} className="top-nav">
-            {nav.map((n) => (
+        {study && (
+          <span className="tag top-study" aria-label={`Current study: ${study.tag}`}>
+            {study.tag}
+          </span>
+        )}
+        {study && (
+          <nav aria-label={`${study.tag} sections`} className="top-nav">
+            {study.nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end}>
                 {n.label}
               </NavLink>
             ))}
           </nav>
         )}
-        <AgentSearch />
-        <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">
-          Cart · 0
-        </button>
+        <span className="top-actions">
+          <AgentLauncher />
+        </span>
       </div>
     </header>
   );
 }
 
 function Footer() {
-  const inBass2 = useLocation().pathname.startsWith("/studies/bass2");
+  const path = useLocation().pathname;
+  const sameR = path.startsWith("/studies/same-r");
+  const bass2 = path.startsWith("/studies/bass2");
   const overview = useOverview();
-  const bass2 = useBass2Overview();
+  const sameROverview = useSameROverview(sameR);
+  const bass2Overview = useBass2Overview(bass2);
   const health = useHealth();
-  const doi = inBass2 ? bass2.data?.doi : overview.data?.about.doi;
-  const dataset = inBass2 ? "BASS-II (PSI-25)" : "FLEX (PSI-69)";
+  const doi = sameR ? sameROverview.data?.doi : bass2 ? bass2Overview.data?.doi : overview.data?.about.doi;
+  const dataset = sameR ? "SAME-R (PSI-101)" : bass2 ? "BASS-II (PSI-25)" : "FLEX (PSI-69)";
   const api = health.isError ? "API unreachable" : health.data ? `API ${health.data.status}` : "API …";
   return (
     <footer className="foot">

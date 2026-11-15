@@ -23,7 +23,9 @@
 - **FLEX** лежить у `main` (`tests`, `ts_droplet`, …: на них спирається API). Схема `flex` містить view на ці ж таблиці, тож `flex.tests` ≡ `main.tests`.
 - `study_about(study, about JSON)` — `about.json` кожного дослідження, ключ `study` = slug.
 - `meta.datasets` — JSON `{slug: версія знімка}` (`meta.dataset` лишається версією FLEX).
-- RAG (`chunks`) і агент поки покривають лише FLEX.
+- **API** (тільки читання, для розробників і посилань агента): `GET /api/studies/{slug}` (реєстр, профіль колонок, ряди, примітки), `…/tests?f=column:op:value&columns=…&sort=…&desc=…&limit=…`, `…/aggregate?f=…&group_by=…&metric=…`, `…/tests/{id}`, `…/tests/{id}/timeseries/{series}?max_points=…`; файли знімка — `/api/media/{slug}/files/{raw|docs|media}/…`. Код: `backend/src/flame/studies/psi/`.
+- **Агент** відповідає по всіх п'яти дослідженнях (інструменти `describe_study`, `query_study_tests`, `aggregate_study_tests`, `get_study_test`, `get_study_timeseries_summary`; [agent/README.md](../agent/README.md)). **RAG** містить їхні `about.json` (опис, цілі, підхід, публікації); PDF з `docs/` — лише SAME-R (`PDF_STUDIES` у `rag/sources/psi_studies.py`, [rag/techstack.md](../rag/techstack.md)), решта поки ні.
+- **UI**: сторінок для цих досліджень ще немає.
 
 ```sql
 SELECT slug, acronym, n_tests, tables FROM studies;
@@ -75,7 +77,9 @@ SELECT s.* FROM samer.tests t JOIN samer.ts_sensors s USING (run_no) WHERE t.tes
   - `51` і `51a` — той самий прогін (`run_no` 51), `a` означає вимірювання після старіння диму (`aged_repeat`), тож ряд `ts_sensors` спільний для обох;
   - для прогону 51 немає файлу датчиків;
   - рік 2010 взято з імен файлів;
-  - дубль тесту 57 відкинуто.
+  - дубль тесту 57 відкинуто;
+  - прилади пишуть коди стану замість вимірів: DustTrak ≥ 1000 (10010, 20008 …) і P-Trak `-999`. У БД вони лишаються як у джерелі; API (`studies/psi`, `VALID_RANGES` у `notes.py`, і `studies/same_r`) віддає їх як `null`;
+  - `t_s` у `ts_sensors` — від початку файлу; сторінки SAME-R і `make_study_chart` рахують час від першого рядка з `heating = 1`.
 - **saffire2:**
   - значення з примітками зберігаються текстом у `*_raw`, а число, якщо його вдалося однозначно взяти, — у сусідній колонці;
   - порожній матеріал означає «як вище» (`material_filled_down`);

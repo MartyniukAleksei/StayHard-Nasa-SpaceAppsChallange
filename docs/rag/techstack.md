@@ -20,6 +20,15 @@
 
 Не індексуємо: `FLEX-NNN_Summary.pdf` (лише підписи осей і числа, дублюють таблиці), `Experimental table` (вже в `tests`), архів метаданих.
 
+## Інші дослідження (`rag/sources/psi_studies.py`)
+Для всіх досліджень з `core/studies.py` — `about.json` (поля опису й публікації). PDF з `docs/` — лише для `PDF_STUDIES`:
+
+| Дослідження | PDF | Сторінок → чанків | Пропущено | Якість (`evalsets/psi101.jsonl`, 8 питань, без тюнінгу) |
+|---|---|---|---|---|
+| SAME-R (PSI-101) | Final Report, EIRD, Operations Manual, Baseline Concept, Software Requirement/Description, Wire Report | 283 → 475 | `SAME_VPRED.pdf` (матриця вимог до ЕМС), слайди pptx (немає парсера), креслення без тексту | recall@5 0.75, MRR 0.56 |
+
+Глосарій SAME-R — `psi_studies.GLOSSARIES["PSI-101"]` (P-Trak, DustTrak, STS, MSG, TEM, CMD…). Очікувані джерела в eval знайдено пошуком фраз у тексті чанків, а не видачею пошуку. Після додавання SAME-R якість FLEX не змінилась (0.93 / 0.88, відкладений набір 0.90 / 0.85).
+
 ## Рішення
 - **Чанкінг.** Короткі документи — один чанк. Сторінка PDF / розділ DOCX — абзацами до ~300 слів (≈400 токенів) з overlap 40 слів. Текст для ембеддингу й BM25 має заголовок `[PSI-69 FLEX] <title>` і розшифровку абревіатур домену, що трапилися в тексті (`GLOSSARY` у `rag/sources/flex.py`: `LLUV` → low-light ultraviolet camera, `SF6` → sulfur hexafluoride, `LOI`, `MEC`, `HiBMS`…) — щоб запит звичайними словами знаходив абревіатури. Цитується лише сам `text`, без розшифровки. `chunk_id` детермінований: `study:source_type:path:test_no|page[:section]:i`.
 - **Ембеддинги — локально:** `fastembed` (ONNX, без torch) + `BAAI/bge-small-en-v1.5`, 384 виміри, ~130 МБ. Без ключів і мережі після першого завантаження; однакові в CI, локально і на Railway. Корпус англійською, агент формулює запит до `search_docs` англійською. Запити отримують bge-префікс (`embed.QUERY_PREFIX`). Рішення — [ADR 0004](../decisions/0004-rag-local-embeddings.md).

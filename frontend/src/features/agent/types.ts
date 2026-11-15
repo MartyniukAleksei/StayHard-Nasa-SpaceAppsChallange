@@ -9,7 +9,8 @@ export type Proposal = {
   id: string;
   action: "open_tests" | "open_test" | "open_compare" | "open_video" | "open_replay";
   label: string;
-  params: { test_nos?: number[]; explorer?: ExplorerParams; t_s?: number };
+  /** study "samer": the SAME-R pages (test_nos are SAME-R run numbers); absent: FLEX */
+  params: { test_nos?: number[]; explorer?: ExplorerParams; t_s?: number; study?: string };
 };
 export type Highlight = { fields: string[]; test_nos: number[] };
 export type ChartTone = "ink" | "ash" | "flame" | "ext" | "dis" | "com" | "s1" | "s2";
@@ -39,7 +40,25 @@ export type Chart = {
   series: ChartSeries[];
   test_nos: number[];
   notes: string[];
+  /** set for charts of another study (e.g. "samer"): its test ids and DOI; test_nos stay FLEX-only */
+  study?: string;
+  test_ids?: number[];
+  doi?: string;
 };
+/** 3D-тур (подія `tour`, docs/agent/ui-actions.md): кроки з уже підставленими числами.
+ *  Програє його фіча experiment-3d; тут — лише перевезти спец і показати кнопку повтору. */
+export type TourLabel = { at: string; text: string; tags: string[]; source: number | null };
+export type TourStep = {
+  moment: string;
+  t: number;
+  action: "play" | "pause";
+  speed: number;
+  camera: string;
+  focus: string[];
+  show_frame: boolean;
+  labels: TourLabel[];
+};
+export type Tour = { id: string; test_no: number; steps: TourStep[]; sources: { url: string; title: string }[] };
 export type Notice = { reason: string; message: string };
 
 export type AgentEvent =
@@ -54,13 +73,20 @@ export type AgentEvent =
   | { event: "highlight"; data: Highlight }
   | { event: "chart"; data: Chart }
   | { event: "frame"; data: Frame }
+  | { event: "tour"; data: Tour }
   | { event: "done"; data: { answer: Answer; cost_usd: number; duration_s: number } };
 
 export type PageContext = {
   route: string;
+  /** heading of the page section the user is looking at ("Watch", "Droplet: the d² law") */
+  section?: string;
   test_no?: number;
   ids?: number[];
   explorer?: ExplorerParams;
+  /** set on the pages of another study (slug as in the agent tools, e.g. "samer"); test_no/ids stay FLEX-only */
+  study?: string;
+  test_id?: string;
+  test_ids?: string[];
 };
 
 /** Репліка для запиту: стисла історія (текст + джерела), як очікує POST /api/agent. */
@@ -81,6 +107,7 @@ export type AssistantItem = {
   proposals: Proposal[];
   charts?: Chart[];
   frames?: Frame[];
+  tour?: Tour;
   notices: Notice[];
   done: boolean;
 };

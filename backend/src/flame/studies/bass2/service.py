@@ -307,7 +307,7 @@ def psi_video_url(cur: DuckDBPyConnection, test_id: str, index: int) -> str | No
     if not 0 <= index < len(vids):
         return None
     f = vids[index]
-    return psi.signed_url(ACCESSION, f["name"], f["version"])
+    return psi.signed_url(f["name"], f["version"])  # дослідження — з префікса PSI-25_
 
 
 def _pi_table_row(test_id: str) -> dict[str, Any] | None:

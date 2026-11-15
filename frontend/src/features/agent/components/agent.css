@@ -1,33 +1,59 @@
-/* Агент: бічна панель чату (префікс ag-). Токени й правила — StayHard. */
+/* Агент: термінал збоку (префікс ag-). Токени й правила — StayHard; усе моноширинне, як у терміналі. */
 .ag-panel {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
-  width: min(420px, 100vw);
+  width: min(var(--ag-w, 420px), 100vw);
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
-  background: var(--deep); border-left: var(--rule);
+  background: var(--void); border-left: var(--rule);
+  font: 13.5px/1.6 var(--mono);
 }
+.ag-panel button { font-family: var(--mono); }
+
+/* title bar: where the agent is looking + window buttons */
 .ag-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 16px; border-bottom: var(--rule);
+  min-height: 40px; padding: 0 8px 0 14px; background: var(--deep); border-bottom: var(--rule);
 }
-.ag-title { margin: 0; font-size: 18px; }
-.ag-head-actions { display: flex; gap: 4px; }
-.ag-log { overflow-y: auto; padding: 16px; display: grid; align-content: start; gap: 16px; }
-.ag-intro p { margin: 0; }
-.ag-user {
-  margin: 0; justify-self: end; max-width: 90%;
-  padding: 8px 12px; border: var(--rule); background: var(--void); white-space: pre-wrap;
-  overflow-wrap: anywhere;
+.ag-context { margin: 0; min-width: 0; color: var(--ink); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-prompt-sign { color: var(--flame); }
+.ag-head-actions { display: flex; flex: none; }
+.ag-tbtn {
+  background: none; border: 0; border-radius: 0; color: var(--ash); cursor: pointer;
+  font-size: 12px; min-height: 32px; padding: 0 8px;
 }
+.ag-tbtn:hover, .ag-tbtn[aria-pressed="true"] { color: var(--ink); }
+.ag-tbtn:disabled { opacity: .35; cursor: default; }
+
+.ag-log { overflow-y: auto; padding: 14px; display: grid; align-content: start; gap: 14px; }
+.ag-ink { color: var(--ink); }
+
+/* welcome block, like Claude Code on start: who / where */
+.ag-welcome { display: grid; gap: 10px; }
+.ag-welcome-box {
+  padding: 10px 12px; border: 1px solid var(--flame);
+}
+.ag-welcome-text p { margin: 0; font-size: 12.5px; }
+.ag-welcome-text .ag-welcome-title { color: var(--ink); font-size: 13.5px; margin-bottom: 4px; }
+.ag-tips { display: grid; justify-items: start; font-size: 12.5px; }
+.ag-tips p { margin: 0 0 2px; }
+.ag-tip { background: none; border: 0; border-radius: 0; color: var(--ash); cursor: pointer; text-align: left; padding: 3px 0; font-size: 12.5px; }
+.ag-tip:hover, .ag-tip:focus-visible { color: var(--ink); }
+
+/* conversation: > question, ● answer, ✻ working */
+.ag-user-wrap { display: grid; }
+.ag-user-ctx { font-size: 11px; color: var(--ash); padding-left: 18px; }
+.ag-user { margin: 0; padding: 6px 10px; background: var(--deep); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ag-caret { color: var(--ash); margin-right: 4px; }
 .ag-reply { display: grid; gap: 8px; }
-.ag-status { margin: 0; color: var(--ash); }
-.ag-status::before { content: "▸ "; color: var(--flame); animation: ag-blink 1s steps(2) infinite; }
+.ag-reply > .ag-text { position: relative; padding-left: 18px; }
+.ag-reply > .ag-text::before { content: "●"; position: absolute; left: 0; top: 0; color: var(--ink); }
+.ag-status { margin: 0; color: var(--ash); padding-left: 18px; position: relative; }
+.ag-status::before { content: "✻"; position: absolute; left: 0; color: var(--flame); animation: ag-blink 1s steps(2) infinite; }
 @keyframes ag-blink { 50% { opacity: 0; } }
-.ag-text { font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
+.ag-text { font-size: 13.5px; line-height: 1.6; overflow-wrap: anywhere; }
 .ag-text p { margin: 0 0 8px; }
 .ag-text ul, .ag-text ol { margin: 0 0 8px; padding-left: 20px; }
 .ag-text li { margin-bottom: 4px; }
 .ag-h { font-family: var(--mono); font-size: 13px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.04em; }
-.ag-general { color: var(--ash); }
 .ag-tag { font-size: 11px; padding: 0 6px; vertical-align: 1px; }
 .ag-nosrc { margin-left: 4px; border-color: var(--end-dis); color: var(--end-dis); }
 .ag-cite {
@@ -35,6 +61,15 @@
   cursor: pointer; vertical-align: 1px;
 }
 .ag-cite:hover, .ag-cite:focus-visible { color: var(--flame); }
+
+/* citation popup (NotebookLM-style): verbatim quote on hover / focus */
+.ag-pop {
+  position: fixed; z-index: 60; display: grid; gap: 6px; padding: 10px 12px;
+  background: var(--void); border: 1px solid var(--ink); font-size: 13px; line-height: 1.45;
+  pointer-events: none;
+}
+.ag-pop.above { transform: translateY(-100%); }
+.ag-pop .ag-quote { color: var(--ink); }
 .ag-panel.with-src { grid-template-rows: auto minmax(0, 1fr) auto auto; }
 .ag-src {
   display: grid; gap: 8px; padding: 12px 16px; max-height: 40vh; overflow-y: auto;
@@ -56,28 +91,62 @@
 .ag-actions { display: grid; gap: 4px; }
 .ag-action { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .ag-count { margin: 0; }
-.ag-form { display: flex; gap: 8px; align-items: end; padding: 12px 16px; border-top: var(--rule); }
+/* input box at the bottom, like a terminal prompt */
+.ag-form { display: grid; gap: 4px; padding: 10px 14px 8px; }
+.ag-inputbox { display: flex; align-items: start; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); }
+.ag-inputbox:focus-within { border-color: var(--ink); }
+.ag-inputbox .ag-caret { color: var(--ink); line-height: 1.6; }
 .ag-form textarea {
-  flex: 1; resize: none; min-height: var(--hit); padding: 10px 12px;
-  font: 14px/1.4 var(--sans); color: var(--ink); background: var(--void);
-  border: var(--rule); border-radius: 0;
+  flex: 1; resize: none; min-height: 1.6em; max-height: 30vh; padding: 0; field-sizing: content;
+  font: 13.5px/1.6 var(--mono); color: var(--ink); background: none; border: 0; border-radius: 0; outline: none;
 }
 .ag-form textarea::placeholder { color: var(--ash); }
-.search.ag-search { display: flex; gap: 8px; align-items: center; }
-.ag-search label { flex: 1; }
-.ag-search input:focus { border-style: solid; border-color: var(--ink); outline: none; }
+.ag-hints { margin: 0; display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--ash); }
+.ag-hints .ag-tbtn { min-height: 0; padding: 0; font-size: 11px; color: var(--flame); }
 
-/* подсвічування значень на сторінці (атрибути data-field) */
+/* header launcher */
+.ag-launch {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px;
+  font: 14px var(--mono); color: var(--ink); background: var(--void);
+  border: 1px solid var(--line); border-radius: 0; cursor: pointer;
+}
+.ag-launch:hover { border-color: var(--ink); }
+.ag-launch.on { border-color: var(--flame); }
+.ag-launch-caret { color: var(--flame); }
+.ag-launch-dot { width: 6px; height: 6px; background: var(--flame); animation: ag-blink 1s steps(2) infinite; }
+.ag-launch-count { font-size: 11px; color: var(--ash); }
+
+/* подсвічування значень на сторінці (атрибути data-field) і процитованої фрази */
 .ag-hl { outline: 1px solid var(--flame); outline-offset: 2px; }
+.ag-hl-block { outline: 1px dashed var(--flame); outline-offset: 4px; }
+::highlight(ag-quote) { background-color: var(--flame); color: var(--ink); }
+
+/* resize handle on the left edge of the panel */
+.ag-resize {
+  position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; z-index: 1;
+  cursor: col-resize; touch-action: none;
+}
+.ag-resize::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 1px; background: transparent; }
+.ag-resize:hover::after, .ag-resize:focus-visible::after, html.ag-resizing .ag-resize::after { background: var(--flame); }
+.ag-resize:focus-visible { outline: none; }
+html.ag-resizing, html.ag-resizing * { cursor: col-resize !important; user-select: none; }
+
+/* full screen: the conversation in a readable centred column */
+.ag-panel.full { width: 100vw; border-left: 0; }
+.ag-panel.full .ag-log, .ag-panel.full .ag-form, .ag-panel.full .ag-src {
+  width: 100%; max-width: 860px; justify-self: center;
+}
+.ag-panel.full .ag-src { border-inline: var(--rule); }
 
 /* на широкому екрані панель не перекриває сторінку */
 @media (min-width: 1100px) {
-  html.ag-open body { padding-right: 420px; }
+  html.ag-open body { padding-right: var(--ag-w, 420px); }
+  html.ag-open.ag-full body { padding-right: 0; }
 }
 @media (max-width: 600px) {
   .ag-panel { width: 100vw; border-left: 0; }
-  .ag-head .btn { padding-inline: 0; }
+  .ag-resize, .ag-head-actions .ag-tbtn[aria-pressed] { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ag-status::before { animation: none; }
+  .ag-status::before, .ag-launch-dot { animation: none; }
 }

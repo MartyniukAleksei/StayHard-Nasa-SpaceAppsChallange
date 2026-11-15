@@ -1,10 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLocation } from "react-router";
-import { streamAgent } from "../api";
+import { useLocation, useNavigate } from "react-router";
+import { API_BASE, streamAgent } from "../api";
 import { pageContext } from "../lib/context";
-import { applyHighlight, clearHighlight } from "../lib/highlight";
+import { applyHighlight, clearHighlight, clearQuote, focusOnPage, revealElement } from "../lib/highlight";
 import { load, save, toHistory } from "../lib/history";
-import type { AgentEvent, AssistantItem, ChatItem } from "../types";
+import { sourceTarget } from "../lib/jump";
+import { OPEN_EVENT, TOUR_EVENT, onTourPage, saveTour, tourHref } from "../lib/tour";
+import { useVisibleSection } from "../lib/useSection";
+import type { AgentEvent, AssistantItem, ChatItem, PageContext, Source, Tour } from "../types";
 
 type Ctx = {
   items: ChatItem[];
@@ -14,7 +17,15 @@ type Ctx = {
   ask: (text: string) => void;
   stop: () => void;
   reset: () => void;
+  /** what the assistant sees right now (page + visible section) */
+  context: PageContext;
+  /** show a cited place on the site: navigate there, highlight it, scroll to it */
+  jumpTo: (src: Source) => void;
+  /** play a 3D walkthrough: open the test's 3D replay (or restart the tour if it is already open) */
+  playTour: (tour: Tour) => void;
 };
+
+const PHONE = "(max-width: 600px)";
 
 const AgentCtx = createContext<Ctx | null>(null);
 const store = () => (typeof window === "undefined" ? undefined : window.sessionStorage);
@@ -25,14 +36,42 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const abort = useRef<AbortController | null>(null);
+  const cancelFocus = useRef<(() => void) | null>(null);
   const loc = useLocation();
-  const locRef = useRef(loc);
-  locRef.current = loc;
+  const navigate = useNavigate();
+  const section = useVisibleSection(loc.pathname + loc.search);
+  const context = useMemo(() => pageContext(loc.pathname, loc.search, section), [loc.pathname, loc.search, section]);
+  const ctxRef = useRef(context);
+  ctxRef.current = context;
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
   useEffect(() => save(store(), items), [items]);
-  useEffect(() => () => abort.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abort.current?.abort();
+      cancelFocus.current?.();
+    },
+    [],
+  );
+
+  const playTour = useCallback(
+    (tour: Tour) => {
+      if (!saveTour(store(), tour)) return; // no storage: the answer stays, the tour cannot travel
+      // on a phone the panel covers the page: step aside so the scene is visible
+      if (window.matchMedia(PHONE).matches) setOpen(false);
+      if (onTourPage(window.location.pathname, window.location.search, tour.test_no)) {
+        window.dispatchEvent(new CustomEvent(TOUR_EVENT, { detail: tour.id }));
+      } else navigate(tourHref(tour));
+    },
+    [navigate],
+  );
+  // the tour bar's [Chat] button on a phone brings the panel back
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, []);
 
   const patch = useCallback((id: string, fn: (a: AssistantItem) => AssistantItem) => {
     setItems((prev) => prev.map((it) => (it.id === id && it.role === "assistant" ? fn(it) : it)));
@@ -44,7 +83,8 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       if (!text || busy) return;
       setOpen(true);
       clearHighlight();
-      const user: ChatItem = { id: uid(), role: "user", text, context: pageContext(locRef.current.pathname, locRef.current.search) };
+      clearQuote();
+      const user: ChatItem = { id: uid(), role: "user", text, context: ctxRef.current };
       const reply: AssistantItem = {
         id: uid(), role: "assistant", live: "", status: "Thinking…", answer: null, proposals: [], notices: [], done: false,
       };
@@ -53,6 +93,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       const ctrl = new AbortController();
       abort.current = ctrl;
       setBusy(true);
+      let tour: Tour | null = null; // starts by itself once the answer is complete (ADR 0010)
       const onEvent = (e: AgentEvent) => {
         switch (e.event) {
           case "text_start":
@@ -61,7 +102,12 @@ export function AgentProvider({ children }: { children: ReactNode }) {
           case "text_delta":
             return patch(reply.id, (a) => ({ ...a, live: a.live + e.data.text }));
           case "status":
+            // the 3D chunk (three.js) is ready by the time the walkthrough arrives
+            if (e.data.tool === "show_in_3d") void import("@/features/experiment-3d").then((m) => m.preloadScene());
             return patch(reply.id, (a) => ({ ...a, status: e.data.text }));
+          case "tour":
+            tour = e.data;
+            return patch(reply.id, (a) => ({ ...a, tour: e.data }));
           case "proposal":
             return patch(reply.id, (a) => ({ ...a, proposals: [...a.proposals, e.data] }));
           case "frame":
@@ -70,14 +116,19 @@ export function AgentProvider({ children }: { children: ReactNode }) {
             );
           case "chart":
             return patch(reply.id, (a) => ({ ...a, charts: [...(a.charts ?? []), e.data] }));
-          case "highlight":
-            applyHighlight(e.data.fields, e.data.test_nos);
+          case "highlight": {
+            // highlight on the current page and bring the first value into view
+            const hits = applyHighlight(e.data.fields, e.data.test_nos);
+            if (hits[0]) revealElement(hits[0]);
             return;
+          }
           case "limit":
           case "error":
             return patch(reply.id, (a) => ({ ...a, notices: [...a.notices, e.data] }));
           case "done":
-            return patch(reply.id, (a) => ({ ...a, answer: e.data.answer, live: "", status: null, done: true }));
+            patch(reply.id, (a) => ({ ...a, answer: e.data.answer, live: "", status: null, done: true }));
+            if (tour) playTour(tour);
+            return;
         }
       };
       streamAgent(history, onEvent, ctrl.signal).finally(() => {
@@ -85,17 +136,36 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         setBusy(false);
       });
     },
-    [busy, patch],
+    [busy, patch, playTour],
+  );
+
+  const jumpTo = useCallback(
+    (src: Source) => {
+      const target = sourceTarget(src, API_BASE);
+      if (target.kind === "external") {
+        window.open(target.href, "_blank", "noopener,noreferrer");
+        return;
+      }
+      const here = window.location.pathname + window.location.search;
+      if (here !== target.href) navigate(target.href);
+      cancelFocus.current?.();
+      cancelFocus.current = focusOnPage(target);
+    },
+    [navigate],
   );
 
   const stop = useCallback(() => abort.current?.abort(), []);
   const reset = useCallback(() => {
     abort.current?.abort();
     clearHighlight();
+    clearQuote();
     setItems([]);
   }, []);
 
-  const value = useMemo(() => ({ items, busy, open, setOpen, ask, stop, reset }), [items, busy, open, ask, stop, reset]);
+  const value = useMemo(
+    () => ({ items, busy, open, setOpen, ask, stop, reset, context, jumpTo, playTour }),
+    [items, busy, open, ask, stop, reset, context, jumpTo, playTour],
+  );
   return <AgentCtx.Provider value={value}>{children}</AgentCtx.Provider>;
 }
 

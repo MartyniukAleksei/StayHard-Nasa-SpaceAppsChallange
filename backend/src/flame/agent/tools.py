@@ -1,4 +1,4 @@
-"""Інструменти даних агента: тонкі обгортки над сервісами `studies.flex` і `rag`.
+"""Інструменти даних агента: тонкі обгортки над сервісами `studies.flex`, `studies.psi` і `rag`.
 
 Кожен інструмент повертає `ToolOutput`: вміст `tool_result` для Claude API (блоки
 `search_result` з цитатами — ADR 0006, плюс службовий текст без чисел, які треба цитувати)
@@ -20,22 +20,30 @@ from flame.core.citations import (
     compare_url,
     neighbors_url,
     test_url,
+    timeseries_url,
     to_search_result,
 )
+from flame.core.studies import ALL_STUDIES, PSI_STUDIES
 from flame.media import psi
 from flame.media import service as media_service
 from flame.media import timing as media_timing
 from flame.rag import service as rag_service
 from flame.rag.schemas import SearchFilters
-from flame.studies.flex import charts
+from flame.studies.flex import charts, tour
 from flame.studies.flex import repository as flex_repository
 from flame.studies.flex import service as flex
 from flame.studies.flex.fields import FIELDS, SIGNALS
 from flame.studies.flex.schemas import Filter
+from flame.studies.psi import repository as psi_repository
+from flame.studies.psi import service as psi_service
+from flame.studies.psi.schemas import Filter as StudyFilter
+from flame.studies.same_r import repository as same_r_repository
+from flame.studies.same_r import service as same_r_service
 
 STUDY = "PSI-69"
 OPS = ["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "not_null"]
 DOC_TYPES = ["testsheet", "doc_pdf", "doc_docx", "about", "publication"]
+STUDY_OPS = [*OPS[:7], "contains", *OPS[7:]]
 
 
 class ToolError(Exception):
@@ -153,14 +161,18 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "search_docs",
         "description": (
-            "Search FLEX texts: researcher TestSheet comments, NASA engineering and science "
-            "documents, presentations, the investigation description and publication list. Use "
-            "it for why/how questions, procedures, definitions and what happened in a test. "
-            "Write the query in English. Optionally restrict to tests or source types."
+            "Search study texts. study=flex (FLEX): researcher TestSheet comments, NASA "
+            "engineering and science documents, presentations, the investigation description "
+            "and publication list. Other studies (cfi, cfig, bass2, samer, saffire2): the "
+            "investigation description (objective, hypothesis, approach, impacts) and "
+            "publication list only. study=any searches all. Use it for why/how questions, "
+            "procedures, definitions and what happened in a FLEX test. Write the query in "
+            "English. Optionally restrict to FLEX tests or source types."
         ),
         "input_schema": _obj(
             {
                 "query": {"type": "string"},
+                "study": {"type": "string", "enum": [*ALL_STUDIES, "any"]},
                 "test_nos": {"type": "array", "items": TEST_NO},
                 "source_types": {"type": "array", "items": {"type": "string", "enum": DOC_TYPES}},
             }
@@ -195,11 +207,15 @@ UI_TOOLS: list[dict[str, Any]] = [
             "include fiber tests). open_video: the onboard video of one test (only some tests "
             "have one; you get an error otherwise). open_replay: the 3D replay of one test "
             "starting at t_s seconds after ignition. t_s is ignored by other actions (send 0). "
-            "label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'."
+            "label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'. study: flex for "
+            "all of the above; samer opens the SAME-R pages instead (open_test, open_compare and "
+            "open_tests only; test_nos are then SAME-R run numbers, e.g. 73 for test 73 / 73a; "
+            "explorer is ignored)."
         ),
         "input_schema": _obj(
             {
                 "action": {"type": "string", "enum": ACTIONS},
+                "study": {"type": "string", "enum": ["flex", "samer"]},
                 "label": {"type": "string"},
                 "test_nos": {"type": "array", "items": TEST_NO},
                 "t_s": {"type": "number"},
@@ -252,6 +268,26 @@ CHART_TOOL: dict[str, Any] = {
     ),
 }
 
+STUDY_CHART_TOOL = {
+    "name": "make_study_chart",
+    "description": (
+        "Draw a SAME-R sensor over time in the chat for 1-3 SAME-R tests on shared axes, e.g. how "
+        "the P-Trak count, smoke mass or a smoke detector reacted. t = 0 is when the heater "
+        "turned on; instrument status codes are left out. test_nos are SAME-R run numbers (73 for "
+        "test 73 / 73a). study must be samer. Smoke mass is DustTrak B (DustTrak A has no usable "
+        "readings in SAME-R). A sensor with almost no valid readings, or a flat one, is not "
+        "drawn: you get the reason instead. Describe what the chart shows using the returned "
+        "summaries; they give the range and when the reading peaked."
+    ),
+    "input_schema": _obj(
+        {
+            "study": {"type": "string", "enum": ["samer"]},
+            "column": {"type": "string", "enum": list(same_r_service.CHART_COLUMNS)},
+            "test_nos": {"type": "array", "items": {"type": "integer"}},
+        }
+    ),
+}
+
 CAMERA = {
     "type": "string",
     "enum": ["A", "B", "D"],
@@ -292,15 +328,150 @@ FRAME_TOOLS: list[dict[str, Any]] = [
     },
 ]
 
+_ONE_FOCUS = {"type": "string", "enum": tour.FOCUS}
+TOUR_TOOL: dict[str, Any] = {
+    "name": "show_in_3d",
+    "description": (
+        "Play a guided walkthrough of one FLEX test in its 3D replay. It starts by itself when "
+        "your answer is complete: the website opens the test's 3D replay and plays your steps "
+        "(camera move, time, highlighted objects, short labels, the real camera frame next to "
+        "the scene). Use it when the user asks what happens in one test, asks to be shown it, "
+        f"or asks why it went out. Give 3-{tour.MAX_STEPS} steps in the order of the story. "
+        "Each step: moment - needles_retract, igniter_on, ignition (t = 0), flame_max (largest "
+        "measured flame), extinction (end of the measured flame series), end_of_data (end of the "
+        "droplet series) or t with t_s seconds after ignition (send t_s 0 otherwise); action - "
+        "pause holds the scene at the moment, play lets time run from it at speed (1 = real "
+        "time, 0.5 = slow motion); camera - overview, flame, droplet or camera_view (along the "
+        "color camera); focus - objects to outline; show_frame - also point at the real "
+        f"onboard frame of that second; labels - at most {tour.MAX_LABELS} short texts (under "
+        f"{tour.MAX_TEXT} characters) attached to an object. Never write numbers in label "
+        "text. Use placeholders and the server fills in the measured value with its unit: "
+        "{t} time of the step, {d} droplet diameter, {d2} its square (derived), {flame_d} "
+        "color-camera flame diameter, {flame_d_uv} UV flame diameter; {d_change} and {dt} - how "
+        "much the diameter changed and how much time passed since the previous step (derived); "
+        "{d0}, {dext}, {K}, {burn_time} from the test table. Example label: 'Flame out at {t}; "
+        "droplet still {d}'. The result lists every filled-in value: cite them in your answer."
+    ),
+    "input_schema": _obj(
+        {
+            "test_no": TEST_NO,
+            "steps": {
+                "type": "array",
+                "items": _obj(
+                    {
+                        "moment": {"type": "string", "enum": tour.MOMENTS},
+                        "t_s": {"type": "number"},
+                        "action": {"type": "string", "enum": tour.ACTIONS},
+                        "speed": {"type": "number"},
+                        "camera": {"type": "string", "enum": tour.CAMERAS},
+                        "focus": {"type": "array", "items": _ONE_FOCUS},
+                        "show_frame": {"type": "boolean"},
+                        "labels": {
+                            "type": "array",
+                            "items": _obj({"at": _ONE_FOCUS, "text": {"type": "string"}}),
+                        },
+                    }
+                ),
+            },
+        }
+    ),
+}
+
+STUDY_PARAM = {"type": "string", "enum": list(PSI_STUDIES), "description": "study slug"}
+TEST_ID = {"type": "string", "description": "test key as in the study table, e.g. 1206, 2-5, 51a"}
+STUDY_FILTERS = {
+    "type": "array",
+    "items": _obj(
+        {
+            "field": {"type": "string", "description": "column of the study test table"},
+            "op": {"type": "string", "enum": STUDY_OPS},
+            "value": {"type": "string"},
+        }
+    ),
+}
+STUDY_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "describe_study",
+        "description": (
+            "Overview of one of the other NASA PSI studies in the database: title and DOI, the "
+            "columns of its test table with value ranges and categories, its time series, and "
+            "notes on how to read the data. Call it first for any question about that study, "
+            "before filtering. Studies: "
+            + "; ".join(f"{s.slug} = {s.acronym} ({s.accession})" for s in PSI_STUDIES.values())
+            + ". FLEX (PSI-69) uses the other tools."
+        ),
+        "input_schema": _obj({"study": STUDY_PARAM}),
+    },
+    {
+        "name": "query_study_tests",
+        "description": (
+            "Find tests of a study by conditions in its test table (column names from "
+            "describe_study). Returns how many match and the rows (default key columns, or the "
+            "columns you list; filtered columns are always included). Ops: eq, ne, lt, lte, gt, "
+            "gte (numbers/dates), in (comma-separated), contains (substring of text), is_null / "
+            "not_null (empty value). Text compares ignoring case. sort: a column or empty."
+        ),
+        "input_schema": _obj(
+            {
+                "study": STUDY_PARAM,
+                "filters": STUDY_FILTERS,
+                "columns": {"type": "array", "items": {"type": "string"}},
+                "sort": {"type": "string"},
+                "descending": {"type": "boolean"},
+                "limit": {"type": "integer", "description": "1-50"},
+            }
+        ),
+    },
+    {
+        "name": "aggregate_study_tests",
+        "description": (
+            "Counts of tests matching filters, optionally grouped by a column (group_by), and "
+            "count/mean/min/max of a numeric column (metric). Values are computed from the "
+            "table; say that means are computed. Leave group_by or metric empty if not needed."
+        ),
+        "input_schema": _obj(
+            {
+                "study": STUDY_PARAM,
+                "filters": STUDY_FILTERS,
+                "group_by": {"type": "string"},
+                "metric": {"type": "string"},
+            }
+        ),
+    },
+    {
+        "name": "get_study_test",
+        "description": (
+            "All recorded columns of one test of a study, which time series it has, and the "
+            "kinds of files NASA PSI lists for it."
+        ),
+        "input_schema": _obj({"study": STUDY_PARAM, "test_id": TEST_ID}),
+    },
+    {
+        "name": "get_study_timeseries_summary",
+        "description": (
+            "Summary of a measured time series of one test of a study: number of rows and the "
+            "range of each column. series is the name from describe_study (e.g. droplet, "
+            "cool_flame, radiometer, chamber, telemetry, sensors)."
+        ),
+        "input_schema": _obj(
+            {"study": STUDY_PARAM, "test_id": TEST_ID, "series": {"type": "string"}}
+        ),
+    },
+]
+
+TOOLS.extend(STUDY_TOOLS)
 TOOLS.extend(UI_TOOLS)
 TOOLS.append(CHART_TOOL)
+TOOLS.append(STUDY_CHART_TOOL)
 TOOLS.extend(FRAME_TOOLS)
+TOOLS.append(TOUR_TOOL)
 
 # strict: true — лише малі схеми: API компілює строгі схеми в граматику з обмеженням розміру,
 # а переліки полів у query_tests / propose_action / highlight_params / make_chart її
 # переповнюють. Їхній ввід і так повністю перевіряє код (помилка → is_error моделі).
 STRICT = {"get_test", "compare_tests", "find_similar_tests", "get_timeseries_summary",
-          "search_docs", "find_frame", "look_at_frames"}  # fmt: skip
+          "search_docs", "find_frame", "look_at_frames", "describe_study", "get_study_test",
+          "get_study_timeseries_summary"}  # fmt: skip
 
 
 def _clamp(v: int, lo: int, hi: int) -> int:
@@ -424,14 +595,16 @@ def search_docs(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOut
     query = str(args.get("query") or "").strip()
     if len(query) < 2:
         raise ToolError("query is empty")
+    slug = str(args.get("study") or "flex")
     filters = SearchFilters(
-        study=STUDY,
+        study=ALL_STUDIES[slug].accession if slug in ALL_STUDIES else None,
         test_nos=[int(n) for n in args.get("test_nos") or []] or None,
         source_types=list(args.get("source_types") or []) or None,
     )
     hits = rag_service.search(cur, query, 6, filters)
     if not hits:
-        return ToolOutput(notes=["No matching passages in the FLEX texts."])
+        where = ALL_STUDIES[slug].acronym if slug in ALL_STUDIES else "study"
+        return ToolOutput(notes=[f"No matching passages in the {where} texts."])
     return ToolOutput(sources=[h.to_source() for h in hits])
 
 
@@ -443,11 +616,28 @@ def _existing(cur: duckdb.DuckDBPyConnection, nos: list[int]) -> list[int]:
     return nos
 
 
+def _same_r_action(cur: duckdb.DuckDBPyConnection, action: Any, nos: list[int]) -> dict[str, Any]:
+    """Кнопка на сторінки SAME-R: ті самі правила кількості тестів, що й для FLEX."""
+    need = {"open_test": (1, 1), "open_compare": (2, 3), "open_tests": (0, 0)}.get(str(action))
+    if need is None:
+        raise ToolError(
+            f"{action} is not available for SAME-R; use open_test, open_compare or open_tests"
+        )
+    if not need[0] <= len(nos) <= need[1]:
+        raise ToolError(f"{action} for SAME-R needs {need[0]}-{need[1]} tests in test_nos")
+    missing = [n for n in nos if not same_r_repository.tests(cur, n)]
+    if missing:
+        raise ToolError(f"no such SAME-R tests: {', '.join(map(str, missing))}")
+    return {"study": "samer", "test_nos": nos}
+
+
 def propose_action(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
     action = args.get("action")
     nos = list(dict.fromkeys(int(n) for n in args.get("test_nos") or []))
     params: dict[str, Any] = {}
-    if action == "open_test":
+    if args.get("study") == "samer":
+        params = _same_r_action(cur, action, nos)
+    elif action == "open_test":
         if len(nos) != 1:
             raise ToolError("open_test needs exactly one test in test_nos")
         params["test_nos"] = _existing(cur, nos)
@@ -511,6 +701,21 @@ def make_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutp
             nos = [int(n) for n in args.get("test_nos") or []]
             out = charts.line(cur, args.get("quantity", ""), nos)
     except charts.ChartError as e:
+        raise ToolError(str(e)) from e
+    notes = out["chart"]["notes"]
+    return ToolOutput(
+        sources=out["sources"],
+        notes=[f"Chart shown to the user. {'; '.join(notes)}"] if notes else [],
+        note_url=out["sources"][0].url,
+        events=[{"event": "chart", "data": out["chart"]}],
+    )
+
+
+def make_study_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    try:
+        nos = [int(n) for n in args.get("test_nos") or []]
+        out = same_r_service.chart(cur, str(args.get("column") or ""), nos)
+    except same_r_service.NotFound as e:
         raise ToolError(str(e)) from e
     notes = out["chart"]["notes"]
     return ToolOutput(
@@ -622,6 +827,107 @@ def look_at_frames(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> Tool
     return out
 
 
+def show_in_3d(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    """3D-тур: кроки з переліків → подія `tour` з підставленими числами та їхні джерела."""
+    try:
+        n = int(args.get("test_no"))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ToolError("test_no must be a FLEX test number") from None
+    rows = flex_repository.get_tests(cur, [n])
+    events = media_timing.apparatus_events(n, rows[0].get("cir_id")) if rows else {}
+    try:
+        out = tour.build(tour.load(cur, n, events), args.get("steps"))
+    except tour.TourError as e:
+        raise ToolError(str(e)) from e
+    sources: list[Source] = out["sources"]
+    shown = "; ".join(
+        f"step {i}: " + " / ".join(lb["text"] for lb in st["labels"])
+        for i, st in enumerate(out["steps"], start=1)
+        if st["labels"]
+    )
+    data = {**out, "sources": [{"url": s.url, "title": s.title} for s in sources]}
+    return ToolOutput(
+        sources=sources,
+        notes=[
+            f"The 3D walkthrough of {flex.test_name(n)} ({len(out['steps'])} steps) starts for "
+            f"the user when your answer is complete. Labels as shown: {shown or 'none'}. Say the "
+            "same things in your answer and cite the values below."
+        ],
+        note_url=timeseries_url(STUDY, n, "droplet"),
+        events=[{"event": "tour", "data": data}],
+    )
+
+
+def _study_filters(args: dict[str, Any]) -> list[StudyFilter]:
+    out = []
+    for f in args.get("filters") or []:
+        flt = StudyFilter(**f)
+        if flt.op in ("is_null", "not_null"):
+            flt.value = None
+        out.append(flt)
+    return out
+
+
+def _study_call(fn: Callable[..., Any], *a: Any) -> Any:
+    try:
+        return fn(*a)
+    except (psi_service.NotFound, psi_repository.InvalidQuery) as e:
+        raise ToolError(str(e)) from e
+
+
+def describe_study(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(psi_service.overview, cur, str(args.get("study")))
+    return ToolOutput(sources=res.sources)
+
+
+def query_study_tests(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    slug = str(args.get("study"))
+    res = _study_call(
+        psi_service.query_tests,
+        cur,
+        slug,
+        _study_filters(args),
+        [str(c) for c in args.get("columns") or []] or None,
+        str(args.get("sort") or "") or None,
+        bool(args.get("descending")),
+        _clamp(args.get("limit") or 20, 1, 50),
+    )
+    if res.total > len(res.tests):
+        res.sources[0].text += " Narrow the filters or raise the limit to see the rest."
+    return ToolOutput(sources=res.sources)
+
+
+def aggregate_study_tests(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(
+        psi_service.aggregate,
+        cur,
+        str(args.get("study")),
+        _study_filters(args),
+        str(args.get("group_by") or "") or None,
+        str(args.get("metric") or "") or None,
+    )
+    return ToolOutput(sources=res.sources)
+
+
+def get_study_test(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    res = _study_call(psi_service.get_test, cur, str(args.get("study")), str(args.get("test_id")))
+    return ToolOutput(sources=res.sources)
+
+
+def get_study_timeseries_summary(
+    cur: duckdb.DuckDBPyConnection, args: dict[str, Any]
+) -> ToolOutput:
+    res = _study_call(
+        psi_service.timeseries,
+        cur,
+        str(args.get("study")),
+        str(args.get("test_id")),
+        str(args.get("series") or "").removeprefix("ts_"),
+        10,
+    )
+    return ToolOutput(sources=res.sources)
+
+
 Handler = Callable[[duckdb.DuckDBPyConnection, dict[str, Any]], ToolOutput]
 
 HANDLERS: dict[str, Handler] = {
@@ -631,11 +937,18 @@ HANDLERS: dict[str, Handler] = {
     "find_similar_tests": find_similar_tests,
     "get_timeseries_summary": get_timeseries_summary,
     "search_docs": search_docs,
+    "describe_study": describe_study,
+    "query_study_tests": query_study_tests,
+    "aggregate_study_tests": aggregate_study_tests,
+    "get_study_test": get_study_test,
+    "get_study_timeseries_summary": get_study_timeseries_summary,
     "propose_action": propose_action,
     "highlight_params": highlight_params,
     "make_chart": make_chart,
+    "make_study_chart": make_study_chart,
     "find_frame": find_frame,
     "look_at_frames": look_at_frames,
+    "show_in_3d": show_in_3d,
 }
 
 
@@ -662,6 +975,17 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return "Highlighting values on the page…"
         case "make_chart":
             return "Drawing a chart from the data…"
+        case "describe_study" | "query_study_tests" | "aggregate_study_tests":
+            study = PSI_STUDIES.get(str(args.get("study")))
+            return f"Reading the {study.acronym if study else 'study'} test table…"
+        case "get_study_test":
+            study = PSI_STUDIES.get(str(args.get("study")))
+            name = study.test_label if study else "study"
+            return f"Reading {name} test {args.get('test_id', '')}…"
+        case "get_study_timeseries_summary":
+            return f"Reading {args.get('series')} data…"
         case "find_frame" | "look_at_frames":
             return "Fetching camera frames from NASA PSI…"
+        case "show_in_3d":
+            return "Preparing 3D walkthrough…"
     return "Working…"

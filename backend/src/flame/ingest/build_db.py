@@ -10,7 +10,8 @@
    у рантаймі).
 4. Копіює знімки інших досліджень PSI (data/<slug>/<slug>.duckdb) у схеми `<slug>`
    (flame.ingest.psi_studies), створює схему `flex` з view на таблиці FLEX і реєстр `studies`.
-5. Будує RAG-індекс `chunks` (flame.rag.index; ембеддинги перевикористовуються зі старої БД).
+5. Будує RAG-індекс `chunks` з текстів FLEX і описів інших досліджень (flame.rag.index;
+   ембеддинги перевикористовуються зі старої БД).
 
 Версія збірки (`BUILD_VERSION`) — хеш коду, від якого залежить вміст БД (`BUILD_SOURCES`).
 Вона пишеться в таблицю `meta`; bootstrap перезбирає БД на проді, коли версія в коді
@@ -21,6 +22,7 @@ import hashlib
 import json
 import shutil
 from datetime import UTC, datetime
+from itertools import chain
 from pathlib import Path
 
 import duckdb
@@ -29,11 +31,13 @@ from flame.core.config import settings
 from flame.ingest import psi_studies
 from flame.rag import index as rag_index
 from flame.rag.sources import flex as flex_sources
+from flame.rag.sources import psi_studies as psi_sources
 
 _PKG = Path(__file__).resolve().parents[1]  # src/flame
 BUILD_SOURCES = [
     _PKG / "ingest" / "build_db.py",
     _PKG / "ingest" / "psi_studies.py",
+    _PKG / "core" / "studies.py",
     *sorted((_PKG / "rag").rglob("*.py")),
 ]
 
@@ -140,7 +144,11 @@ def main() -> None:
         else:
             print(f"warning: немає {about}, у study_about немає FLEX")
         datasets = load_studies(con)
-        rag_meta = rag_index.build(con, flex_sources.iter_documents(settings.flex_dir), old_db=out)
+        docs = chain(
+            flex_sources.iter_documents(settings.flex_dir),
+            psi_sources.iter_documents(settings.data_dir),
+        )
+        rag_meta = rag_index.build(con, docs, old_db=out)
         con.execute("CREATE OR REPLACE TABLE meta (key VARCHAR PRIMARY KEY, value VARCHAR)")
         con.executemany(
             "INSERT INTO meta VALUES (?, ?)",

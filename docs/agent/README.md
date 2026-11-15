@@ -1,6 +1,6 @@
 # Агент
 
-Агент відповідає на питання про FLEX лише з даних інструментів, кожне число — з посиланням ([ADR 0006](../decisions/0006-citation-contract.md)). Архітектура — [ADR 0007](../decisions/0007-agent-architecture.md). Код: `backend/src/flame/agent/`.
+Агент відповідає на питання про FLEX і ще п'ять досліджень PSI (CFI, ACME CFI-G, BASS-II, SAME-R, Saffire-II — [data/psi-studies.md](../data/psi-studies.md)) лише з даних інструментів, кожне число — з посиланням ([ADR 0006](../decisions/0006-citation-contract.md)). Архітектура — [ADR 0007](../decisions/0007-agent-architecture.md). Код: `backend/src/flame/agent/`.
 
 ## Етапи
 | Етап | Що | Стан |
@@ -9,6 +9,8 @@
 | 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | ✅ |
 | 3 | Графіки `make_chart` | ✅ |
 | 4 | Кадри камер за подією, відео, replay | ✅ |
+| 5 | Інші дослідження PSI: інструменти над схемами `cfi`, `cfig`, `bass2`, `samer`, `saffire2`, RAG по їхніх описах і публікаціях | ✅ |
+| 6 | 3D-тур: `show_in_3d`, подія `tour`, режисер у 3D-сцені — [3d-tour/](3d-tour/mission.md), [ADR 0010](../decisions/0010-agent-3d-tour.md); результати на проді й шпаргалка для демо — [3d-tour/demo.md](3d-tour/demo.md) | ✅ |
 | — | Симуляція what-if | відкладено |
 
 ## Модель і налаштування
@@ -22,12 +24,21 @@
 | `compare_tests(test_nos)` | `compare_tests` | обчислене порівняння (`/compare?ids=`) + рядки |
 | `find_similar_tests(test_no, k)` | `neighbors` | рейтинг схожості (оцінка) + рядки |
 | `get_timeseries_summary(test_no, signal)` | `get_timeseries` | зведення ряду, сирий файл |
-| `search_docs(query, test_nos, source_types)` | `rag.service.search` | чанки RAG |
-| `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
+| `search_docs(query, study, test_nos, source_types)` | `rag.service.search` | чанки RAG; `study` = slug або `any` (FLEX: документи й TestSheet; `samer`: ще й NASA-документи (PDF); інші — лише опис і публікації з `about.json`) |
+| `propose_action(action, study, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст; `study=samer` — кнопки на сторінки SAME-R (`open_test`, `open_compare`, `open_tests`) |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 | `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |
+| `make_study_chart(study, column, test_nos)` | `studies/same_r/service.chart` | SAME-R: один сенсор у часі (t = 0 — увімкнення нагрівача, без кодів приладів) для 1–3 тестів (маса диму — DustTrak B; ряд з < 20 % валідних значень або плаский не малюється — агент отримує причину); подія `chart` з `study`, `test_ids`, `doi` (кнопка «Open on page» і CSV ведуть на SAME-R); моделі — мінімум і максимум з часом кожного |
 | `find_frame(test_no, event, t_s, camera)` | `media.service` + `media/timing.py` | подія `frame`; джерело — URL кадру з часом від запалювання |
 | `look_at_frames(test_no, camera, t_s[≤4])` | те саме + `frame_jpeg(…, 512)` | зображення для зору моделі (без `search_result`), події `frame` для UI |
+| `show_in_3d(test_no, steps[≤6])` | `studies/flex/tour.py` + `media/timing.apparatus_events` | подія `tour` (кроки з підставленими числами); моделі — значення рядів у кожному кроці як `search_result` (ряди, таблиця тесту, лог) |
+| `describe_study(study)` | `studies.psi.service.overview` | DOI, профіль колонок `tests` (діапазони, категорії), часові ряди, примітки до даних (`studies/psi/notes.py`) |
+| `query_study_tests(study, filters, columns, sort, descending, limit)` | `query_tests` | підсумок запиту + рядки (`/api/studies/{slug}/tests/{id}`); оп. `contains` для тексту |
+| `aggregate_study_tests(study, filters, group_by, metric)` | `aggregate` | обчислені кількості й count/mean/min/max (`/api/studies/{slug}/aggregate`) |
+| `get_study_test(study, test_id)` | `get_test` | рядок тесту + які ряди й файли є |
+| `get_study_timeseries_summary(study, test_id, series)` | `timeseries` | кількість точок і діапазон кожної колонки (у samer — ряд прогону) |
+
+Інструменти FLEX (`query_tests`, `make_chart`, кадри, кнопки) працюють лише з FLEX. Для інших досліджень сторінок, графіків і кнопок поки немає; поле `field` у фільтрах — назва колонки таблиці, яку перевіряє `studies/psi/repository.py` за `information_schema`.
 
 `strict: true` — лише в інструментів з малими схемами (`tools.STRICT`): API компілює строгі схеми в граматику з обмеженням розміру, а переліки полів `query_tests` / `propose_action` / `highlight_params` / `make_chart` її переповнюють («compiled grammar is too large»); їхній ввід повністю перевіряє код. `tool_result` містить або лише блоки `search_result`, або лише текст/зображення (API не дозволяє змішувати).
 
@@ -47,6 +58,7 @@
 | `highlight` | `{fields[], test_nos[]}` | підсвітити `[data-field]` на поточній сторінці |
 | `chart` | `{kind, title, x_label, y_label, derived, series[{id,label,points,kind,tone}], test_nos, notes}` | графік у повідомленні (`ChartBlock`), `[Open on page]`, `[Download CSV]` |
 | `frame` | `{test_no, camera, camera_label, index, t_s, event, url}` | кадр у повідомленні (`FrameStrip`), підпис з часом (`derived time`) |
+| `tour` | `{id, test_no, steps[{moment, t, action, speed, camera, focus[], show_frame, labels[{at, text, tags[], source}]}], sources[{url, title}]}` | після `done` відкрити 3D-replay тесту й програти кроки ([ui-actions.md](ui-actions.md)) |
 | `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, картка джерела з `quotes`, позначки «General knowledge» / «No source» |
 
 Відмови до стріму — JSON `{"detail": {"reason", "message", "retry_after"}}`: 503 `not_configured` / `budget`, 429 `rate_limit` (+ `Retry-After`), 422 `bad_history` / `too_long`. Фронт показує `message` як є.
@@ -72,9 +84,16 @@ uv run python -m flame.agent.eval --only trap-no-data
 
 ## Фронтенд (`frontend/src/features/agent`)
 - `AgentProvider` (у `app/Layout.tsx`) — стан чату, стрім `POST /api/agent` (`api.ts`), історія в `sessionStorage` (`lib/history.ts`), `page_context` з URL (`lib/context.ts`).
-- `AgentSearch` — поле в шапці замість заглушки: Enter відкриває панель і надсилає питання.
-- `AgentPanel` — права панель (420 px; на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран), живий текст і статуси, позначки «general knowledge» / «no source», номери `[n]` → картка джерела внизу панелі (назва, дослівні цитати, `[Open source]`: рядок тесту й порівняння ведуть на сторінки застосунку, файли й PDF — на бекенд, DOI — на doi.org; `lib/links.ts`), кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
-- Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`; `highlight` — DOM.
+- `AgentLauncher` — кнопка `>_ agent` у шапці (пошукового поля в шапці немає): відкриває й закриває термінал агента, те саме — `Ctrl+`` / `⌘+``; поки агент відповідає, на кнопці блимає мітка, коли панель закрита — лічильник питань.
+- `AgentPanel` — **термінал** збоку (усе моноширинне; на ≥ 1100 px сторінка відсувається, на ≤ 600 px — на весь екран). Рядок заголовка — контекст («● agent · Test #35 · Watch») і кнопки `expand` / `clear` / `×`. На початку журналу — вітальний блок як у Claude Code: хто це й на що дивиться; поки розмова порожня — 3 підказки під сторінку. Репліки: `> питання` (під ним «on …»), `● відповідь`, `✻ крок…`. Знизу поле з `>`: Enter — надіслати, Shift+Enter — новий рядок, Esc — зупинити відповідь або закрити термінал. Решта:
+  - **розмір**: лівий край тягнеться мишею або ← → (320 px … 70 % екрана, подвійний клік — 420 px), ширина в `localStorage` (`ag-width`) і CSS-змінній `--ag-w`; `[Expand]` / `[Collapse]` — на весь екран (розмова в колонці ≤ 860 px), `Esc` згортає;
+  - **контекст**: під заголовком «Context: Test #35 · Watch» — сторінка й розділ (`h2`), який користувач бачить (`lib/useSection.ts`, `describeContext` у `lib/context.ts`); те саме йде в `page_context.section`; під кожним питанням — «asked on …»;
+  - **цитати як у NotebookLM**: наведення/фокус на `[n]` — попап з дослівною цитатою; клік — картка джерела внизу панелі **і** перехід до місця на сайті (`lib/jump.ts` → `focusOnPage` у `lib/highlight.ts`): рядок таблиці → сторінка тесту, розділ Parameters, підсвічені поля з цитати; коментар TestSheet → «What happened» з підсвіченою фразою (CSS Custom Highlight API); часовий ряд → потрібний графік; порівняння → сторінка порівняння; PDF/файли/DOI — нова вкладка (PDF на сторінці `#page`);
+  - подія `highlight` підсвічує й прокручує до першого значення;
+  - позначка «no source» лишається; «general knowledge» у UI не показується;
+  - кнопки-пропозиції з `[Back]`, повідомлення лімітів і помилок (`message` з бекенду).
+- **3D-тур:** на `status` з `tool = show_in_3d` підвантажується чанк сцени (`preloadScene`); подія `tour` зберігається в репліці й у `sessionStorage`; після `done` — `playTour` (`lib/tour.ts`: `tourHref`, `onTourPage`, `saveTour`): перехід на 3D-replay тесту або подія `agent:tour`. У репліці лишається кнопка `[Replay 3D walkthrough]`. На ≤ 600 px панель на час туру закривається, кнопка `[Chat]` у смузі туру (подія `agent:open`) повертає її.
+- Чисті функції в `lib/` з тестами `node:test`: `sse`, `answer` (рендер сегментів і мінімального markdown), `history`, `links`, `actions`, `context`, `jump`; `highlight`, `useSection` — DOM.
 
 ## Графіки (`studies/flex/charts.py`, `make_chart`)
 - **line** — одна величина в часі для 1–3 тестів на спільних осях: `droplet_diameter`, `droplet_d2` (derived), `droplet_d2_normalized` ((d/d₀)² від t/d₀², derived), `flame_diameter_uv`, `flame_diameter_color`, `standoff_uv`. Лише t ≥ 0 (після запалювання), ≤ 300 точок на серію. Тест без ряду чи без d₀ пропускається з приміткою.
@@ -85,6 +104,13 @@ uv run python -m flame.agent.eval --only trap-no-data
 - **Час кадру від запалювання** (`media/timing.py`): нуль — рядок «AS Igniter Off/Retract Start» у лозі `<CIR>.txt` (як у 3D-replay), час кадру = `start_time` архіву + `t_ms` − нуль. Перевірено на FLEX-100: кінець ряду UV-полум'я 6.12 с ↔ кадр камери B при 6.08 с.
 - **Події:** `ignition` (0 с), `extinction` (кінець ряду полум'я UV, інакше кольорового), `end` (кінець ряду краплі), `time` (довільний `t_s`). Кадри тягнуться з NASA PSI (~7 с на перший запит до архіву), UI показує статус.
 - **Пропозиції** `open_video` (лише якщо в тесту є локальний mp4, інакше помилка моделі → чесне «немає відео») і `open_replay(t_s)` → `/studies/flex/tests/{n}?view=3d&t=…#tp-media`; `MediaBlock` відкриває вкладку й ставить 3D/2D replay на паузу в цей момент (`startAt`).
+
+## 3D-тур (`studies/flex/tour.py`, `show_in_3d`)
+- Модель обирає момент, дію, ракурс і об'єкти з переліків і пише підписи із заповнювачами; бекенд обчислює час моменту, бере найближчий відлік ряду (±0.25 с), підставляє число з одиницею, ставить теги `data` / `derived` і джерело. Цифри поза заповнювачами, невідомі заповнювачі, > 6 кроків, > 2 підписи, текст > 90 символів, тест без ряду краплі — помилка моделі (`TourError` → `is_error`).
+- `extinction` = останній відлік обох рядів полум'я (як `flameEnd` у сцені); рухи голок і запалювача — з логу тесту (`media/timing.apparatus_events`, ті самі мітки, що в `experiment-3d/lib/log.ts`).
+- Тур не замінює відповідь: промпт вимагає сказати те саме текстом із цитатами; холодне полум'я — лише словами коментаря NASA.
+- Eval: `tour-155`, `tour-cool-flame-wording`, `tour-no-series` (`expect_tour` / `expect_no_tour`); для сценарію демо — `demo-compare-over-time` (графік при порівнянні в часі) і `demo-pick-one-test` (кнопка `open_test` для виділеного тесту).
+- Сцена (`features/experiment-3d`): крок = переліт камери й перемотка часу до моменту (1.2–3 с), потім утримання (2.5–6 с за довжиною підписів; `play` — час іде зі швидкістю кроку). Тур чекає на перший кадр сцени й кадри камер першого кроку (не довше 8 с). `[Pause]` зупиняє і годинник, і переліт. `prefers-reduced-motion`: без перельоту й перемотки, швидкість ≤ 1×. Без WebGL — 2D-replay і кроки туру списком. `camera_view` дивиться вздовж осі Z сцени (оцінка: геометрії камер у даних немає).
 
 ## Збирання відповіді
 У Sonnet 5.5 текст між викликами інструментів приходить як службові блоки міркувань і користувачу не показується. Тому промпт вимагає спершу всі виклики (дані, графіки, кадри, кнопки), а повну відповідь — в останньому повідомленні. `loop._answer_content` збирає текстові блоки всіх повідомлень асистента за хід (після перезапиту «No source» — лише переписані).

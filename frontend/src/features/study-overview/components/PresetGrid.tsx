@@ -52,9 +52,9 @@ function GroupAnswer({ group, showLabel }: { group: PresetGroup; showLabel: bool
         <span>free-floating tests</span>
       </div>
       <div className="ov-ends small">
-        <EndMark type="Extinction" count={group.by_end.extinction} short />
-        <EndMark type="Disruption" count={group.by_end.disruption} short />
-        <EndMark type="Completion" count={group.by_end.completion} short />
+        <EndMark type="Extinction" count={group.by_end.extinction} />
+        <EndMark type="Disruption" count={group.by_end.disruption} />
+        <EndMark type="Completion" count={group.by_end.completion} />
       </div>
       {excluded && <p className="ov-excluded">{excluded}</p>}
       <span className="ov-open mono small">open tests →</span>

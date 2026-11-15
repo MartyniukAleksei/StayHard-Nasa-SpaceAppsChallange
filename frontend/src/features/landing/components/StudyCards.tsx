@@ -1,11 +1,15 @@
 import { Link } from "react-router";
+import { FlameMini } from "./FlameMini";
 import { useStudies } from "../api";
 import type { StudyCard } from "../types";
 
 const EXCERPT = 180;
 
+/** "The FLEX (Flame Extinguishment Experiment) investigation aims…" → "FLEX aims…". */
+const plainName = (s: string) => s.replace(/^The\s+([A-Z][\w-]*)\s*(\([^)]*\))?\s+investigation\b/, "$1");
+
 const excerpt = (s: string) => {
-  const flat = s.replace(/\s+/g, " ").trim();
+  const flat = plainName(s.replace(/\s+/g, " ").trim());
   return flat.length > EXCERPT ? `${flat.slice(0, EXCERPT).replace(/\s+\S*$/, "")}…` : flat;
 };
 
@@ -15,10 +19,10 @@ export function StudyCards() {
   return (
     <section id="studies" className="band land-studies" aria-labelledby="studies-title">
       <div className="wrap">
-        <h2 id="studies-title" className="h-section">Choose a study</h2>
+        <h2 id="studies-title" className="sr-only">Choose a study</h2>
         <p className="lede">
-          Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX is open
-          now; the others are next.
+          Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX and
+          SAME-R are open now; the others are next.
         </p>
         {isPending && <p className="muted mono">Loading studies…</p>}
         {isError && (
@@ -57,6 +61,7 @@ function Active({ s, route }: { s: StudyCard; route: string }) {
       <Link to={route} className="land-card-link">
         <Passport s={s} />
         {f && (
+          <div className="land-facts-row">
           <div className="stats land-facts">
             <div className="stat">
               <b>{f.n_tests}</b>
@@ -72,6 +77,8 @@ function Active({ s, route }: { s: StudyCard; route: string }) {
               </b>
               <span>on the ISS</span>
             </div>
+          </div>
+          <FlameMini caption="a fuel droplet burning inside a spherical flame" />
           </div>
         )}
         <span className="btn">Open {s.acronym}</span>
