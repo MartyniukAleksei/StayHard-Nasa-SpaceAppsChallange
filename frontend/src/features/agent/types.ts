@@ -9,7 +9,8 @@ export type Proposal = {
   id: string;
   action: "open_tests" | "open_test" | "open_compare" | "open_video" | "open_replay";
   label: string;
-  params: { test_nos?: number[]; explorer?: ExplorerParams; t_s?: number };
+  /** study "samer": the SAME-R pages (test_nos are SAME-R run numbers); absent: FLEX */
+  params: { test_nos?: number[]; explorer?: ExplorerParams; t_s?: number; study?: string };
 };
 export type Highlight = { fields: string[]; test_nos: number[] };
 export type ChartTone = "ink" | "ash" | "flame" | "ext" | "dis" | "com" | "s1" | "s2";
@@ -39,6 +40,10 @@ export type Chart = {
   series: ChartSeries[];
   test_nos: number[];
   notes: string[];
+  /** set for charts of another study (e.g. "samer"): its test ids and DOI; test_nos stay FLEX-only */
+  study?: string;
+  test_ids?: number[];
+  doi?: string;
 };
 export type Notice = { reason: string; message: string };
 

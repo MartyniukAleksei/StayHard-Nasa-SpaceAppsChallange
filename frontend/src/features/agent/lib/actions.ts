@@ -3,6 +3,11 @@ import type { Proposal } from "../types.ts";
 
 export function proposalHref(p: Proposal): string | null {
   const nos = p.params.test_nos ?? [];
+  if (p.params.study === "samer") {
+    if (p.action === "open_test") return nos.length === 1 ? `/studies/same-r/tests/${nos[0]}` : null;
+    if (p.action === "open_compare") return nos.length >= 2 ? `/studies/same-r/compare?ids=${nos.slice(0, 3).join(",")}` : null;
+    return p.action === "open_tests" ? "/studies/same-r/tests" : null;
+  }
   switch (p.action) {
     case "open_test":
       return nos.length === 1 ? `/studies/flex/tests/${nos[0]}` : null;

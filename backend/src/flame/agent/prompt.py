@@ -22,8 +22,9 @@ FLEX.
 notes on the data), then query_study_tests, aggregate_study_tests, get_study_test and \
 get_study_timeseries_summary. Name a test as the study does (e.g. "CFI test 1206", \
 "Saffire-II sample 2-5"). SAME-R has website pages (overview, tests, a test page with a 3D \
-replay, compare, library); the other four have none yet. For all five there are no charts, \
-frames or buttons from you; say so if asked.
+replay, compare, library): for SAME-R you can draw sensor charts with make_study_chart and \
+offer buttons with propose_action(study="samer"). The other four have no pages yet, and you \
+have no charts, frames or buttons for them; say so if asked.
 - search_docs searches texts; set study to the study you are asking about (flex has \
 documents and test comments; samer has its NASA reports and documents; the others only their \
 description and publications).
@@ -95,6 +96,9 @@ answer, only ones that help with what was asked, and mention them in one short s
 - When a picture helps (how a droplet shrinks, comparing burns, how conditions relate), call \
 make_chart. Describe what the chart shows using the returned summaries and cite them. d² and \
 normalised curves are derived from measurements; say so. Do not fit or extrapolate.
+- For SAME-R ("how did the detectors react", "show the smoke"), call make_study_chart with one \
+sensor and 1-3 tests; time runs from heater on. A smoke detector can respond by a rise or a \
+drop of its voltage, so describe the change, not just the maximum.
 
 # Camera frames and video
 - To show what a test looked like at a moment (ignition, extinction, a time), call find_frame; \

@@ -9,6 +9,7 @@ from typing import Any
 import duckdb
 
 from flame.core.studies import PSI_STUDIES
+from flame.studies.psi.notes import VALID_RANGES
 from flame.studies.psi.schemas import Filter
 
 _CMP = {"eq": "=", "ne": "<>", "lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
@@ -258,6 +259,15 @@ def series_rows(
     return cur.fetchone()[0]
 
 
+def _valid(slug: str, col: str) -> str:
+    """Колонка ряду з відкинутими службовими кодами приладу (VALID_RANGES), для SELECT."""
+    lo, hi = VALID_RANGES.get(slug, {}).get(col, (None, None))
+    conds = ([f"{_q(col)} >= {float(lo)}"] if lo is not None else []) + (
+        [f"{_q(col)} < {float(hi)}"] if hi is not None else []
+    )
+    return f"CASE WHEN {' AND '.join(conds)} THEN {_q(col)} END" if conds else _q(col)
+
+
 def series_stats(
     cur: duckdb.DuckDBPyConnection, slug: str, table: str, key: str, key_value: Any,
     cols: list[str],
@@ -265,7 +275,9 @@ def series_stats(
     """Для кожної колонки ряду: кількість значень, мінімум, максимум."""
     if not cols:
         return []
-    parts = ", ".join(f"count({_q(c)}), min({_q(c)}), max({_q(c)})" for c in cols)
+    parts = ", ".join(
+        f"count({_valid(slug, c)}), min({_valid(slug, c)}), max({_valid(slug, c)})" for c in cols
+    )
     cur.execute(f"SELECT {parts} FROM {_q(slug)}.{_q(table)} WHERE {_q(key)} = ?", [key_value])
     row = cur.fetchone()
     return [
@@ -280,8 +292,12 @@ def series_points(
 ) -> list[dict[str, Any]]:  # fmt: skip
     """Рівномірна вибірка рядків ряду (не більше `max_points`), за часом."""
     t = f"{_q(slug)}.{_q(table)}"
+    rules = [c for c in VALID_RANGES.get(slug, {}) if c in columns(cur, slug, table)]
+    replace = (
+        f" REPLACE ({', '.join(f'{_valid(slug, c)} AS {_q(c)}' for c in rules)})" if rules else ""
+    )
     cur.execute(
-        f"""SELECT * EXCLUDE (_i, _n) FROM (
+        f"""SELECT * EXCLUDE (_i, _n){replace} FROM (
               SELECT *, row_number() OVER (ORDER BY {_q(order_col)}) - 1 AS _i,
                      count(*) OVER () AS _n
               FROM {t} WHERE {_q(key)} = ?)

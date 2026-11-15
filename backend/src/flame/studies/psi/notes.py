@@ -62,6 +62,11 @@ NOTES: dict[str, list[str]] = {
         "point to the same series. Run 51 has no sensor file.",
         "Ion A/B and ISS obscuration/scatter detector readings and STS are voltages; P-Trak "
         "counts particles per cm3, DustTrak A/B gives mg/m3.",
+        "The instruments write status codes instead of readings when they are not measuring: "
+        "DustTrak 1000 mg/m3 and above (e.g. 10010, 20008) and P-Trak -999. Series summaries "
+        "and points leave them out (null); never report them as measurements.",
+        "t_s in ts_sensors counts from the start of the file, not from heater on; the heater "
+        "is on while heating = 1. The website's SAME-R pages show time from heater on.",
         "The year (2010) is taken from the file names; the source table has no year.",
     ],
     "saffire2": [
@@ -75,4 +80,14 @@ NOTES: dict[str, list[str]] = {
         "ts_sensors is 1 Hz data in physical units; the samples burned one after another and "
         "each series covers its own time interval.",
     ],
+}
+
+# Значення поза цими межами — службові коди приладів, а не виміри: у зведеннях і точках рядів
+# вони стають NULL (дані в БД не змінюються). (нижня межа включно, верхня — ні); None — без межі.
+VALID_RANGES: dict[str, dict[str, tuple[float | None, float | None]]] = {
+    "samer": {
+        "ptrak_pt_cc": (0, None),  # -999: P-Trak не міряє
+        "dusttrak_a_mg_m3": (None, 1000),  # 10010, 20008 …: коди стану DustTrak
+        "dusttrak_b_mg_m3": (None, 1000),
+    },
 }

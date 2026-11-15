@@ -24,3 +24,12 @@ describe("proposalHref", () => {
     assert.equal(proposalHref(p("open_test", { test_nos: [] })), null);
   });
 });
+
+describe("proposalHref for SAME-R", () => {
+  test("study samer opens the SAME-R pages", () => {
+    assert.equal(proposalHref(p("open_test", { study: "samer", test_nos: [73] })), "/studies/same-r/tests/73");
+    assert.equal(proposalHref(p("open_compare", { study: "samer", test_nos: [73, 53] })), "/studies/same-r/compare?ids=73,53");
+    assert.equal(proposalHref(p("open_tests", { study: "samer" })), "/studies/same-r/tests");
+    assert.equal(proposalHref(p("open_test", { study: "samer", test_nos: [] })), null);
+  });
+});

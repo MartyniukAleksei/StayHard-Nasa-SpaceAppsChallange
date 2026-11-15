@@ -219,3 +219,38 @@ def test_503_without_samer_schema(data: Path, monkeypatch: pytest.MonkeyPatch):
     for c in _client(data, monkeypatch, with_samer=False):
         r = c.get("/api/studies/same-r/tests")
         assert r.status_code == 503 and "data-psi-studies" in r.json()["detail"]
+
+
+def test_agent_tools_for_same_r(client: TestClient):
+    from flame.agent import tools
+    from flame.studies.psi import repository as psi_repo
+
+    cur = get_connection().cursor()
+    # загальний ряд studies/psi: коди приладів (-999, 10010) не потрапляють у зведення й точки
+    stats = psi_repo.series_stats(
+        cur, "samer", "ts_sensors", "run_no", 73, ["ptrak_pt_cc", "dusttrak_a_mg_m3"]
+    )
+    assert [(s["n"], s["min"], s["max"]) for s in stats] == [(3, 0.0, 500.0), (3, 0.2, 0.4)]
+    pts = psi_repo.series_points(cur, "samer", "ts_sensors", "run_no", 73, "t_s", 10)
+    assert pts[0]["ptrak_pt_cc"] is None and pts[0]["dusttrak_a_mg_m3"] is None
+
+    args = {"study": "samer", "column": "ptrak_per_cc", "test_nos": [73]}
+    out = tools.make_study_chart(cur, args)
+    chart = out.events[0]["data"]
+    assert chart["study"] == "samer" and chart["test_ids"] == [73] and chart["test_nos"] == []
+    assert chart["series"][0]["points"][0] == [0.0, 0.0]  # t від увімкнення нагрівача, без -999
+    assert "highest 500 particles/cm³ at t = 2 s" in out.sources[0].text
+    with pytest.raises(tools.ToolError):
+        tools.make_study_chart(cur, {**args, "test_nos": [51]})
+
+    base = {"label": "Open", "t_s": 0, "explorer": {}, "study": "samer"}
+    out = tools.propose_action(cur, {**base, "action": "open_test", "test_nos": [73]})
+    assert out.events[0]["data"]["params"] == {"study": "samer", "test_nos": [73]}
+    bad_args = (
+        {"action": "open_test", "test_nos": [999]},  # немає такого тесту
+        {"action": "open_video", "test_nos": [73]},  # відео в SAME-R не прив'язані до тестів
+    )
+    for bad in bad_args:
+        with pytest.raises(tools.ToolError):
+            tools.propose_action(cur, {**base, **bad})
+    cur.close()

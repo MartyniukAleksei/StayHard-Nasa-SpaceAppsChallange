@@ -304,3 +304,83 @@ def photo_jpeg(i: int, max_side: int | None) -> bytes:
 def _render_photo(member: str) -> bytes:
     img = Image.open(io.BytesIO(repository.read_photo(member))).convert("RGB")
     return _jpeg(img, PHOTO_MAX_SIDE)
+
+
+# Колонки ряду hkp, які агент може намалювати: підпис і одиниця.
+CHART_COLUMNS: dict[str, tuple[str, str]] = {
+    "ptrak_per_cc": ("P-Trak particle count", "particles/cm³"),
+    "dusttrak_b_mg_m3": ("DustTrak B smoke mass", "mg/m³"),
+    "dusttrak_a_mg_m3": ("DustTrak A smoke mass", "mg/m³"),
+    "plume_c": ("smoke (plume) temperature", "°C"),
+    "iss_scatter_v": ("ISS detector, light scatter", "V"),
+    "iss_obscuration_v": ("ISS detector, obscuration", "V"),
+    "sts_v": ("STS ionization detector", "V"),
+    "ion_a_v": ("ion detector A", "V"),
+    "ion_b_v": ("ion detector B", "V"),
+    "heating": ("heater on (1) / off (0)", ""),
+}
+CHART_POINTS = 400
+_TONES = ["s1", "s2", "ink"]
+
+
+def chart(cur: DuckDBPyConnection, column: str, test_nos: list[int]) -> dict[str, Any]:
+    """Одна колонка телеметрії в часі (t = 0 — увімкнення нагрівача) для 1–3 тестів на спільних
+    осях: подія `chart` для чату агента (та сама форма, що в studies/flex/charts.line)."""
+    if column not in CHART_COLUMNS:
+        raise NotFound(f"unknown column {column!r}; one of {', '.join(CHART_COLUMNS)}")
+    if not 1 <= len(test_nos) <= 3:
+        raise NotFound("a SAME-R chart takes 1-3 tests")
+    label, unit = CHART_COLUMNS[column]
+    series, sources, notes = [], [], []
+    for i, n in enumerate(test_nos):
+        if not repository.tests(cur, n):
+            raise NotFound(f"no {test_name(n)} in the experiment table")
+        data = repository.hkp(cur, n)
+        if data is None:
+            notes.append(f"{test_name(n)}: no telemetry")
+            continue
+        cols, rows = data
+        k = cols.index(column)
+        pts = [[r[0], r[k]] for r in rows if r[k] is not None]
+        if not pts:
+            notes.append(f"{test_name(n)}: no valid {label} readings")
+            continue
+        step = max(1, math.ceil(len(pts) / CHART_POINTS))
+        thin = pts[::step] + ([pts[-1]] if (len(pts) - 1) % step else [])
+        name = test_name(n)
+        series.append(
+            {"id": name, "label": name, "points": thin, "kind": "line", "tone": _TONES[i]}
+        )
+        ys = [p[1] for p in pts]
+        # детектор може реагувати і зростанням, і падінням сигналу: даємо обидва екстремуми з часом
+        lo_t, hi_t = pts[ys.index(min(ys))][0], pts[ys.index(max(ys))][0]
+        text = (
+            f"{label} of {name} over time from heater on: {len(pts)} readings at 1 Hz from "
+            f"{pts[0][0]:g} to {pts[-1][0]:g} s; lowest {min(ys):g} {unit} at t = {lo_t:g} s, "
+            f"highest {max(ys):g} {unit} at t = {hi_t:g} s. Instrument status codes are left out."
+        )
+        sources.append(
+            Source(
+                url=study_series_url(repository.SLUG, n, "sensors"),
+                title=f"{name} {label}",
+                text=text,
+            )
+        )
+    if not series:
+        raise NotFound("; ".join(notes) or "no data to plot")
+    return {
+        "chart": {
+            "kind": "line",
+            "title": f"{label} — {', '.join(s['label'] for s in series)}",
+            "x_label": "time from heater on, s",
+            "y_label": f"{label}, {unit}" if unit else label,
+            "derived": False,
+            "series": series,
+            "test_nos": [],  # FLEX-номери; для SAME-R — study + test_ids
+            "study": "samer",
+            "doi": repository.about(cur).get("doi"),
+            "test_ids": [int(s["id"].rsplit("#", 1)[1]) for s in series],
+            "notes": notes,
+        },
+        "sources": sources,
+    }
