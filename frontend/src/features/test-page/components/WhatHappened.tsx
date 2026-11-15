@@ -16,11 +16,11 @@ type Props = {
   /** researcher comment from the NASA test sheet (may be empty) */
   comment: string;
   files: FileItem[];
-  /** optional AI-generated summary; shown only in "ai" mode */
+  /** optional SI-generated summary; shown only in "ai" mode */
   aiSummary?: string | null;
 };
 
-/** "What happened": NASA researcher comment or an AI summary. Hidden when there is nothing to show. */
+/** "What happened": NASA researcher comment or an SI summary. Hidden when there is nothing to show. */
 export function WhatHappened({ comment, files, aiSummary }: Props) {
   const useAi = WHAT_HAPPENED_MODE === "ai" && Boolean(aiSummary?.trim());
   const text = useAi ? aiSummary!.trim() : comment.trim();
@@ -32,7 +32,7 @@ export function WhatHappened({ comment, files, aiSummary }: Props) {
       <h2 id="tp-what" className="h-section">What happened</h2>
       {useAi ? (
         <p className="tp-what-label mono small">
-          <span className="tag">derived</span> AI-generated summary
+          <span className="tag">derived</span> SI-generated summary
         </p>
       ) : (
         <p className="tp-what-label mono small muted">Researcher comment</p>

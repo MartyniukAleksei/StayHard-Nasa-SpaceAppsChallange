@@ -1,6 +1,6 @@
 # Flame in Freefall
 
-**NASA Space Apps Challenge 2026 · "Flame in Freefall: AI-Powered Fire Safety Insights from Microgravity Combustion Data"**
+**NASA Space Apps Challenge 2026 · "Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data"**
 
 An agentic web tool over NASA Physical Sciences Informatics (PSI) microgravity-combustion data. Ask a question in plain language. The agent finds real flight tests, puts them side by side, replays them from the recorded data, and explains what the differences mean for crew fire safety, from the ISS to a lunar base.
 
