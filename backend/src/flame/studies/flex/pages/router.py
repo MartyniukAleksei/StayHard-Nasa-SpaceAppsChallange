@@ -1,5 +1,5 @@
 """HTTP для сторінок UI FLEX: /api/studies/flex/{overview,library,explorer},
-/tests/{n}/{report,replay,series.csv}.
+/videos, /tests/{n}/{report,replay,series.csv}.
 
 Агентне API з фільтрами й `sources` (`/tests`, `/tests/{n}`, `/compare`…) —
 у flame.studies.flex.router.
@@ -13,7 +13,14 @@ from fastapi.responses import PlainTextResponse
 
 from flame.db.duckdb import db_available, get_cursor
 from flame.studies.flex.pages import service
-from flame.studies.flex.pages.schemas import Library, Overview, Replay, TestDetail, TestSummary
+from flame.studies.flex.pages.schemas import (
+    Library,
+    Overview,
+    Replay,
+    TestDetail,
+    TestSummary,
+    VideoItem,
+)
 
 DATA_NOT_BUILT = "FLEX database is not built. Run: uv run python -m flame.ingest.build_db"
 
@@ -52,6 +59,11 @@ def library(cur: Cursor) -> Library:
 @router.get("/explorer", response_model=list[TestSummary])
 def tests(cur: Cursor) -> list[TestSummary]:
     return service.list_tests(cur)
+
+
+@router.get("/videos", response_model=list[VideoItem])
+def videos(cur: Cursor) -> list[VideoItem]:
+    return service.list_videos(cur)
 
 
 @router.get("/tests/{test_no}/report", response_model=TestDetail)

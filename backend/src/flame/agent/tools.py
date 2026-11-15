@@ -5,6 +5,7 @@
 і рядок статусу для UI. SQL тут немає — лише виклики сервісів.
 """
 
+import base64
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -21,6 +22,9 @@ from flame.core.citations import (
     test_url,
     to_search_result,
 )
+from flame.media import psi
+from flame.media import service as media_service
+from flame.media import timing as media_timing
 from flame.rag import service as rag_service
 from flame.rag.schemas import SearchFilters
 from flame.studies.flex import charts
@@ -44,8 +48,11 @@ class ToolOutput:
     notes: list[str] = field(default_factory=list)  # підсумок виклику («8 tests match…»)
     note_url: str = ""  # джерело підсумку; API не дозволяє змішувати text і search_result
     events: list[dict[str, Any]] = field(default_factory=list)  # SSE для UI (proposal…)
+    raw_content: list[dict[str, Any]] | None = None  # готові блоки (зображення кадрів)
 
     def content(self) -> list[dict[str, Any]]:
+        if self.raw_content is not None:
+            return self.raw_content
         if not self.sources:
             return [{"type": "text", "text": " ".join(self.notes) or "No results."}]
         blocks = [to_search_result(s) for s in self.sources]
@@ -171,9 +178,9 @@ EXPLORER_FACETS: dict[str, list[str]] = {
     "o2": ["<16.5", "16.5-21", "air", "21.6-30", "30+"],
     "fiber": ["free", "fiber", "unknown", "all"],
     "end": ["Extinction", "Disruption", "Completion"],
-    "tag": ["series", "video", "cool"],
+    "tag": ["series", "video", "3d", "cool"],
 }
-ACTIONS = ["open_tests", "open_test", "open_compare"]
+ACTIONS = ["open_tests", "open_test", "open_compare", "open_video", "open_replay"]
 
 UI_TOOLS: list[dict[str, Any]] = [
     {
@@ -185,13 +192,17 @@ UI_TOOLS: list[dict[str, Any]] = [
             "page holds at most 3). open_tests: the test explorer filtered by the explorer facets "
             "(empty arrays mean no filter; pressure bands 0.7 / 1 / 2-3 atm; o2 bands <16.5, "
             "16.5-21, air (21%), 21.6-30, 30+ percent; fiber defaults to free-floating, use all to "
-            "include fiber tests). label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'."
+            "include fiber tests). open_video: the onboard video of one test (only some tests "
+            "have one; you get an error otherwise). open_replay: the 3D replay of one test "
+            "starting at t_s seconds after ignition. t_s is ignored by other actions (send 0). "
+            "label is the button text, e.g. 'Compare FLEX-019 and FLEX-027'."
         ),
         "input_schema": _obj(
             {
                 "action": {"type": "string", "enum": ACTIONS},
                 "label": {"type": "string"},
                 "test_nos": {"type": "array", "items": TEST_NO},
+                "t_s": {"type": "number"},
                 "explorer": _obj(
                     {
                         k: {"type": "array", "items": {"type": "string", "enum": v}}
@@ -241,8 +252,55 @@ CHART_TOOL: dict[str, Any] = {
     ),
 }
 
+CAMERA = {
+    "type": "string",
+    "enum": ["A", "B", "D"],
+    "description": "A = backlit droplet camera (HiBMS), B = UV flame camera, D = color",
+}
+FRAME_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "find_frame",
+        "description": (
+            "Find the onboard camera frame of a test at an event or time and show it to the "
+            "user. event: ignition (t=0), extinction (end of the measured flame series), end "
+            "(end of the droplet series) or time (use t_s, seconds after ignition). Frames are "
+            "fetched from NASA PSI and take a few seconds."
+        ),
+        "input_schema": _obj(
+            {
+                "test_no": TEST_NO,
+                "event": {"type": "string", "enum": ["ignition", "extinction", "end", "time"]},
+                "t_s": {"type": "number"},
+                "camera": CAMERA,
+            }
+        ),
+    },
+    {
+        "name": "look_at_frames",
+        "description": (
+            "Look at up to 4 camera frames of one test yourself (they are also shown to the "
+            "user). Use it to describe what is visible - flame shape, brightness, soot, droplet "
+            "motion. Describe qualitatively; do not read numbers off images."
+        ),
+        "input_schema": _obj(
+            {
+                "test_no": TEST_NO,
+                "camera": CAMERA,
+                "t_s": {"type": "array", "items": {"type": "number"}, "description": "1-4 times"},
+            }
+        ),
+    },
+]
+
 TOOLS.extend(UI_TOOLS)
 TOOLS.append(CHART_TOOL)
+TOOLS.extend(FRAME_TOOLS)
+
+# strict: true — лише малі схеми: API компілює строгі схеми в граматику з обмеженням розміру,
+# а переліки полів у query_tests / propose_action / highlight_params / make_chart її
+# переповнюють. Їхній ввід і так повністю перевіряє код (помилка → is_error моделі).
+STRICT = {"get_test", "compare_tests", "find_similar_tests", "get_timeseries_summary",
+          "search_docs", "find_frame", "look_at_frames"}  # fmt: skip
 
 
 def _clamp(v: int, lo: int, hi: int) -> int:
@@ -397,6 +455,21 @@ def propose_action(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> Tool
         if not 2 <= len(nos) <= 3:
             raise ToolError("open_compare needs 2 or 3 tests (the compare page holds at most 3)")
         params["test_nos"] = _existing(cur, nos)
+    elif action in ("open_video", "open_replay"):
+        if len(nos) != 1:
+            raise ToolError(f"{action} needs exactly one test in test_nos")
+        n = _existing(cur, nos)[0]
+        detail = flex.get_test(cur, n)
+        if action == "open_video":
+            if not any(f.name.lower().endswith(".mp4") for f in detail.files):
+                raise ToolError(
+                    f"{flex.test_name(n)} has no onboard video; camera frames or the replay "
+                    "may be available instead"
+                )
+        elif not detail.test.get("has_droplet_ts"):
+            raise ToolError(f"{flex.test_name(n)} has no measured series for a replay")
+        params["test_nos"] = [n]
+        params["t_s"] = max(0.0, round(float(args.get("t_s") or 0), 2))
     elif action == "open_tests":
         explorer = args.get("explorer") or {}
         clean = {}
@@ -448,6 +521,107 @@ def make_chart(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutp
     )
 
 
+def _camera_frames(cur: duckdb.DuckDBPyConnection, n: int, cam: str):
+    """(камера, час кожного кадру від запалювання) або ToolError з поясненням."""
+    rows = flex_repository.get_tests(cur, [n])
+    if not rows:
+        raise ToolError(f"{flex.test_name(n)} not found")
+    try:
+        camera = media_service.camera(cur, n, cam)
+        index = media_service.frame_index(camera)
+    except media_service.NotFound as e:
+        raise ToolError(str(e)) from e
+    except psi.PsiUnavailable as e:
+        raise ToolError(f"NASA PSI is unavailable right now: {e}") from e
+    ignition = media_timing.ignition_epoch_ms(n, rows[0].get("cir_id"))
+    if ignition is None:
+        raise ToolError(f"{flex.test_name(n)}: the test log has no ignition time")
+    return camera, media_timing.frame_times(index, ignition)
+
+
+def _event_time(cur: duckdb.DuckDBPyConnection, n: int, event: str, t_s: float) -> float:
+    if event == "ignition":
+        return 0.0
+    if event == "time":
+        return float(t_s)
+    signals = ("flame_uv", "flame_color") if event == "extinction" else ("droplet",)
+    for sig in signals:
+        _, rows = flex_repository.timeseries(cur, n, sig)
+        ts = [r[0] for r in rows if r[0] is not None and r[1] is not None]
+        if ts:
+            return float(max(ts))
+    raise ToolError(f"{flex.test_name(n)} has no series to locate '{event}'")
+
+
+def _frame_url(n: int, cam: str, i: int, side: int = 640) -> str:
+    return f"/api/media/flex/{n}/cameras/{cam}/frames/{i}.jpg?max_side={side}"
+
+
+def _frame_event(n: int, cam, i: int, t: float, event: str) -> dict[str, Any]:
+    return {
+        "event": "frame",
+        "data": {
+            "test_no": n, "camera": cam.camera, "camera_label": cam.info.label, "index": i,
+            "t_s": round(t, 2), "event": event, "url": _frame_url(n, cam.camera, i),
+        },
+    }  # fmt: skip
+
+
+def find_frame(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    n, cam_id = int(args["test_no"]), str(args.get("camera") or "D")
+    event = str(args.get("event") or "time")
+    target = _event_time(cur, n, event, float(args.get("t_s") or 0))
+    camera, times = _camera_frames(cur, n, cam_id)
+    i = media_timing.nearest(times, target)
+    if i is None or abs((times[i] or 0) - target) > 2.0:
+        raise ToolError(f"camera {cam_id} has no frame near t = {target:.2f} s")
+    t = times[i] or 0.0
+    what = {
+        "ignition": "ignition",
+        "extinction": "the end of the measured flame series",
+        "end": "the end of the droplet series",
+        "time": "the requested time",
+    }[event]
+    src = Source(
+        url=_frame_url(n, cam_id, i),
+        title=f"{flex.test_name(n)} camera {cam_id} ({camera.info.label}) frame at t = {t:.2f} s",
+        text=(
+            f"Frame {i} of camera {cam_id} ({camera.info.label}) of {flex.test_name(n)}, taken "
+            f"{t:.2f} s after ignition, nearest to {what} (t = {target:.2f} s). Frame time is "
+            "derived from the camera index and the test log."
+        ),
+    )
+    return ToolOutput(sources=[src], events=[_frame_event(n, camera, i, t, event)])
+
+
+def look_at_frames(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    n, cam_id = int(args["test_no"]), str(args.get("camera") or "D")
+    wanted = [float(t) for t in (args.get("t_s") or [])][:4]
+    if not wanted:
+        raise ToolError("give 1-4 times in t_s")
+    camera, times = _camera_frames(cur, n, cam_id)
+    blocks: list[dict[str, Any]] = []
+    events = []
+    for t in wanted:
+        i = media_timing.nearest(times, t)
+        if i is None:
+            continue
+        try:
+            jpeg = media_service.frame_jpeg(camera, i, 512)
+        except (media_service.NotFound, psi.PsiUnavailable) as e:
+            raise ToolError(f"could not fetch frame {i}: {e}") from e
+        ft = times[i] or 0.0
+        blocks.append({"type": "text", "text": f"Frame {i}, camera {cam_id}, t = {ft:.2f} s:"})
+        blocks.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
+                       "data": base64.b64encode(jpeg).decode()}})  # fmt: skip
+        events.append(_frame_event(n, camera, i, ft, "time"))
+    if not blocks:
+        raise ToolError(f"camera {cam_id} has no frames with timestamps")
+    out = ToolOutput(events=events)
+    out.raw_content = blocks
+    return out
+
+
 Handler = Callable[[duckdb.DuckDBPyConnection, dict[str, Any]], ToolOutput]
 
 HANDLERS: dict[str, Handler] = {
@@ -460,6 +634,8 @@ HANDLERS: dict[str, Handler] = {
     "propose_action": propose_action,
     "highlight_params": highlight_params,
     "make_chart": make_chart,
+    "find_frame": find_frame,
+    "look_at_frames": look_at_frames,
 }
 
 
@@ -486,4 +662,6 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return "Highlighting values on the page…"
         case "make_chart":
             return "Drawing a chart from the data…"
+        case "find_frame" | "look_at_frames":
+            return "Fetching camera frames from NASA PSI…"
     return "Working…"

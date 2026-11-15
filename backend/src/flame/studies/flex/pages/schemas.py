@@ -89,6 +89,7 @@ class TestSummary(BaseModel):
     end_type: str
     fiber: bool | None
     has_series: bool
+    has_3d: bool  # є ряд краплі — достатньо для 3D replay (features/experiment-3d)
     has_video: bool
     cool_flame: bool
 
@@ -132,9 +133,24 @@ class TestDetail(BaseModel):
     comment: str
     cool_flame: bool
     has_series: bool
+    has_3d: bool
     neighbors: list[Neighbor]
     files: list[FileItem]
     videos: list[FileItem]
+
+
+class VideoItem(BaseModel):
+    """Відео камери NASA (mp4 з PSI FLEX) з умовами тесту — для галереї на Огляді."""
+
+    test_no: int
+    fuel: str
+    diluent: str
+    x_o2: float | None
+    p_atm: float | None
+    end_type: str
+    name: str
+    path: str
+    bytes: int
 
 
 class Publication(BaseModel):

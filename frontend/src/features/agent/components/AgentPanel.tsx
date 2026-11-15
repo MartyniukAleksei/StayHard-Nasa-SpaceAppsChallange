@@ -5,6 +5,7 @@ import type { AssistantItem, ChatItem, Proposal, Source } from "../types";
 import { useAgent } from "./AgentProvider";
 import { AnswerText, SourceCard } from "./AnswerText";
 import { ChartBlock } from "./ChartBlock";
+import { FrameStrip } from "./FrameBlock";
 import "./agent.css";
 
 /** Бічна панель чату. Змонтована в Layout поза Outlet — не закривається під час навігації. */
@@ -101,6 +102,7 @@ function Reply({ it, onCite }: { it: AssistantItem; onCite: (s: Source) => void 
           {it.status}
         </p>
       )}
+      {it.frames && it.frames.length > 0 && <FrameStrip frames={it.frames} />}
       {(it.charts ?? []).map((c, i) => (
         <ChartBlock key={i} chart={c} />
       ))}

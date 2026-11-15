@@ -40,18 +40,13 @@ function Header() {
           <span className="h-brand">Flame in Freefall</span>
         </Link>
         {inFlex && (
-          <>
-            <Link to="/" className="tag on" title="Choose another study">
-              FLEX
-            </Link>
-            <nav aria-label="FLEX sections" className="top-nav">
-              {FLEX_NAV.map((n) => (
-                <NavLink key={n.to} to={n.to} end={n.end}>
-                  {n.label}
-                </NavLink>
-              ))}
-            </nav>
-          </>
+          <nav aria-label="FLEX sections" className="top-nav">
+            {FLEX_NAV.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.end}>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
         )}
         <AgentSearch />
         <button type="button" className="btn ghost" disabled title="Lab cart — coming soon">

@@ -1,4 +1,4 @@
-import { FACETS, type FacetKey, type Filters, facetCounts, toggle } from "../lib/filter";
+import { FACETS, type FacetKey, type Filters, facetCounts, fromParams, toggle } from "../lib/filter";
 import type { TestSummary } from "@/features/flex-tests";
 
 type Props = { tests: TestSummary[]; filters: Filters; onChange: (f: Filters) => void };
@@ -27,7 +27,7 @@ export function Facets({ tests, filters, onChange }: Props) {
           className="btn ghost"
           onClick={() =>
             onChange(
-              Object.fromEntries(FACETS.map((f) => [f.key, f.key === "fiber" ? ["free"] : []])) as Filters,
+              fromParams(new URLSearchParams()),
             )
           }
         >

@@ -9,7 +9,9 @@
    видаляється одразу після розпакування, щоб на диску не лежало кілька архівів разом.
 2. БД: якщо flame.duckdb немає, якийсь знімок оновився або версія збірки в коді
    (build_db.BUILD_VERSION) відрізняється від записаної в БД — перезбирає.
-На актуальному Volume нічого не робить.
+На актуальному Volume нічого не робить. Архів, який не вдалося скачати чи розпакувати, не
+валить старт: помилка йде в лог, бекенд піднімається з тим, що вже є на Volume, а наступний
+старт спробує ще раз.
 """
 
 import json
@@ -46,12 +48,20 @@ def _save_state(data: Path, state: dict[str, list[str]]) -> None:
     (data / LEGACY_MARKER).unlink(missing_ok=True)
 
 
+class ExtractError(Exception):
+    """Архів скачано, але розпакувати не вдалося (каталоги могли бути вже видалені)."""
+
+
 def _install(url: str, data: Path) -> list[str]:
     """Качає архів, замінює каталоги, які він містить. Повертає їхні імена."""
     archive = data / "snapshot.zip.part"
     print(f"bootstrap: downloading {url}", flush=True)
-    with urllib.request.urlopen(url) as r, archive.open("wb") as f:
-        shutil.copyfileobj(r, f, length=1 << 20)
+    try:
+        with urllib.request.urlopen(url) as r, archive.open("wb") as f:
+            shutil.copyfileobj(r, f, length=1 << 20)
+    except BaseException:
+        archive.unlink(missing_ok=True)
+        raise
     try:
         with zipfile.ZipFile(archive) as z:
             tops = sorted({n.split("/", 1)[0] for n in z.namelist() if "/" in n})
@@ -59,6 +69,8 @@ def _install(url: str, data: Path) -> list[str]:
             for top in tops:
                 shutil.rmtree(data / top, ignore_errors=True)
             z.extractall(data)
+    except (OSError, zipfile.BadZipFile) as e:
+        raise ExtractError(str(e)) from e
     finally:
         archive.unlink(missing_ok=True)
     return tops
@@ -77,10 +89,20 @@ def sync_snapshot() -> bool:
     for url in urls:
         if url in state:
             continue
-        state[url] = _install(url, data)
+        try:
+            state[url] = _install(url, data)
+        except ExtractError as e:  # частина каталогів могла зникнути — БД перезберемо з того, що є
+            print(f"bootstrap: ERROR extracting {url}: {e}", flush=True)
+            changed = True
+            continue
+        except OSError as e:  # мережа, 404, нестача місця під zip: Volume не змінився
+            print(f"bootstrap: ERROR downloading {url}: {e} — keeping current data", flush=True)
+            continue
         changed = True
         _save_state(data, state)  # після кожного архіву: перерваний старт продовжить з наступного
-    state = {u: state[u] for u in urls}  # архіви, прибрані зі списку, забуваємо (файли лишаються)
+    state = {
+        u: state[u] for u in urls if u in state
+    }  # архіви, прибрані зі списку, забуваємо (файли лишаються)
     _save_state(data, state)
     return changed
 

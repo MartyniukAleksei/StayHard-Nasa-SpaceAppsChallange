@@ -139,3 +139,34 @@ def test_bootstrap_keeps_flex_from_legacy_marker(
     assert installs == [flex, studies]  # FLEX качався лише першим запуском
     assert not (data_dir / bootstrap.LEGACY_MARKER).exists()
     assert (data_dir / "cfi" / "cfi.duckdb").exists()
+
+
+def test_bootstrap_starts_with_current_data_when_download_fails(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    flex = _make_archive(tmp_path, "flex-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex])
+    bootstrap.main()
+    built_at = build_db.read_meta(settings.duckdb_path)["built_at"]
+
+    missing = (tmp_path / "missing.zip").as_uri()  # як 404 приватного релізу
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, missing])
+    bootstrap.main()  # не падає
+    assert build_db.read_meta(settings.duckdb_path)["built_at"] == built_at  # без перезбірки
+    assert json.loads((data_dir / bootstrap.STATE).read_text()) == {flex: ["flex"]}
+    assert not list(data_dir.glob("*.part"))
+
+
+def test_bootstrap_rebuilds_from_what_is_left_when_extract_fails(
+    data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    flex = _make_archive(tmp_path, "flex-v1")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex])
+    bootstrap.main()
+
+    broken = tmp_path / "broken.zip"
+    broken.write_bytes(b"not a zip")
+    monkeypatch.setattr(settings, "data_archive_urls", [flex, broken.as_uri()])
+    bootstrap.main()  # не падає, FLEX лишився
+    assert build_db.read_meta(settings.duckdb_path)["dataset"] == "flex-v1"
+    assert broken.as_uri() not in json.loads((data_dir / bootstrap.STATE).read_text())

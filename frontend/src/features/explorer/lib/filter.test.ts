@@ -13,6 +13,8 @@ import {
   pressureBand,
   toggle,
   toParams,
+  toggleEnd,
+  endShown,
 } from "./filter.ts";
 
 const base: TestSummary = {
@@ -28,6 +30,7 @@ const base: TestSummary = {
   end_type: "Extinction",
   fiber: false,
   has_series: true,
+  has_3d: true,
   has_video: false,
   cool_flame: false,
 };
@@ -146,6 +149,7 @@ function loadTests(): TestSummary[] {
       end_type: v("end_type") as TestSummary["end_type"],
       fiber: fiber === "Yes" ? true : fiber === "No" ? false : null,
       has_series: v("has_droplet_ts") === "True" && v("has_flame_uv_ts") === "True",
+      has_3d: v("has_droplet_ts") === "True",
       has_video: false,
       cool_flame: /cool[- ]?flame/i.test(comment),
     };
@@ -164,5 +168,39 @@ describe("presets on real data", { skip: !existsSync(CSV) && "data/flex/tests.cs
   test("CO₂ 99 · He 41", () => {
     assert.equal(count("co2"), 99);
     assert.equal(count("he"), 41);
+  });
+});
+
+describe("O₂ range and outcome legend", () => {
+  const tests = [mk({ test_no: 1, x_o2: 0.15 }), mk({ test_no: 2, x_o2: 0.21 }), mk({ test_no: 3, x_o2: 0.35 }), mk({ test_no: 4, x_o2: null })];
+
+  test("range in percent is inclusive and round-trips through the URL", () => {
+    const f = fromParams(new URLSearchParams("o2min=20&o2max=30"));
+    assert.deepEqual(applyFilters(tests, f).map((t) => t.test_no), [2]);
+    const sp = toParams(f);
+    assert.equal(sp.get("o2min"), "20");
+    assert.equal(sp.get("o2max"), "30");
+  });
+
+  test("open-ended range and a test without O₂", () => {
+    const f = fromParams(new URLSearchParams("o2min=21"));
+    assert.deepEqual(applyFilters(tests, f).map((t) => t.test_no), [2, 3]);
+    assert.equal(applyFilters(tests, fromParams(new URLSearchParams(""))).length, 4);
+  });
+
+  test("legend toggles hide one outcome, never all", () => {
+    let f = fromParams(new URLSearchParams(""));
+    f = toggleEnd(f, "Extinction");
+    assert.deepEqual([...f.end].sort(), ["Completion", "Disruption"]);
+    assert.equal(endShown(f, "Extinction"), false);
+    f = toggleEnd(toggleEnd(f, "Disruption"), "Completion");
+    assert.deepEqual(f.end, ["Completion"], "the last visible outcome stays on");
+    f = toggleEnd(toggleEnd(f, "Extinction"), "Disruption");
+    assert.deepEqual(f.end, [], "all three on = no filter");
+  });
+
+  test("3D tag filters tests with a droplet series", () => {
+    const rows = [mk({ test_no: 1 }), mk({ test_no: 2, has_3d: false })];
+    assert.deepEqual(applyFilters(rows, fromParams(new URLSearchParams("tag=3d"))).map((t) => t.test_no), [1]);
   });
 });

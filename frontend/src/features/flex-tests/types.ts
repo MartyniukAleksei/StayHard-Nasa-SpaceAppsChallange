@@ -14,6 +14,8 @@ export type TestSummary = {
   end_type: EndType;
   fiber: boolean | null;
   has_series: boolean;
+  /** droplet series present: enough data for the 3D replay */
+  has_3d: boolean;
   has_video: boolean;
   cool_flame: boolean;
 };
@@ -41,6 +43,19 @@ export type TestDetail = Omit<TestSummary, "has_video"> & {
   neighbors: Neighbor[];
   files: FileItem[];
   videos: FileItem[];
+};
+
+/** NASA camera video (mp4 from PSI FLEX) with its test conditions, for the overview gallery. */
+export type VideoItem = {
+  test_no: number;
+  fuel: string;
+  diluent: string;
+  x_o2: number | null;
+  p_atm: number | null;
+  end_type: EndType;
+  name: string;
+  path: string;
+  bytes: number;
 };
 
 export type Limitations = {

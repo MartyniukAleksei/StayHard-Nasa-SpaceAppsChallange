@@ -4,8 +4,27 @@
 .ov-kicker { color: var(--ash); font-size: 13px; margin: 0 0 14px; }
 .ov-meta { color: var(--ash); margin: 24px 0 0; }
 .ov-narrow > * { max-width: 75ch; }
-/* G: one wide texture image across the page; 4:3 again on phones */
-.ov-replay .replay canvas, .ov-replay .replay-empty { aspect-ratio: 21 / 8; }
+.ov-cta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 20px 0 0 -6px; }
+.ov-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
+.ov-browse .lede { margin: 0; }
+
+/* G: NASA camera videos — one large player, the rest as a list */
+.ov-videos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ov-video { margin: 0; display: grid; gap: 8px; }
+.ov-video video { width: 100%; max-height: 70vh; background: #000; border: var(--rule); display: block; }
+.ov-video figcaption { display: grid; gap: 2px; }
+.ov-video-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
+.ov-video-cap .end-mark { font-family: var(--mono); font-size: 14px; }
+.ov-video-list p { margin: 0 0 6px; }
+.ov-video-list ul { list-style: none; margin: 0; padding: 0; display: grid; border-top: var(--rule); max-height: 60vh; overflow-y: auto; }
+.ov-video-list button {
+  width: 100%; display: grid; gap: 2px; text-align: left; min-height: var(--hit);
+  padding: 8px 10px; background: none; border: 0; border-bottom: var(--rule); border-radius: 0;
+  color: var(--ash); font: 14px var(--sans); cursor: pointer;
+}
+.ov-video-list button:hover { color: var(--ink); background: var(--deep); }
+.ov-video-list button.on { color: var(--ink); box-shadow: inset 2px 0 0 var(--flame); background: var(--deep); }
+.ov-video-empty { display: grid; place-items: center; min-height: 160px; border: 1px dashed var(--line); color: var(--ash); font-size: 13px; }
 
 /* presets 3×2 */
 .ov-presets {
@@ -63,11 +82,11 @@
 .ov-cite + p { margin: 0 0 24px; }
 
 @media (max-width: 960px) {
+  .ov-videos { grid-template-columns: minmax(0, 1fr); }
   .ov-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ov-hero .stats { grid-template-columns: repeat(2, minmax(0, max-content)); }
 }
 @media (max-width: 720px) {
-  .ov-replay .replay canvas, .ov-replay .replay-empty { aspect-ratio: 4 / 3; }
   .ov-presets, .ov-traps { grid-template-columns: minmax(0, 1fr); }
   .ov-preset h3 { min-height: 0; }
   .ov-hero .stats { gap: 18px 32px; }

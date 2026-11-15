@@ -73,6 +73,8 @@ def check(case: dict[str, Any], done: dict[str, Any], ui: dict[str, list]) -> li
             fails.append(f"no {case['expect_proposal']} proposal (got {acts})")
     if case.get("expect_highlight") and not ui["highlight"]:
         fails.append("no highlight")
+    if case.get("expect_frame") and not ui["frame"]:
+        fails.append("no camera frame shown")
     if case.get("expect_chart"):
         kinds = [c["kind"] for c in ui["chart"]]
         if case["expect_chart"] not in kinds:
@@ -83,9 +85,9 @@ def check(case: dict[str, Any], done: dict[str, Any], ui: dict[str, list]) -> li
         if not re.search(r"FLEX|only help", text, re.I):
             fails.append("off-topic answer does not redirect to FLEX")
         return fails
-    if not srcs:
+    if not srcs and not case.get("allow_no_sources"):
         fails.append("no citations")
-    if len(srcs) < case.get("min_sources", 1):
+    if srcs and len(srcs) < case.get("min_sources", 1):
         fails.append(f"fewer than {case['min_sources']} sources")
     uncited = [s["text"].strip()[:70] for s in ans["segments"] if s["uncited"]]
     if uncited:
@@ -127,7 +129,7 @@ def main() -> None:
         turn = HistoryTurn(role="user", text=case["q"], page_context=case.get("page_context"))
         t0 = time.time()
         try:
-            ui: dict[str, list] = {"proposal": [], "highlight": [], "chart": []}
+            ui: dict[str, list] = {"proposal": [], "highlight": [], "chart": [], "frame": []}
             done = None
             for e in loop.run_turn(client(), cur, [turn], settings):
                 if e["event"] in ui:

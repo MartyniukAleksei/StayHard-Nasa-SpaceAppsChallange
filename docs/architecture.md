@@ -35,9 +35,10 @@ docker-compose.yml  локальний запуск прод-образів
 | `core/citations.py` | контракт джерел: `Source(url, title, text)`, побудова URL, `to_search_result` для Claude API ([ADR 0006](decisions/0006-citation-contract.md)) |
 | `studies/` | `catalog.py` + `catalog.json` (паспорти досліджень PSI, генерує `flame.ingest.psi_catalog`), `router.py` — `/api/studies` |
 | `studies/flex/` | домен FLEX: `fields` (whitelist полів і сигналів) → `schemas` → `repository` (SQL) → `service` (логіка, `sources` у кожному результаті) → `router` (HTTP) — агентне API з фільтрами; `pages/` — відповіді під сторінки UI (огляд, дослідник, звіт тесту, replay, CSV, бібліотека) |
-| `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела; там же переліки файлів тесту, відео й NASA-документів для UI |
+| `media/` | кадри камер з PSI на вимогу (`psi.py`: Range-читання zip з S3; `service.py`: індекс кадрів, 16-біт → JPEG), [ADR 0005](decisions/0005-psi-frames-proxy.md); `files.py`: файли знімка (`raw/`, `docs/`, `media/`) з Volume із захистом від виходу за межі каталогу — на ці URL ведуть посилання-джерела; там же переліки файлів тесту, відео й NASA-документів для UI; `timing.py`: час кадру від запалювання (з логу тест-пойнта) для агента |
 | `rag/` | джерела текстів (`sources/<study>.py`), чанкінг, локальні ембеддинги, офлайн-індекс `chunks` (`index.py`, кличе `build_db`), гібридний пошук vector + BM25 ([docs/rag/](rag/techstack.md)) |
 | `agent/` | LLM-агент (Claude Sonnet 5.5; фронтенд — `frontend/src/features/agent`, бічна панель чату): інструменти даних над `studies/flex` і `rag`, цикл зі стрімінгом SSE, цитати й «No source», ліміти, eval ([docs/agent/](agent/README.md), [ADR 0007](decisions/0007-agent-architecture.md)) |
+| `ingest/replay3d_coverage.py` | офлайн-звіт: у яких тестів є дані для 3D replay (`uv run python -m flame.ingest.replay3d_coverage [--missing]`) |
 | `ingest/` | офлайн-пайплайн: `psi_flex` (PSI → data/flex), `psi_cfi` (PSI → data/cfi), `psi_studies` (знімки інших досліджень → схеми БД, `--verify`), `build_db` (data/* → flame.duckdb), `bootstrap` (архіви релізів → Volume). API його не імпортує |
 
 Залежності між шарами: `router → service → repository → db`. `agent` викликає `service`-и доменів і `rag`, а не SQL напряму.
@@ -62,10 +63,11 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/media/flex/files/{path}` | ✅ файли знімка (`raw/…`, `docs/…`, `media/…`), inline, Range |
 | GET | `/api/studies` | ✅ картки досліджень для лендінгу: паспорт з `studies/catalog.json` (PSI-69 FLEX, PSI-39 CFI, PSI-25 BASS-II, PSI-99 SAFFIRE-II, PSI-107 SPICE, PSI-102 SAME) + `status` (`active`/`coming_soon`), `route`, `facts` (лише для активних, з БД) |
 | GET | `/api/studies/flex/overview` | ✅ UI: `{about, facts, presets[]}` — паспорт (з `study_about`), факти, пресети-питання з розкладом за фіналами (лише вільні краплі + скільки виключено через нитку) |
-| GET | `/api/studies/flex/explorer` | ✅ UI: усі 274 рядки Дослідника (фільтрація — на фронтенді, стан у URL). `has_series` = є ряди краплі **і** UV-полум'я; `has_video` = є локальний mp4; `cool_flame` — *derived* |
-| GET | `/api/studies/flex/tests/{n}/report` | ✅ UI, сторінка тесту 3A: паспорт + `neighbors` (5 схожих: те саме паливо, розбавник і клас нитки, найближчі за O₂, тиском і d₀; *derived*) + `files` + `videos` |
+| GET | `/api/studies/flex/explorer` | ✅ UI: усі 274 рядки Дослідника (фільтрація — на фронтенді, стан у URL). `has_series` = є ряди краплі **і** UV-полум'я; `has_3d` = є ряд краплі (досить для 3D replay); `has_video` = є локальний mp4; `cool_flame` — *derived* |
+| GET | `/api/studies/flex/tests/{n}/report` | ✅ UI, сторінка тесту 3A: паспорт + `neighbors` (5 схожих: те саме паливо, розбавник і клас нитки, найближчі за O₂, тиском і d₀; *derived*) + `files` + `videos` + `has_3d` |
 | GET | `/api/studies/flex/tests/{n}/replay` | ✅ UI: `{test_no, fuel, end_type, burn_time_s, d0_mm, droplet[[t,d]], flame[[t,d]]}`, `t ≥ 0`, ≤ 500 точок |
 | GET | `/api/studies/flex/tests/{n}/series.csv` | ✅ усі точки рядів (`signal,t_s,value`), у першому рядку — цитата з DOI |
+| GET | `/api/studies/flex/videos` | ✅ UI: усі mp4 камер NASA (PSI FLEX) з умовами тесту (`test_no, fuel, diluent, x_o2, p_atm, end_type, name, path`) — галерея на Огляді |
 | GET | `/api/studies/flex/library` | ✅ UI: цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
 | POST | `/api/agent` | ✅ SSE: `text_delta`, `status`, `limit`, `done` (відповідь із сегментами й джерелами) — [docs/agent](agent/README.md) |
 

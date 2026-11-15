@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { chem } from "@/shared/lib/format";
 import { HERO_QUESTION, HERO_VARIED } from "../content";
 import type { About, Facts } from "../types";
@@ -21,6 +22,11 @@ export function Hero({ about, facts }: { about: About; facts: Facts }) {
           <Stat value={facts.fuels.length} label={facts.fuels.join(" · ")} />
           <Stat value={facts.diluents.length} label={`diluents: ${facts.diluents.map(chem).join(", ")}`} />
           <Stat value={years} label="on the ISS" />
+        </div>
+        <div className="ov-cta">
+          <Link className="btn" to="/studies/flex/tests">
+            Browse all tests →
+          </Link>
         </div>
         <p className="ov-meta mono small">
           {about.acronym} · {about.accession} · {about.flight_program} · {years} · {facts.n_tests} tests ·{" "}

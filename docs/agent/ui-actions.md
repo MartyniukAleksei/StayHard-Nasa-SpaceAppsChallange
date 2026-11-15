@@ -16,9 +16,10 @@
 | `open_tests` | `filters: [{field, op, value}]` | перехід у explorer з цими фільтрами |
 | `open_test` | `test_no` | `/studies/flex/tests/:id` |
 | `open_compare` | `test_nos` (2–3) | `/studies/flex/compare?ids=…` |
-| `open_video` | `test_no` | сторінка тесту, вкладка відео (лише 14 тестів з mp4) — етап 4 |
-| `open_frame` | `test_no, camera, t_s` | переглядач кадрів на момент `t_s` — етап 4 |
-| `open_replay` | `test_no, t_s` | 3D-replay на момент `t_s`, коли його перенесуть у `frontend/` — етап 4 |
+| `open_video` | `test_nos` (1) | `/studies/flex/tests/{n}?view=video#tp-media` (лише тести з локальним mp4) |
+| `open_replay` | `test_nos` (1), `t_s` | `/studies/flex/tests/{n}?view=3d&t=<t_s>#tp-media` — 3D-replay на паузі в цей момент |
+
+Кадри камер агент не відкриває окремою сторінкою: `find_frame` / `look_at_frames` показують їх прямо в чаті (подія `frame`).
 
 Бекенд-інструмент `propose_action` перевіряє параметри (тести існують, ≤ 3 для compare) і відповідає моделі «shown to user». Кнопка під відповіддю: «Opened comparison of FLEX-019, 023» після кліку + «Back».
 
@@ -33,7 +34,7 @@
 Зараз розмічено: параметри на сторінці тесту (`TestReport` → `Params`) і колонки порівняння (`Compare`). Нова сторінка з параметрами — додай ці атрибути, і підсвічування запрацює.
 
 ## Параметри `open_tests`
-`explorer` — ті самі ключі й значення, що в `features/explorer/lib/filter.ts` (`fuel`, `diluent`, `pressure ∈ 0.7|1|2-3`, `o2 ∈ <16.5|16.5-21|air|21.6-30|30+`, `fiber ∈ free|fiber|unknown|all`, `end`, `tag ∈ series|video|cool`). Тест бекенду звіряє переліки з `filter.ts`.
+`explorer` — ті самі ключі й значення, що в `features/explorer/lib/filter.ts` (`fuel`, `diluent`, `pressure ∈ 0.7|1|2-3`, `o2 ∈ <16.5|16.5-21|air|21.6-30|30+`, `fiber ∈ free|fiber|unknown|all`, `end`, `tag ∈ series|video|3d|cool`). Тест бекенду звіряє переліки з `filter.ts`.
 
 ## Час у відео/replay (етап 4)
 Сторінка тесту читає `?view=video|replay|3d&t=<секунди>` і відкриває потрібну вкладку на моменті `t`.

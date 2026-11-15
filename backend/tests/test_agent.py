@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from flame.agent import loop
 from flame.agent import router as agent_router
+from flame.agent import tools as tools_mod
 from flame.agent.citations import build_answer
 from flame.agent.limits import Budget, RateLimiter, cost_usd
 from flame.agent.schemas import HistorySource, HistoryTurn
@@ -140,7 +141,8 @@ def test_tool_round_then_cited_answer(cur) -> None:
     first = client.calls[0]
     assert first["model"] == "claude-sonnet-5-5"
     assert first["fallbacks"] == "default"
-    assert all(t["strict"] for t in first["tools"])
+    strict = {t["name"] for t in first["tools"] if t.get("strict")}
+    assert strict == tools_mod.STRICT
     assert first["tools"][-1]["cache_control"] == {"type": "ephemeral"}
     assert "tool_choice" not in first
 
@@ -202,7 +204,7 @@ def test_empty_query_is_a_citable_source(cur) -> None:
     client = FakeClient(
         [
             msg([tool_call("query_tests", args)], stop="tool_use"),
-            msg([{"type": "text", "text": "None.", "citations": []}]),
+            msg([{"type": "text", "text": "None.", "citations": [CITE]}]),
         ]
     )
     run(client, cur)
@@ -372,3 +374,45 @@ def test_explorer_facets_match_frontend() -> None:
         assert block, key
         front = re.findall(r'value: "([^"]+)"', block.group(1))
         assert set(values) - {"all"} == set(front), key
+
+
+def test_answer_keeps_text_written_before_a_ui_tool(cur) -> None:
+    client = FakeClient(
+        [
+            msg(
+                [
+                    {"type": "text", "text": "FLEX-001 ran at 0.7 atm.", "citations": [CITE]},
+                    tool_call(
+                        "propose_action",
+                        {
+                            "action": "open_test",
+                            "label": "Open",
+                            "test_nos": [1],
+                            "t_s": 0,
+                            "explorer": {},
+                        },
+                    ),
+                ],
+                stop="tool_use",
+            ),  # fmt: skip
+            msg([{"type": "text", "text": "Use the button to open it.", "citations": []}]),
+        ]
+    )
+    done = run(client, cur)[-1]["data"]
+    text = "".join(s["text"] for s in done["answer"]["segments"])
+    assert text == "FLEX-001 ran at 0.7 atm.\n\nUse the button to open it."
+    assert done["answer"]["sources"][0]["n"] == 1
+
+
+def test_answer_without_citations_after_sources_is_rewritten(cur) -> None:
+    client = FakeClient(
+        [
+            msg([tool_call("get_test", {"test_no": 1})], stop="tool_use"),
+            msg([{"type": "text", "text": "It ended in Disruption.", "citations": []}]),
+            msg([{"type": "text", "text": "It ended in Disruption.", "citations": [CITE]}]),
+        ]
+    )
+    events = run(client, cur)
+    assert events[-1]["data"]["rewritten"] is True
+    assert "has no citations" in client.calls[2]["messages"][-1]["content"]
+    assert events[-1]["data"]["answer"]["sources"]
