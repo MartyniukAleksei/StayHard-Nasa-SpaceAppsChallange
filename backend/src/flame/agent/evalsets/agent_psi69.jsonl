@@ -25,3 +25,6 @@
 {"id": "psi-cfig-modes", "q": "In ACME CFI-G, how many tests were normal flames and how many were inverse flames?", "expect_url_any": ["/api/studies/cfig"], "mention_any": ["179"]}
 {"id": "psi-saffire2-materials", "q": "What materials were burned in Saffire-II?", "expect_url_any": ["/api/studies/saffire2"], "mention_any": ["SIBAL", "silicone"]}
 {"id": "psi-samer-aged", "q": "In SAME-R, what is the difference between test 51 and test 51a?", "expect_url_any": ["/api/studies/samer"], "mention_any": ["aged", "aging"]}
+{"id": "tour-155", "q": "What happens in FLEX-155?", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1}
+{"id": "tour-cool-flame-wording", "q": "Show me why the flame went out in FLEX-155 and what happened to the droplet afterwards.", "expect_tour": 155, "expect_tests": [155], "min_test_hits": 1, "mention_any": ["indicative", "likely", "suggest"]}
+{"id": "tour-no-series", "q": "Show me in 3D what happens in FLEX-009.", "expect_no_tour": true, "expect_tests": [9], "min_test_hits": 1, "mention_any": ["no measured", "no droplet", "not available", "no 3D", "cannot", "can't", "does not have", "doesn't have"]}

@@ -10,6 +10,7 @@
 | 3 | Графіки `make_chart` | ✅ |
 | 4 | Кадри камер за подією, відео, replay | ✅ |
 | 5 | Інші дослідження PSI: інструменти над схемами `cfi`, `cfig`, `bass2`, `samer`, `saffire2`, RAG по їхніх описах і публікаціях | ✅ |
+| 6 | 3D-тур: `show_in_3d` і подія `tour` (бекенд ✅; режисер у сцені — окремий PR) — [3d-tour/](3d-tour/mission.md), [ADR 0010](../decisions/0010-agent-3d-tour.md) | 🟡 |
 | — | Симуляція what-if | відкладено |
 
 ## Модель і налаштування
@@ -30,6 +31,7 @@
 | `make_study_chart(study, column, test_nos)` | `studies/same_r/service.chart` | SAME-R: один сенсор у часі (t = 0 — увімкнення нагрівача, без кодів приладів) для 1–3 тестів (маса диму — DustTrak B; ряд з < 20 % валідних значень або плаский не малюється — агент отримує причину); подія `chart` з `study`, `test_ids`, `doi` (кнопка «Open on page» і CSV ведуть на SAME-R); моделі — мінімум і максимум з часом кожного |
 | `find_frame(test_no, event, t_s, camera)` | `media.service` + `media/timing.py` | подія `frame`; джерело — URL кадру з часом від запалювання |
 | `look_at_frames(test_no, camera, t_s[≤4])` | те саме + `frame_jpeg(…, 512)` | зображення для зору моделі (без `search_result`), події `frame` для UI |
+| `show_in_3d(test_no, steps[≤6])` | `studies/flex/tour.py` + `media/timing.apparatus_events` | подія `tour` (кроки з підставленими числами); моделі — значення рядів у кожному кроці як `search_result` (ряди, таблиця тесту, лог) |
 | `describe_study(study)` | `studies.psi.service.overview` | DOI, профіль колонок `tests` (діапазони, категорії), часові ряди, примітки до даних (`studies/psi/notes.py`) |
 | `query_study_tests(study, filters, columns, sort, descending, limit)` | `query_tests` | підсумок запиту + рядки (`/api/studies/{slug}/tests/{id}`); оп. `contains` для тексту |
 | `aggregate_study_tests(study, filters, group_by, metric)` | `aggregate` | обчислені кількості й count/mean/min/max (`/api/studies/{slug}/aggregate`) |
@@ -56,6 +58,7 @@
 | `highlight` | `{fields[], test_nos[]}` | підсвітити `[data-field]` на поточній сторінці |
 | `chart` | `{kind, title, x_label, y_label, derived, series[{id,label,points,kind,tone}], test_nos, notes}` | графік у повідомленні (`ChartBlock`), `[Open on page]`, `[Download CSV]` |
 | `frame` | `{test_no, camera, camera_label, index, t_s, event, url}` | кадр у повідомленні (`FrameStrip`), підпис з часом (`derived time`) |
+| `tour` | `{id, test_no, steps[{moment, t, action, speed, camera, focus[], show_frame, labels[{at, text, tags[], source}]}], sources[{url, title}]}` | після `done` відкрити 3D-replay тесту й програти кроки ([ui-actions.md](ui-actions.md)) |
 | `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, картка джерела з `quotes`, позначки «General knowledge» / «No source» |
 
 Відмови до стріму — JSON `{"detail": {"reason", "message", "retry_after"}}`: 503 `not_configured` / `budget`, 429 `rate_limit` (+ `Retry-After`), 422 `bad_history` / `too_long`. Фронт показує `message` як є.
@@ -100,6 +103,12 @@ uv run python -m flame.agent.eval --only trap-no-data
 - **Час кадру від запалювання** (`media/timing.py`): нуль — рядок «AS Igniter Off/Retract Start» у лозі `<CIR>.txt` (як у 3D-replay), час кадру = `start_time` архіву + `t_ms` − нуль. Перевірено на FLEX-100: кінець ряду UV-полум'я 6.12 с ↔ кадр камери B при 6.08 с.
 - **Події:** `ignition` (0 с), `extinction` (кінець ряду полум'я UV, інакше кольорового), `end` (кінець ряду краплі), `time` (довільний `t_s`). Кадри тягнуться з NASA PSI (~7 с на перший запит до архіву), UI показує статус.
 - **Пропозиції** `open_video` (лише якщо в тесту є локальний mp4, інакше помилка моделі → чесне «немає відео») і `open_replay(t_s)` → `/studies/flex/tests/{n}?view=3d&t=…#tp-media`; `MediaBlock` відкриває вкладку й ставить 3D/2D replay на паузу в цей момент (`startAt`).
+
+## 3D-тур (`studies/flex/tour.py`, `show_in_3d`)
+- Модель обирає момент, дію, ракурс і об'єкти з переліків і пише підписи із заповнювачами; бекенд обчислює час моменту, бере найближчий відлік ряду (±0.25 с), підставляє число з одиницею, ставить теги `data` / `derived` і джерело. Цифри поза заповнювачами, невідомі заповнювачі, > 6 кроків, > 2 підписи, текст > 90 символів, тест без ряду краплі — помилка моделі (`TourError` → `is_error`).
+- `extinction` = останній відлік обох рядів полум'я (як `flameEnd` у сцені); рухи голок і запалювача — з логу тесту (`media/timing.apparatus_events`, ті самі мітки, що в `experiment-3d/lib/log.ts`).
+- Тур не замінює відповідь: промпт вимагає сказати те саме текстом із цитатами; холодне полум'я — лише словами коментаря NASA.
+- Eval: `tour-155`, `tour-cool-flame-wording`, `tour-no-series` (`expect_tour` / `expect_no_tour`).
 
 ## Збирання відповіді
 У Sonnet 5.5 текст між викликами інструментів приходить як службові блоки міркувань і користувачу не показується. Тому промпт вимагає спершу всі виклики (дані, графіки, кадри, кнопки), а повну відповідь — в останньому повідомленні. `loop._answer_content` збирає текстові блоки всіх повідомлень асистента за хід (після перезапиту «No source» — лише переписані).

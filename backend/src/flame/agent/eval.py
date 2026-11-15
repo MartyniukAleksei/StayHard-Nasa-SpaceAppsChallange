@@ -7,7 +7,9 @@
 - кожне десяткове число в процитованому сегменті є в дослівних цитатах його джерел;
 - очікувані тести серед джерел (`expect_tests`, `min_test_hits`), очікувані URL (`expect_url_any`);
 - у тексті є одна з фраз `mention_any` (регістр не важливий);
-- off_topic: жодних джерел, ввічлива відмова.
+- off_topic: жодних джерел, ввічлива відмова;
+- `expect_tour`: N — є подія `tour` для тесту N, у кожному кроці з підписом є число,
+  яке підставив бекенд; `expect_no_tour` — події `tour` немає.
 Витрати пишуться в журнал $DATA_DIR/agent_spend.json; прогін зупиняється на `--budget`.
 """
 
@@ -79,6 +81,14 @@ def check(case: dict[str, Any], done: dict[str, Any], ui: dict[str, list]) -> li
         kinds = [c["kind"] for c in ui["chart"]]
         if case["expect_chart"] not in kinds:
             fails.append(f"no {case['expect_chart']} chart (got {kinds})")
+    if case.get("expect_tour"):
+        tours = [t for t in ui["tour"] if t["test_no"] == case["expect_tour"]]
+        if not tours:
+            fails.append(f"no 3D walkthrough for test {case['expect_tour']}")
+        elif not any(lb["tags"] for st in tours[0]["steps"] for lb in st["labels"]):
+            fails.append("walkthrough labels carry no measured values")
+    if case.get("expect_no_tour") and ui["tour"]:
+        fails.append("unexpected 3D walkthrough")
     if case.get("off_topic"):
         if srcs:
             fails.append("off-topic answer has sources")
@@ -129,7 +139,13 @@ def main() -> None:
         turn = HistoryTurn(role="user", text=case["q"], page_context=case.get("page_context"))
         t0 = time.time()
         try:
-            ui: dict[str, list] = {"proposal": [], "highlight": [], "chart": [], "frame": []}
+            ui: dict[str, list] = {
+                "proposal": [],
+                "highlight": [],
+                "chart": [],
+                "frame": [],
+                "tour": [],
+            }
             done = None
             for e in loop.run_turn(client(), cur, [turn], settings):
                 if e["event"] in ui:

@@ -20,6 +20,7 @@ from flame.core.citations import (
     compare_url,
     neighbors_url,
     test_url,
+    timeseries_url,
     to_search_result,
 )
 from flame.core.studies import ALL_STUDIES, PSI_STUDIES
@@ -28,7 +29,7 @@ from flame.media import service as media_service
 from flame.media import timing as media_timing
 from flame.rag import service as rag_service
 from flame.rag.schemas import SearchFilters
-from flame.studies.flex import charts
+from flame.studies.flex import charts, tour
 from flame.studies.flex import repository as flex_repository
 from flame.studies.flex import service as flex
 from flame.studies.flex.fields import FIELDS, SIGNALS
@@ -327,6 +328,55 @@ FRAME_TOOLS: list[dict[str, Any]] = [
     },
 ]
 
+_ONE_FOCUS = {"type": "string", "enum": tour.FOCUS}
+TOUR_TOOL: dict[str, Any] = {
+    "name": "show_in_3d",
+    "description": (
+        "Play a guided walkthrough of one FLEX test in its 3D replay. It starts by itself when "
+        "your answer is complete: the website opens the test's 3D replay and plays your steps "
+        "(camera move, time, highlighted objects, short labels, the real camera frame next to "
+        "the scene). Use it when the user asks what happens in one test, asks to be shown it, "
+        f"or asks why it went out. Give 3-{tour.MAX_STEPS} steps in the order of the story. "
+        "Each step: moment - needles_retract, igniter_on, ignition (t = 0), flame_max (largest "
+        "measured flame), extinction (end of the measured flame series), end_of_data (end of the "
+        "droplet series) or t with t_s seconds after ignition (send t_s 0 otherwise); action - "
+        "pause holds the scene at the moment, play lets time run from it at speed (1 = real "
+        "time, 0.5 = slow motion); camera - overview, flame, droplet or camera_view (along the "
+        "color camera); focus - objects to outline; show_frame - also point at the real "
+        f"onboard frame of that second; labels - at most {tour.MAX_LABELS} short texts (under "
+        f"{tour.MAX_TEXT} characters) attached to an object. Never write numbers in label "
+        "text. Use placeholders and the server fills in the measured value with its unit: "
+        "{t} time of the step, {d} droplet diameter, {d2} its square (derived), {flame_d} "
+        "color-camera flame diameter, {flame_d_uv} UV flame diameter; {d_change} and {dt} - how "
+        "much the diameter changed and how much time passed since the previous step (derived); "
+        "{d0}, {dext}, {K}, {burn_time} from the test table. Example label: 'Flame out at {t}; "
+        "droplet still {d}'. The result lists every filled-in value: cite them in your answer."
+    ),
+    "input_schema": _obj(
+        {
+            "test_no": TEST_NO,
+            "steps": {
+                "type": "array",
+                "items": _obj(
+                    {
+                        "moment": {"type": "string", "enum": tour.MOMENTS},
+                        "t_s": {"type": "number"},
+                        "action": {"type": "string", "enum": tour.ACTIONS},
+                        "speed": {"type": "number"},
+                        "camera": {"type": "string", "enum": tour.CAMERAS},
+                        "focus": {"type": "array", "items": _ONE_FOCUS},
+                        "show_frame": {"type": "boolean"},
+                        "labels": {
+                            "type": "array",
+                            "items": _obj({"at": _ONE_FOCUS, "text": {"type": "string"}}),
+                        },
+                    }
+                ),
+            },
+        }
+    ),
+}
+
 STUDY_PARAM = {"type": "string", "enum": list(PSI_STUDIES), "description": "study slug"}
 TEST_ID = {"type": "string", "description": "test key as in the study table, e.g. 1206, 2-5, 51a"}
 STUDY_FILTERS = {
@@ -414,6 +464,7 @@ TOOLS.extend(UI_TOOLS)
 TOOLS.append(CHART_TOOL)
 TOOLS.append(STUDY_CHART_TOOL)
 TOOLS.extend(FRAME_TOOLS)
+TOOLS.append(TOUR_TOOL)
 
 # strict: true — лише малі схеми: API компілює строгі схеми в граматику з обмеженням розміру,
 # а переліки полів у query_tests / propose_action / highlight_params / make_chart її
@@ -776,6 +827,37 @@ def look_at_frames(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> Tool
     return out
 
 
+def show_in_3d(cur: duckdb.DuckDBPyConnection, args: dict[str, Any]) -> ToolOutput:
+    """3D-тур: кроки з переліків → подія `tour` з підставленими числами та їхні джерела."""
+    try:
+        n = int(args.get("test_no"))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ToolError("test_no must be a FLEX test number") from None
+    rows = flex_repository.get_tests(cur, [n])
+    events = media_timing.apparatus_events(n, rows[0].get("cir_id")) if rows else {}
+    try:
+        out = tour.build(tour.load(cur, n, events), args.get("steps"))
+    except tour.TourError as e:
+        raise ToolError(str(e)) from e
+    sources: list[Source] = out["sources"]
+    shown = "; ".join(
+        f"step {i}: " + " / ".join(lb["text"] for lb in st["labels"])
+        for i, st in enumerate(out["steps"], start=1)
+        if st["labels"]
+    )
+    data = {**out, "sources": [{"url": s.url, "title": s.title} for s in sources]}
+    return ToolOutput(
+        sources=sources,
+        notes=[
+            f"The 3D walkthrough of {flex.test_name(n)} ({len(out['steps'])} steps) starts for "
+            f"the user when your answer is complete. Labels as shown: {shown or 'none'}. Say the "
+            "same things in your answer and cite the values below."
+        ],
+        note_url=timeseries_url(STUDY, n, "droplet"),
+        events=[{"event": "tour", "data": data}],
+    )
+
+
 def _study_filters(args: dict[str, Any]) -> list[StudyFilter]:
     out = []
     for f in args.get("filters") or []:
@@ -866,6 +948,7 @@ HANDLERS: dict[str, Handler] = {
     "make_study_chart": make_study_chart,
     "find_frame": find_frame,
     "look_at_frames": look_at_frames,
+    "show_in_3d": show_in_3d,
 }
 
 
@@ -903,4 +986,6 @@ def status_text(name: str, args: dict[str, Any]) -> str:
             return f"Reading {args.get('series')} data…"
         case "find_frame" | "look_at_frames":
             return "Fetching camera frames from NASA PSI…"
+        case "show_in_3d":
+            return "Preparing 3D walkthrough…"
     return "Working…"
