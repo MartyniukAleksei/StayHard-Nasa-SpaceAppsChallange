@@ -39,10 +39,15 @@ def test_studies_catalog_has_active_studies_first() -> None:
     cards = r.json()
     assert cards[0]["acronym"] == "FLEX" and cards[0]["status"] == "active"
     assert cards[0]["route"] == "/studies/flex"
-    assert cards[1]["acronym"] == "SAME-R" and cards[1]["route"] == "/studies/same-r"
-    assert cards[1]["facts"] is None  # факти з БД лише у FLEX
-    assert cards[2]["acronym"] == "SAFFIRE-II" and cards[2]["route"] == "/studies/saffire2"
-    assert all(c["status"] == "coming_soon" and c["route"] is None for c in cards[3:])
+    active = {c["acronym"]: c for c in cards if c["status"] == "active"}
+    assert {k: c["route"] for k, c in active.items()} == {
+        "FLEX": "/studies/flex",
+        "SAME-R": "/studies/same-r",
+        "BASS-II": "/studies/bass2",
+        "SAFFIRE-II": "/studies/saffire2",
+    }
+    assert active["SAME-R"]["facts"] is None  # SAME-R читає знімок, не БД
+    assert all(c["route"] is None for c in cards if c["status"] == "coming_soon")
     assert all(c["doi"] for c in cards)
 
 

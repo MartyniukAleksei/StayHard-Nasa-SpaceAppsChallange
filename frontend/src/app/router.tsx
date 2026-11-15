@@ -1,4 +1,7 @@
 import { createBrowserRouter } from "react-router";
+import { Bass2OverviewPage } from "@/pages/Bass2OverviewPage";
+import { Bass2TestPage } from "@/pages/Bass2TestPage";
+import { Bass2TestsPage } from "@/pages/Bass2TestsPage";
 import { ComparePage } from "@/pages/ComparePage";
 import { LandingPage } from "@/pages/LandingPage";
 import { LibraryPage } from "@/pages/LibraryPage";
@@ -41,6 +44,9 @@ export const router = createBrowserRouter([
       { path: "/studies/saffire2/samples/:id", element: <Saffire2SamplePage /> },
       { path: "/studies/saffire2/compare", element: <Saffire2ComparePage /> },
       { path: "/studies/saffire2/library", element: <Saffire2LibraryPage /> },
+      { path: "/studies/bass2", element: <Bass2OverviewPage /> },
+      { path: "/studies/bass2/tests", element: <Bass2TestsPage /> },
+      { path: "/studies/bass2/tests/:id", element: <Bass2TestPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

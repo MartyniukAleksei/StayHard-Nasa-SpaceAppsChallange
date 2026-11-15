@@ -1,0 +1,74 @@
+/* BASS-II apparatus simulation. The scene inside the frame is realistic on purpose
+   (docs/design/README.md, 3D exception); everything around it follows StayHard:
+   straight corners, no shadows, mono numbers, 1 px rules. */
+.b3d {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);
+  gap: 12px 20px;
+  align-items: start;
+}
+.b3d-modes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.b3d-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.b3d-tags .tag { background: none; cursor: pointer; min-height: 32px; border-radius: 0; }
+.b3d-tags .tag:hover { color: var(--ink); }
+.b3d-label { font: 12px var(--mono); color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; min-width: 5.5em; }
+
+.b3d-stage { margin: 0; background: var(--void); border: var(--rule); min-width: 0; }
+.b3d-view { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+.b3d-view > div:first-child { position: absolute !important; inset: 0; }
+.b3d-view canvas { display: block; touch-action: none; }
+.b3d-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ash); font: 13px var(--mono); }
+.b3d-phase { padding: 8px 12px; min-height: 2.6em; font-size: 13px; line-height: 1.4; color: var(--ink); border-top: var(--rule); }
+.b3d-live { color: var(--flame); }
+.b3d-scale { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--ash); pointer-events: none; }
+.b3d-scale div { height: 5px; border: 1px solid var(--ash); border-top: 0; margin-bottom: 4px; min-width: 2px; }
+.b3d-flowdir { position: absolute; left: 12px; top: 10px; font-size: 11px; color: var(--ash); pointer-events: none; }
+.b3d-kind { position: absolute; right: 12px; top: 10px; font-size: 11px; color: var(--ash); pointer-events: none; }
+
+.b3d-side { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.b3d-controls { display: grid; gap: 12px; }
+.b3d-title { margin: 0; font: 500 16px var(--sans); color: var(--ink); }
+.b3d-sub { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--ash); }
+.b3d-sliders { display: grid; gap: 10px; }
+.b3d-slider { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 2px 8px; align-items: center; font-size: 13px; }
+.b3d-slider > span { font: 12px var(--mono); color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; }
+.b3d-slider output { grid-column: 2; color: var(--ink); font-size: 13px; font-variant-numeric: tabular-nums; }
+.b3d-slider input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 32px; margin: 0; background: none; cursor: ew-resize;
+}
+.b3d-slider input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--ash); }
+.b3d-slider input[type="range"]::-moz-range-track { height: 1px; background: var(--ash); }
+.b3d-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 18px; margin-top: -9px;
+  background: var(--flame); border: 0; border-radius: 0;
+}
+.b3d-slider input[type="range"]::-moz-range-thumb { width: 10px; height: 18px; background: var(--flame); border: 0; border-radius: 0; }
+.b3d-readout { display: grid; gap: 2px; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.b3d-caption { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink); max-width: 60ch; }
+.b3d-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+.b3d-layer { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 32px; font: 13px var(--mono); color: var(--ash); }
+.b3d-layer input { margin: 0; accent-color: currentColor; }
+.b3d-facts { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13px; line-height: 1.5; color: var(--ash); }
+.b3d-facts li { padding-left: 14px; position: relative; }
+.b3d-facts li::before { content: "·"; position: absolute; left: 2px; color: var(--ink); }
+.b3d-facts .mono, .b3d-caption .mono, .b3d-sub .mono { font-size: 12px; color: var(--ash); white-space: nowrap; }
+
+.b3d-map { margin: 0; display: grid; gap: 6px; }
+.b3d-map svg { width: 100%; display: block; border: var(--rule); background: var(--deep); cursor: crosshair; touch-action: none; }
+.b3d-map svg text { font: var(--chart-font); fill: var(--ash); user-select: none; }
+.b3d-map svg text.ink { fill: var(--ink); }
+.b3d-map svg .tick { stroke: var(--chart-grid); }
+.b3d-map svg .ref { stroke: var(--ash); stroke-dasharray: 2 3; }
+.b3d-map svg .curve { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.b3d-map svg .cursor { stroke: var(--flame); stroke-dasharray: 3 3; }
+.b3d-map svg .dot { fill: var(--deep); stroke: var(--ink); stroke-width: 1.5; }
+.b3d-map svg .dot.live { fill: var(--flame); stroke: var(--flame); }
+
+.b3d-under { grid-column: 1 / -1; }
+.b3d-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ash); max-width: 110ch; }
+.b3d-fallback { display: grid; gap: 14px; max-width: 760px; }
+
+@media (max-width: 960px) {
+  .b3d { grid-template-columns: minmax(0, 1fr); }
+}
