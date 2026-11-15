@@ -46,7 +46,8 @@ def test_studies_catalog_has_active_studies_first() -> None:
         "BASS-II": "/studies/bass2",
         "SAFFIRE-II": "/studies/saffire2",
     }
-    assert active["SAME-R"]["facts"] is None  # SAME-R читає знімок, не БД
+    if db_available():  # CI has no flame.duckdb, so no facts there
+        assert all(c["facts"]["n_tests"] > 0 for c in active.values())
     assert all(c["route"] is None for c in cards if c["status"] == "coming_soon")
     assert all(c["doi"] for c in cards)
 

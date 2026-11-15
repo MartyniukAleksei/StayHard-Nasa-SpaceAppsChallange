@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { FlameMini } from "./FlameMini";
 import { useStudies } from "../api";
+import { MINI } from "../lib/miniScenes";
 import type { StudyCard } from "../types";
 
 const EXCERPT = 180;
@@ -53,35 +54,28 @@ function Passport({ s }: { s: StudyCard }) {
   );
 }
 
+// what "fuels" and the year range mean on each card (FLEX burns fuels; the rest burn or heat materials)
+const MATERIALS = "materials";
+
 function Active({ s, route }: { s: StudyCard; route: string }) {
   const f = s.facts;
+  const mini = MINI[s.acronym];
+  const what = s.acronym === "FLEX" ? "fuels" : MATERIALS;
   return (
     <li className="land-card on">
       <Link to={route} className="land-card-link">
         <Passport s={s} />
         {f && (
-          <div className="land-facts-row">
-          <div className="stats land-facts">
-            <div className="stat">
-              <b>{f.n_tests}</b>
-              <span>tests</span>
-            </div>
-            <div className="stat">
-              <b>{f.fuels.length}</b>
-              <span>fuels</span>
-            </div>
-            <div className="stat">
-              <b>
-                {f.first_year}–{f.last_year}
-              </b>
-              <span>on the ISS</span>
-            </div>
-          </div>
-          <FlameMini caption="a fuel droplet burning inside a spherical flame" />
-          </div>
+          <p className="mono land-nums">
+            {f.n_tests} {s.acronym === "SAFFIRE-II" ? "samples" : "tests"} · {f.fuels.length} {what} ·{" "}
+            {f.first_year === f.last_year ? f.first_year : `${f.first_year}–${f.last_year}`}
+          </p>
         )}
-        <span className="btn">Open {s.acronym}</span>
       </Link>
+      <Link to={route} className="btn land-open">
+        Open {s.acronym}
+      </Link>
+      {mini && <FlameMini scene={mini.scene} caption={mini.caption} />}
     </li>
   );
 }

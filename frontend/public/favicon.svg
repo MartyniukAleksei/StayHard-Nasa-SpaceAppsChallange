@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
-  <!-- StayHard pixel fire: the favicon and the header icon (src/app/Layout.tsx uses this file). Transparent tile;
+  <!-- StayHard pixel fire: the favicon; the header animates the same cells (src/app/logo/draw.ts). Transparent tile;
        a warm fire gradient: pale yellow tip, orange body, red base. -->
   <defs>
     <linearGradient id="fire" x1="0" y1="0" x2="0" y2="16" gradientUnits="userSpaceOnUse">

@@ -41,6 +41,8 @@
   min-height: var(--hit);
 }
 .land-down i { font-style: normal; color: var(--ink); display: inline-block; animation: land-bob 1.6s steps(2) infinite; }
+.land-down { transition: opacity .3s, visibility .3s; }
+.land-down.gone { opacity: 0; visibility: hidden; }
 @keyframes land-bob { 50% { transform: translateY(4px); } }
 
 /* study picker */
@@ -58,14 +60,13 @@
 .land-card h3 .muted { font-family: var(--sans); font-size: 15px; }
 .land-card p { margin: 0; }
 .land-obj { color: var(--ash); font-size: 14px; }
-.land-card.on { border: 1px solid var(--flame); grid-column: span 3; padding: 0; }
-.land-card-link { display: grid; gap: 12px; padding: 24px; text-decoration: none; }
-.land-card-link:hover .btn { color: #fff; }
-.land-card-link .btn { justify-self: start; margin-left: -6px; }
+.land-card.on { border: 1px solid var(--flame); grid-column: span 3; padding: 24px; gap: 12px; }
+.land-card-link { display: grid; gap: 10px; min-width: 0; text-decoration: none; color: inherit; }
+.land-card.on { grid-template-columns: minmax(0, 75ch) minmax(200px, 1fr); column-gap: 32px; }
+.land-card.on > .land-mini { grid-column: 2; grid-row: 1 / span 2; place-self: center; }
+.land-nums { color: var(--ink); }
+.land-open { justify-self: start; margin-left: -6px; }
 .land-card.on .land-obj { max-width: 75ch; }
-.land-facts { grid-template-columns: repeat(3, minmax(0, max-content)); gap: 12px 48px; }
-.land-facts-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; }
-.land-facts-row > .land-facts { flex: 1 1 360px; }
 .land-mini { margin: 0; display: grid; justify-items: center; gap: 4px; }
 .land-mini canvas { width: 200px; height: 120px; display: block; }
 .land-mini figcaption { font-size: 11px; color: var(--ash); max-width: 200px; text-align: center; }
@@ -81,7 +82,8 @@
 @media (max-width: 600px) {
   .land-cards { grid-template-columns: minmax(0, 1fr); }
   .land-card.on { grid-column: auto; }
-  .land-facts { gap: 12px 28px; }
+  .land-card.on { grid-template-columns: minmax(0, 1fr); }
+  .land-card.on > .land-mini { grid-column: auto; grid-row: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .land-down i { animation: none; }

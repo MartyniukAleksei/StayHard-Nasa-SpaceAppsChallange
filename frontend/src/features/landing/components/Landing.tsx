@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StudyCards } from "./StudyCards";
 import { useSky } from "./Sky";
 import "./landing.css";
@@ -9,6 +9,14 @@ export function Landing() {
   const cosmos = useRef<HTMLCanvasElement>(null);
   const text = useRef<HTMLDivElement>(null);
   useSky(sky, cosmos, text);
+  // the "choose a study" cue hides once the user scrolls, and comes back at the very top
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 0);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
 
   return (
     <div className="land-page">
@@ -31,7 +39,7 @@ export function Landing() {
             </div>
           </div>
         </div>
-        <a className="land-down mono" href="#studies">
+        <a className={scrolled ? "land-down mono gone" : "land-down mono"} href="#studies" aria-hidden={scrolled || undefined} tabIndex={scrolled ? -1 : undefined}>
           <i aria-hidden="true">v</i>choose a study
         </a>
       </section>
