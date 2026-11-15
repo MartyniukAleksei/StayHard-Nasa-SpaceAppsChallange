@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { TimeSeries } from "@/features/same-r-3d";
 import type { Row } from "../types";
-import { column, groupTests, heaterOff, materials, paramRows } from "./tests.ts";
+import { column, fromRest, groupTests, heaterOff, materials, paramRows, peak } from "./tests.ts";
 
 const row = (test_id: string, test_no: number, material: string) => ({ test_id, test_no, material }) as Row;
 
@@ -45,4 +45,14 @@ test("paramRows shows the aged row only where it records a different value", () 
   assert.equal(rows["Material"].aged, null);
   assert.equal(rows["Description"].aged, null);
   assert.equal(rows["Primary aging time"].value, "not recorded");
+});
+
+test("fromRest subtracts the median before t = 0 and needs a baseline", () => {
+  assert.deepEqual(fromRest([[-2, 1], [-1, 3], [0, 2], [5, -4]]), [[-2, -1], [-1, 1], [0, 0], [5, -6]]);
+  assert.deepEqual(fromRest([[0, 1], [1, 2]]), []);
+});
+
+test("peak takes the largest |value| from t = 0 on", () => {
+  assert.deepEqual(peak([[-1, -9], [0, 1], [3, -2], [4, 1.5]]), [3, -2]);
+  assert.equal(peak([[-1, 5]]), null);
 });

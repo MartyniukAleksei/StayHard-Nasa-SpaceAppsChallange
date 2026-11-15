@@ -7,9 +7,6 @@
 .sr-meta { color: var(--ash); margin: 24px 0 0; overflow-wrap: anywhere; }
 .sr-sub { font: 400 12px var(--mono); color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; margin: 28px 0 10px; }
 
-.sr-why { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sr-why h3 { margin: 0 0 8px; font-size: 17px; font-weight: 500; }
-.sr-why p { margin: 0 0 8px; }
 .sr-traps { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ash); max-width: 75ch; }
 
 .sr-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
@@ -85,7 +82,7 @@
 
 @media (max-width: 960px) {
   .sr-hero .stats { grid-template-columns: minmax(0, 1fr); }
-  .sr-why, .sr-docs, .sr-charts { grid-template-columns: minmax(0, 1fr); }
+  .sr-docs, .sr-charts { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
   .sr-hero .stats { gap: 18px 32px; }
@@ -170,12 +167,11 @@ div.sr-cmp-tem { aspect-ratio: 4 / 3; display: grid; place-items: center; }
 .sr-nb a { display: inline-flex; align-items: center; min-height: var(--hit); min-width: 56px; }
 
 /* overview: how it worked, tests to read first */
-.sr-how, .sr-first { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.sr-how h3, .sr-first h3 { margin: 4px 0 8px; font-size: 17px; font-weight: 500; }
-.sr-how p, .sr-first p { margin: 0 0 8px; }
-.sr-first .cell { display: grid; align-content: start; justify-items: start; }
-@media (max-width: 900px) { .sr-how, .sr-first { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .sr-how, .sr-first { grid-template-columns: minmax(0, 1fr); } }
+.sr-how { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sr-how h3 { margin: 4px 0 8px; font-size: 17px; font-weight: 500; }
+.sr-how p { margin: 0 0 8px; }
+@media (max-width: 900px) { .sr-how { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .sr-how { grid-template-columns: minmax(0, 1fr); } }
 
 /* library: section links */
 .sr-toc ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 0 20px; }
@@ -184,3 +180,36 @@ div.sr-cmp-tem { aspect-ratio: 4 / 3; display: grid; place-items: center; }
 .sr-anchor { scroll-margin-top: 12px; }
 .sr-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
 .sr-browse .lede { margin: 0; }
+
+/* Overview cards (same layout as the FLEX overview, features/study-overview/components/overview.css) */
+.sr .tc-list { display: grid; gap: 0; border-top: var(--rule); margin-top: 8px; }
+.sr .tc { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; border-bottom: var(--rule); }
+.sr .tc-left { padding: 20px 24px 20px 0; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.sr .tc-right { padding: 20px 0 20px 24px; border-left: var(--rule); min-width: 0; }
+.sr .tc-kicker { margin: 0; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; }
+.sr .tc-title { margin: 0; font-size: 1.25rem; }
+.sr .tc-head { margin: 0; color: var(--ash); overflow-wrap: anywhere; }
+.sr .tc-head a, .sr .tc-refs a { color: var(--ink); }
+.sr .tc-cap { margin: 0; color: var(--ash); }
+.sr .tc-wait { display: grid; place-items: center; min-height: 230px; border: 1px dashed var(--line); color: var(--ash); }
+.sr .tc-sub { margin: 0 0 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+.sr .tc-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.sr .tc-notes p { margin: 0; max-width: 62ch; font-size: 14.5px; }
+.sr .tc-refs { margin-top: 4px !important; color: var(--ash); }
+.sr .tc-ev { color: var(--ink); text-transform: none; letter-spacing: 0; padding: 0 6px; border: 1px dashed var(--line); }
+.sr .tc-ev-derived { color: var(--series-uv); border-color: var(--series-uv); }
+.sr .tc-claim { margin: 0 0 12px; font-size: 1.05rem; max-width: 52ch; }
+.sr .tc-caveat { margin: 12px 0 10px; color: var(--ash); max-width: 62ch; }
+.sr .tc-caveat b { color: var(--ink); font-weight: 500; margin-right: 6px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+.sr .ov-quote { margin: 10px 0 0; padding-left: 12px; border-left: var(--rule); font-size: 14px; font-style: italic; color: var(--ink); }
+.sr .ov-quote cite { display: block; font-style: normal; font-size: 12px; color: var(--ash); margin-top: 4px; }
+.sr .ov-refs { margin: 0 0 24px; padding-left: 24px; display: grid; gap: 10px; font-size: 14px; max-width: 100ch; }
+.sr .ov-refs li::marker { font-family: var(--mono); color: var(--ash); }
+.sr .ov-refs a { color: var(--ash); overflow-wrap: anywhere; }
+.sr .ov-refs-sub { margin: 0 0 8px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+.sr .sr-how .tc-refs { margin: 0; }
+@media (max-width: 900px) {
+  .sr .tc { grid-template-columns: 1fr; }
+  .sr .tc-left { padding-right: 0; }
+  .sr .tc-right { padding-left: 0; border-left: 0; border-top: var(--rule); }
+}

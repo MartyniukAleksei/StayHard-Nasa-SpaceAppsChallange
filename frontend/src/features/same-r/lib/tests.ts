@@ -32,6 +32,25 @@ export function column(s: TimeSeries, col: string): [number, number][] {
   return s.rows.flatMap((r) => (r[0] != null && r[i] != null ? [[r[0], r[i]] as [number, number]] : []));
 }
 
+/**
+ * Points as change from the level before heating (derived): minus the median of the values at t < 0.
+ * Empty when nothing was recorded before t = 0, so no baseline is invented.
+ */
+export function fromRest(pts: [number, number][]): [number, number][] {
+  const pre = pts.filter(([t]) => t < 0).map(([, v]) => v).sort((a, b) => a - b);
+  if (!pre.length) return [];
+  const m = pre.length >> 1;
+  const rest = pre.length % 2 ? pre[m] : (pre[m - 1] + pre[m]) / 2;
+  return pts.map(([t, v]) => [t, v - rest]);
+}
+
+/** The point with the largest absolute value at t >= 0; null when there is none. */
+export function peak(pts: [number, number][]): [number, number] | null {
+  let best: [number, number] | null = null;
+  for (const p of pts) if (p[0] >= 0 && (!best || Math.abs(p[1]) > Math.abs(best[1]))) best = p;
+  return best;
+}
+
 /** First second after t = 0 with the heater off; null if the heater stays on to the end. */
 export function heaterOff(s: TimeSeries): number | null {
   for (const [t, h] of column(s, "heating")) if (t > 0 && h < 0.5) return t;

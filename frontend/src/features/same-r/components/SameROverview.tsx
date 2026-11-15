@@ -2,16 +2,17 @@ import { useMemo } from "react";
 import { Link } from "react-router";
 import { useSameROverview, useSameRTests } from "../api";
 import { PTRAK_LIMIT, SameR3D } from "@/features/same-r-3d";
-import { HERO_LEDE, HERO_QUESTION, HOW, TRAPS, WHY } from "../content";
+import { HERO_LEDE, HERO_QUESTION } from "../content";
 import { testHref, TESTS_PATH } from "../lib/compare";
 import { readFirst, type Pick } from "../lib/picks";
 import { groupTests, materials, type TestGroup } from "../lib/tests";
 import type { Overview } from "../types";
-import { Cite, LoadError, Loading } from "./Common";
+import { LoadError, Loading } from "./Common";
+import { Findings, How, References, TestCards } from "./OverviewParts";
 import { IssPhotos } from "./Photos";
 import "./same-r.css";
 
-/** SAME-R overview: the question, key numbers, the hardware on the ISS, why it matters, how to cite. */
+/** SAME-R overview, in the FLEX order (.claude/skills/study-overview-page/SKILL.md). */
 export function SameROverview() {
   const overview = useSameROverview();
   const tests = useSameRTests();
@@ -24,17 +25,11 @@ export function SameROverview() {
     <div className="sr">
       <Hero o={overview.data} groups={groups} />
       {picks[0] && <Example pick={picks[0]} />}
-      <ReadFirst picks={picks} />
-      <How />
-      <section className="band" aria-labelledby="sr-iss">
-        <div className="wrap">
-          <h2 id="sr-iss" className="h-section">On the ISS</h2>
-          <IssPhotos bursts />
-        </div>
-      </section>
-      <Why />
+      <TestCards picks={picks} />
+      <How photos={<IssPhotos bursts />} />
+      <Findings groups={groups} />
       <BrowseTests />
-      <Cite o={overview.data} />
+      <References o={overview.data} picks={picks} />
     </div>
   );
 }
@@ -82,76 +77,6 @@ function Stat({ value, label }: { value: number; label: string }) {
       <b>{value}</b>
       <span>{label}</span>
     </div>
-  );
-}
-
-function Why() {
-  return (
-    <section className="band" aria-labelledby="sr-why">
-      <div className="wrap">
-        <h2 id="sr-why" className="h-section">Why it matters</h2>
-        <ul className="cells sr-why">
-          {WHY.map((w) => (
-            <li key={w.title} className="cell">
-              <h3>{w.title}</h3>
-              <p>{w.text}</p>
-              <p className="small muted">{w.cite}</p>
-            </li>
-          ))}
-        </ul>
-        <h3 className="sr-sub">Read the numbers carefully</h3>
-        <ul className="sr-traps">
-          {TRAPS.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function How() {
-  return (
-    <section className="band" aria-labelledby="sr-how">
-      <div className="wrap">
-        <h2 id="sr-how" className="h-section">How it worked</h2>
-        <ol className="cells sr-how">
-          {HOW.map((h, i) => (
-            <li key={h.title} className="cell">
-              <span className="mono small muted">{String(i + 1).padStart(2, "0")}</span>
-              <h3>{h.title}</h3>
-              <p>{h.text}</p>
-              <p className="small muted">{h.cite}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-function ReadFirst({ picks }: { picks: Pick[] }) {
-  if (!picks.length) return null;
-  return (
-    <section className="band" aria-labelledby="sr-first">
-      <div className="wrap">
-        <h2 id="sr-first" className="h-section">
-          Tests to read first <span className="tag">derived</span>
-        </h2>
-        <p className="lede">For each thing worth seeing, the first test with telemetry that shows it.</p>
-        <ul className="cells sr-first">
-          {picks.map((p) => (
-            <li key={p.id} className="cell">
-              <h3>{p.title}</h3>
-              <p>{p.why}</p>
-              <Link className="btn ghost" to={testHref(p.g.test_no)}>
-                Test #{p.g.main.test_id} · {p.g.main.material}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
   );
 }
 
