@@ -1,0 +1,122 @@
+:root {
+  color-scheme: dark;
+  --bg: #04050a;
+  --panel: rgba(14, 18, 30, 0.62);
+  --line: rgba(140, 165, 220, 0.16);
+  --text: #e8edf7;
+  --muted: #8d99b3;
+  --d2: #7fd0ff;
+  --vis: #ffa64d;
+  --uv: #8f9dff;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+.x3d {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.x3d-stage { position: relative; min-height: 0; }
+.x3d-stage canvas { display: block; }
+.x3d-status { height: 100%; display: grid; place-items: center; color: var(--muted); }
+
+.x3d-glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+}
+
+.x3d-header { position: absolute; top: 16px; left: 16px; max-width: min(620px, calc(100% - 300px)); padding: 14px 18px; pointer-events: none; }
+.x3d-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.x3d-header h1 { margin: 2px 0 10px; font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
+.x3d-header h1 span { font-size: 16px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+.x3d-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.x3d-chips span { font: 12px var(--mono); padding: 3px 9px; border-radius: 999px; background: rgba(140, 165, 220, 0.1); border: 1px solid var(--line); }
+.x3d-chips .x3d-chip-end { color: #ffd9a8; border-color: rgba(255, 166, 77, 0.35); background: rgba(255, 166, 77, 0.1); }
+
+.x3d-readouts { position: absolute; top: 16px; right: 16px; width: 250px; padding: 14px 16px; }
+.x3d-time { font: 600 30px/1.1 var(--mono); letter-spacing: -0.02em; }
+.x3d-time small { display: block; font: 11px/1.6 Inter, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.x3d-readouts dl { margin: 12px 0 0; display: grid; grid-template-columns: 1fr auto; gap: 7px 10px; align-items: center; }
+.x3d-readouts dt { color: var(--muted); font-size: 12.5px; }
+.x3d-readouts dd { margin: 0; font: 13px var(--mono); text-align: right; white-space: nowrap; }
+.x3d-layer { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.x3d-layer input { accent-color: currentColor; margin: 0; }
+.x3d-layer-vis { color: var(--vis); }
+.x3d-layer-uv { color: var(--uv); }
+
+.x3d-phase {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  max-width: min(680px, 90%); padding: 8px 16px; border-radius: 12px; text-align: center;
+  background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(12px);
+  font-size: 13.5px; pointer-events: none;
+}
+.x3d-phase-burn { border-color: rgba(255, 166, 77, 0.4); color: #ffe2bd; }
+.x3d-phase-out { border-color: rgba(143, 157, 255, 0.4); }
+.x3d-phase p { margin: 6px 0 2px; font-size: 12px; color: var(--muted); text-align: left; }
+.scene-label { font: 11px var(--mono); color: #7f8db0; white-space: nowrap; pointer-events: none; transform: translate(26px, -10px); }
+
+.x3d-frames { grid-row: 1 / 3; grid-column: 2; border-left: 1px solid var(--line); padding: 16px 14px; overflow-y: auto; background: #070912; }
+.x3d-frames h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.x3d-frames h2 small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.x3d-frames-note { color: var(--muted); font-size: 12.5px; }
+.x3d-feed { margin: 0 0 16px; }
+.x3d-feed-image { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #000; border: 1px solid var(--line); display: grid; place-items: center; }
+.x3d-feed-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.x3d-feed-image span { color: var(--muted); font-size: 12px; padding: 0 16px; text-align: center; }
+.x3d-feed-image.stale img { opacity: 0.45; }
+.x3d-feed-progress { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--d2); transition: width 0.3s; }
+.x3d-feed figcaption { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.x3d-feed figcaption b { color: var(--text); margin-right: 4px; }
+.x3d-feed figcaption small { display: block; font: 11px var(--mono); margin-top: 2px; }
+.x3d-feed-file { opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.x3d-bottom { grid-column: 1; border-top: 1px solid var(--line); background: #070912; padding: 10px 16px 8px; }
+.x3d-timeline { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center; }
+.x3d-controls { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.x3d-play { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: rgba(127, 208, 255, 0.14); color: var(--text); font-size: 15px; cursor: pointer; }
+.x3d-play:hover { background: rgba(127, 208, 255, 0.26); }
+.x3d-speeds { display: flex; gap: 2px; }
+.x3d-speeds button { font: 11px var(--mono); padding: 2px 5px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--muted); cursor: pointer; }
+.x3d-speeds button.on { color: var(--text); border-color: var(--line); background: rgba(140, 165, 220, 0.12); }
+.x3d-timeline svg { width: 100%; height: 120px; cursor: ew-resize; touch-action: none; display: block; }
+.x3d-timeline svg text { font: 10px var(--mono); fill: var(--muted); user-select: none; }
+.x3d-timeline svg .tick { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.x3d-timeline svg .tick.zero { stroke: rgba(255, 255, 255, 0.35); }
+.x3d-timeline svg .tick.end { stroke: var(--uv); stroke-dasharray: 3 3; }
+.x3d-timeline svg text.end { fill: var(--uv); }
+.x3d-timeline svg text.axis.d2 { fill: var(--d2); }
+.x3d-timeline svg .line { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.x3d-timeline svg .line.d2 { stroke: var(--d2); stroke-width: 2; }
+.x3d-timeline svg .line.vis { stroke: var(--vis); }
+.x3d-timeline svg .line.uv { stroke: var(--uv); }
+.x3d-timeline svg .cursor { stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.x3d-legend { grid-column: 2; display: flex; gap: 16px; font-size: 11.5px; color: var(--muted); }
+.x3d-legend span::before { content: ""; display: inline-block; width: 14px; height: 2px; margin-right: 6px; vertical-align: middle; background: currentColor; }
+.x3d-legend .d2 { color: var(--d2); }
+.x3d-legend .vis { color: var(--vis); }
+.x3d-legend .uv { color: var(--uv); }
+.x3d-footer { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 24px; font-size: 11.5px; color: var(--muted); }
+.x3d-footer b { color: var(--text); font-weight: 600; }
+.x3d-footer a { color: var(--d2); }
+.x3d-footer span:last-child { white-space: nowrap; }
+.x3d-scale-note { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
+.x3d-scale { position: absolute; left: 20px; bottom: 20px; font: 11px var(--mono); color: var(--muted); pointer-events: none; }
+.x3d-scale div { height: 6px; border: 1px solid #aab6d3; border-top: none; margin-bottom: 4px; min-width: 2px; }
+.x3d-timeline svg .tick.event { stroke: rgba(255, 196, 107, 0.5); stroke-dasharray: 2 3; }
+.x3d-timeline svg text.event { fill: #e0b074; }
+.x3d-scale { position: absolute; left: 20px; bottom: 20px; font: 11px var(--mono); color: var(--muted); pointer-events: none; }
+.x3d-scale div { height: 6px; border: 1px solid #aab6d3; border-top: none; margin-bottom: 4px; min-width: 2px; }
+.x3d-timeline svg .tick.event { stroke: rgba(255, 196, 107, 0.5); stroke-dasharray: 2 3; }
+.x3d-timeline svg text.event { fill: #e0b074; }
