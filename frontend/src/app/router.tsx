@@ -3,6 +3,13 @@ import { ComparePage } from "@/pages/ComparePage";
 import { LandingPage } from "@/pages/LandingPage";
 import { LibraryPage } from "@/pages/LibraryPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import {
+  Saffire2ComparePage,
+  Saffire2LibraryPage,
+  Saffire2Page,
+  Saffire2SamplePage,
+  Saffire2SamplesPage,
+} from "@/pages/Saffire2Page";
 import { SameRPage } from "@/pages/SameRPage";
 import { SameRComparePage } from "@/pages/SameRComparePage";
 import { SameRLibraryPage } from "@/pages/SameRLibraryPage";
@@ -29,6 +36,11 @@ export const router = createBrowserRouter([
       { path: "/studies/same-r/tests/:id", element: <SameRTestPage /> },
       { path: "/studies/same-r/compare", element: <SameRComparePage /> },
       { path: "/studies/same-r/library", element: <SameRLibraryPage /> },
+      { path: "/studies/saffire2", element: <Saffire2Page /> },
+      { path: "/studies/saffire2/samples", element: <Saffire2SamplesPage /> },
+      { path: "/studies/saffire2/samples/:id", element: <Saffire2SamplePage /> },
+      { path: "/studies/saffire2/compare", element: <Saffire2ComparePage /> },
+      { path: "/studies/saffire2/library", element: <Saffire2LibraryPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

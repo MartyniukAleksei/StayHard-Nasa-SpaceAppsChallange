@@ -21,8 +21,8 @@ export function StudyCards() {
       <div className="wrap">
         <h2 id="studies-title" className="sr-only">Choose a study</h2>
         <p className="lede">
-          Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX and
-          SAME-R are open now; the others are next.
+          Microgravity combustion datasets from NASA Physical Sciences Informatics. FLEX, SAME-R
+          and SAFFIRE-II are open now; the others are next.
         </p>
         {isPending && <p className="muted mono">Loading studies…</p>}
         {isError && (

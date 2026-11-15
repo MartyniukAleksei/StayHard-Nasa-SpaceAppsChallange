@@ -1,0 +1,61 @@
+/* Saffire-II 3D replay. Inside the frame the scene is realistic (docs/design/README.md, 3D exception);
+   everything around it is StayHard. Prefix sf3d-. */
+.sf3d { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 16px; }
+.sf3d-stage { margin: 0; position: relative; height: clamp(420px, 56vw, 620px); background: var(--void); border: var(--rule); overflow: hidden; }
+.sf3d-stage > div:first-child { position: absolute !important; inset: 0; }
+.sf3d-stage canvas { display: block; touch-action: none; }
+.sf3d-empty {
+  aspect-ratio: 16 / 9; display: grid; place-items: center; border: 1px dashed var(--line);
+  color: var(--ash); font: 13px var(--mono);
+}
+.sf3d-stage .sf3d-empty { position: absolute; inset: 0; border: 0; aspect-ratio: auto; }
+.sf3d-phase { z-index: 20;
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 12px; font-size: 13px; color: var(--ink);
+  background: var(--void); border-top: var(--rule); pointer-events: none;
+}
+.sf3d-live { color: var(--flame); }
+.sf3d-scale { z-index: 20; position: absolute; left: 12px; bottom: 44px; font-size: 11px; color: var(--ash); pointer-events: none; }
+.sf3d-scale div { height: 5px; border: 1px solid var(--ash); border-top: 0; margin-bottom: 4px; min-width: 2px; }
+.sf3d-label { font: 11px var(--mono); color: var(--ink); white-space: nowrap; pointer-events: none; user-select: none; }
+.sf3d-label.muted { color: var(--ash); }
+
+.sf3d-one .sf3d-stage { height: clamp(360px, 42vw, 480px); }
+
+.sf3d-under { grid-column: 1 / -1; display: grid; gap: 8px; }
+.sf3d-timeline { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+.sf3d-controls { display: grid; justify-items: start; }
+.sf3d-speeds { display: flex; }
+.sf3d-speeds button {
+  background: none; border: 0; border-bottom: 2px solid transparent; color: var(--ash);
+  font: 12px var(--mono); padding: 6px 8px; min-height: 32px; cursor: pointer;
+}
+.sf3d-speeds button.on { color: var(--ink); border-bottom-color: var(--flame); }
+.sf3d-timeline svg { width: 100%; display: block; cursor: ew-resize; touch-action: none; border: var(--rule); background: var(--deep); }
+.sf3d-timeline svg text { font: 11px var(--mono); fill: var(--ash); user-select: none; }
+.sf3d-timeline svg .seg { fill: none; stroke: var(--line); }
+.sf3d-timeline svg .flame { fill: var(--flame); opacity: 0.55; }
+.sf3d-timeline svg .ign { stroke: var(--ash); stroke-dasharray: 2 2; }
+.sf3d-timeline svg .gap { fill: var(--ash); }
+.sf3d-timeline svg .cursor { stroke: var(--ink); stroke-width: 1.5; }
+.sf3d-timeline svg .tick { stroke: var(--line); }
+.sf3d-timeline svg .igniter { fill: #ff5a14; }
+.sf3d-timeline svg .lbl { fill: var(--ash); font-size: 10px; }
+.sf3d-jump { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; }
+.sf3d-jump .tag { background: none; color: var(--ink); font: 12px var(--mono); min-height: 32px; cursor: pointer; }
+
+.sf3d-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sf3d-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; }
+.sf3d-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ash); max-width: 110ch; }
+
+.sf3d-fallback { display: grid; gap: 8px; max-width: 520px; }
+.sf3d-fallback svg { width: 100%; max-width: 360px; }
+.sf3d-fallback .strip { fill: none; stroke: var(--ash); }
+.sf3d-fallback .char { fill: var(--ink); }
+.sf3d-fallback text { font: 10px var(--mono); fill: var(--ash); }
+
+@media (max-width: 860px) {
+  .sf3d-stage { height: auto; aspect-ratio: 3 / 4; }
+  .sf3d-one .sf3d-stage { height: auto; aspect-ratio: 4 / 5; }
+  .sf3d-timeline { grid-template-columns: minmax(0, 1fr); }
+  .sf3d-jump { grid-column: 1; }
+}

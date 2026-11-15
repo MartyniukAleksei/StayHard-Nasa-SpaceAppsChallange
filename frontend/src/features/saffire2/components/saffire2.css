@@ -1,0 +1,112 @@
+@import "./pages.css";
+/* Saffire-II dashboards. Prefix sf-. Tokens only. */
+.sf-hero { max-width: 960px; margin-inline: 0; }
+.sf-kicker { color: var(--ash); font-size: 13px; margin: 0 0 14px; }
+.sf-stats { grid-template-columns: repeat(4, minmax(0, max-content)); gap: 18px 48px; margin-top: 8px; }
+.sf-meta { color: var(--ash); margin: 24px 0 0; overflow-wrap: anywhere; }
+.sf-derived { font-size: 11px; padding: 1px 6px; vertical-align: 2px; }
+.sf-toc { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-block: 12px; border-top: var(--rule); }
+.sf-toc a { color: var(--ash); text-decoration: none; min-height: var(--hit); display: inline-flex; align-items: center; }
+.sf-toc a:hover { color: var(--ink); }
+
+.sf-phys, .sf-traps { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sf-phys p, .sf-traps p { margin: 0; font-size: 15px; }
+/* .cells draws hairlines with a --line background: an empty slot in the last row would show as a
+   grey block, so the last card stretches over the rest of its row (3 columns on desktop) */
+@media (min-width: 901px) {
+  .sf-phys > .cell:last-child:nth-child(3n + 2), .sf-traps > .cell:last-child:nth-child(3n + 2) { grid-column: span 2; }
+  .sf-phys > .cell:last-child:nth-child(3n + 1), .sf-traps > .cell:last-child:nth-child(3n + 1) { grid-column: span 3; }
+}
+.sf-replay-note { margin-top: 20px; }
+.sf-replay { margin-bottom: 28px; }
+.sf-cursor { stroke: var(--flame); stroke-dasharray: 3 3; }
+
+/* A1 Space vs Earth */
+.sf-ev { list-style: none; margin: 0 0 12px; padding: 0; display: grid; }
+.sf-ev-row {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr) max-content;
+  gap: 8px 24px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: var(--rule);
+}
+.sf-ev-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sf-ev-bars { display: grid; gap: 4px; }
+.sf-bar { display: grid; grid-template-columns: 24px minmax(0, 1fr) 56px minmax(0, 160px); gap: 10px; align-items: center; }
+.sf-bar-k { color: var(--ash); font-size: 12px; }
+.sf-bar-v { font-size: 13px; text-align: right; }
+.sf-raw { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sf-track { position: relative; height: 8px; border: var(--rule); display: block; }
+.sf-track i { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.sf-bar.earth .sf-track i { background: var(--ash); }
+.sf-whisker { position: absolute; top: 50%; height: 1px; background: var(--ash); }
+.sf-verdict { font-size: 12px; justify-self: start; }
+.sf-verdict.v-earth_stricter { border-style: solid; }
+.sf-verdict.v-not_comparable, .sf-verdict.v-unknown { color: var(--ash); }
+.sf-glyph { color: var(--ash); }
+
+/* SVG charts */
+.sf-svg { width: 100%; overflow: hidden; }
+.sf-svg svg { display: block; }
+.sf-svg text { font: 11px var(--mono); fill: var(--ash); }
+.sf-svg .sf-rowlabel { fill: var(--ink); font-size: 12px; }
+.sf-svg .sf-axlabel { font-size: 12px; }
+.sf-grid, .sf-axis { stroke: var(--line); }
+.sf-ug rect { fill: var(--ink); }
+.sf-ug line { stroke: var(--ink); }
+.sf-ug text { fill: var(--ink); }
+.sf-g1 rect { fill: none; stroke: var(--ash); }
+.sf-svg .sf-none { fill: var(--ash); font-style: italic; }
+.sf-pt text { fill: var(--ink); }
+.sf-svg .sf-glyph-svg { font-size: 14px; fill: var(--ink); }
+.sf-cell { fill: var(--ink); }
+.sf-ign { stroke: var(--flame); }
+.sf-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.sf-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.sf-scale i { display: inline-block; width: 14px; height: 10px; background: var(--ink); }
+
+.sf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 48px; align-items: start; }
+.sf-hbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sf-hbars li { display: grid; grid-template-columns: 36px minmax(0, 1fr) 130px; gap: 10px; align-items: center; font-size: 13px; }
+
+/* B one sample */
+.sf-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.sf-tags .tag { min-height: var(--hit); background: none; color: var(--ink); font: 13px var(--mono); cursor: pointer; }
+.sf-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 24px; }
+.sf-facts .cell { display: grid; gap: 2px; }
+.sf-fact { font-weight: 400; font-size: 15px; overflow-wrap: anywhere; }
+.sf-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.sf-fig { margin: 0; }
+.sf-fig figcaption { margin-bottom: 8px; }
+.sf-fig figcaption p { margin: 0; }
+.sf-wide { grid-column: 1 / -1; }
+.band .sf-fig.sf-wide { margin-top: 28px; }
+
+/* C conditions */
+.sf-table-wrap { overflow-x: auto; margin-top: 28px; }
+.sf-table { border-collapse: collapse; width: 100%; font: 13px var(--mono); }
+.sf-table caption { text-align: left; padding-bottom: 8px; font-family: var(--sans); }
+.sf-table th, .sf-table td { padding: 8px 12px 8px 0; text-align: left; border-top: var(--rule); white-space: nowrap; font-weight: 400; }
+.sf-table thead th { color: var(--ash); }
+
+/* traps, notes, citation */
+.sf-notes-h { margin-top: 28px; }
+.sf-notes { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.sf-notes li::marker { font-family: var(--mono); color: var(--ash); }
+.sf-cite { margin-top: 24px; padding-top: 16px; border-top: var(--rule); display: grid; gap: 8px; justify-items: start; }
+.sf-cite p { margin: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 900px) {
+  .sf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sf-phys, .sf-traps { grid-template-columns: minmax(0, 1fr); }
+  .sf-ev-row { grid-template-columns: minmax(0, 1fr); }
+  .sf-two, .sf-charts { grid-template-columns: minmax(0, 1fr); }
+  .sf-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .sf-bar { grid-template-columns: 24px minmax(0, 1fr) 52px; }
+  .sf-raw { grid-column: 2 / -1; }
+  .sf-hbars li { grid-template-columns: 32px minmax(0, 1fr) 96px; }
+}
+.sf-ev-id { font-weight: 600; color: var(--ink); }
