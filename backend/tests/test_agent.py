@@ -297,3 +297,78 @@ def test_api_streams_sse(api, monkeypatch, cur) -> None:
     assert events[0].startswith("event: text_start")
     last = events[-1].split("\n")
     assert last[0] == "event: done" and json.loads(last[1][6:])["answer"]["segments"]
+
+
+def test_proposal_and_highlight_events(cur) -> None:
+    client = FakeClient(
+        [
+            msg(
+                [
+                    tool_call(
+                        "propose_action",
+                        {
+                            "action": "open_compare",
+                            "label": "Compare",
+                            "test_nos": [1, 2],
+                            "explorer": {},
+                        },
+                        "tu_a",
+                    ),
+                    tool_call(
+                        "highlight_params", {"fields": ["p_atm", "bogus"], "test_nos": [1]}, "tu_b"
+                    ),
+                ],
+                stop="tool_use",
+            ),  # fmt: skip
+            msg([{"type": "text", "text": "Here you go.", "citations": []}]),
+        ]
+    )
+    events = run(client, cur)
+    prop = next(e["data"] for e in events if e["event"] == "proposal")
+    assert prop == {"action": "open_compare", "label": "Compare",
+                    "params": {"test_nos": [1, 2]}, "id": "tu_a-0"}  # fmt: skip
+    hl = next(e["data"] for e in events if e["event"] == "highlight")
+    assert hl["fields"] == ["p_atm"] and hl["test_nos"] == [1]
+    results = client.calls[1]["messages"][-1]["content"]
+    assert [r.get("is_error") for r in results] == [None, None]
+    assert results[0]["content"][0]["type"] == "text"
+
+
+@pytest.mark.parametrize(
+    "args, error",
+    [
+        ({"action": "open_compare", "test_nos": [1]}, "2 or 3 tests"),
+        ({"action": "open_compare", "test_nos": [1, 2, 3, 99]}, "2 or 3 tests"),
+        ({"action": "open_test", "test_nos": [99]}, "no such tests"),
+    ],
+)
+def test_proposal_validation(cur, args, error) -> None:
+    from flame.agent import tools
+
+    with pytest.raises(tools.ToolError, match=error):
+        tools.propose_action(cur, {"label": "x", "explorer": {}, **args})
+
+
+def test_open_tests_keeps_only_known_facet_values(cur) -> None:
+    from flame.agent import tools
+
+    out = tools.propose_action(
+        cur,
+        {"action": "open_tests", "label": "x", "test_nos": [],
+         "explorer": {"fuel": ["Heptane", "Kerosene"], "o2": ["30+"], "tag": []}},
+    )  # fmt: skip
+    assert out.events[0]["data"]["params"] == {"explorer": {"fuel": ["Heptane"], "o2": ["30+"]}}
+
+
+def test_explorer_facets_match_frontend() -> None:
+    """Значення фасетів мають збігатися з features/explorer/lib/filter.ts."""
+    import re
+
+    from flame.agent.tools import EXPLORER_FACETS
+
+    ts = (Path(__file__).parents[2] / "frontend/src/features/explorer/lib/filter.ts").read_text()
+    for key, values in EXPLORER_FACETS.items():
+        block = re.search(rf'key: "{key}",.*?options: \[(.*?)\]\s*,\s*values', ts, re.S)
+        assert block, key
+        front = re.findall(r'value: "([^"]+)"', block.group(1))
+        assert set(values) - {"all"} == set(front), key

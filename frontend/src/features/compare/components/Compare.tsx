@@ -141,7 +141,7 @@ function Column({ id, detail: t, replay, error, domain, onRemove }: ColumnProps)
   if (!t) return <article className="cmp-col muted mono">Loading #{id}…</article>;
   const d2 = (replay?.droplet ?? []).map(([s, d]) => [s, d * d] as [number, number]);
   return (
-    <article className="cmp-col" aria-labelledby={`cmp-${id}`}>
+    <article className="cmp-col" aria-labelledby={`cmp-${id}`} data-test={id}>
       <header className="cmp-col-head">
         <h2 id={`cmp-${id}`} className="h-section">
           <Link to={testHref(id)}>#{id}</Link>
@@ -151,7 +151,8 @@ function Column({ id, detail: t, replay, error, domain, onRemove }: ColumnProps)
         </button>
       </header>
       <p className="mono small">
-        {t.fuel} · {num(t.p_atm, 2, "atm")} · {pct(t.x_o2)} O₂ · {chem(t.diluent)}
+        <span data-field="fuel">{t.fuel}</span> · <span data-field="p_atm">{num(t.p_atm, 2, "atm")}</span> ·{" "}
+        <span data-field="x_o2">{pct(t.x_o2)} O₂</span> · <span data-field="diluent x_co2 x_he x_n2">{chem(t.diluent)}</span>
       </p>
       <p className="small">
         <EndMark type={t.end_type} /> <span className="muted">· {fiberLabel(t.fiber)}</span>
@@ -173,11 +174,11 @@ function Column({ id, detail: t, replay, error, domain, onRemove }: ColumnProps)
       )}
       <dl className="kv">
         <dt>d₀</dt>
-        <dd>{num(t.d0_mm, 2, "mm")}</dd>
+        <dd data-field="d0_mm">{num(t.d0_mm, 2, "mm")}</dd>
         <dt>K</dt>
-        <dd>{num(t.k_mm2_s, 2, "mm²/s")}</dd>
+        <dd data-field="k_mm2_s">{num(t.k_mm2_s, 2, "mm²/s")}</dd>
         <dt>Burn time</dt>
-        <dd>{num(t.burn_time_s, 1, "s")}</dd>
+        <dd data-field="burn_time_s">{num(t.burn_time_s, 1, "s")}</dd>
       </dl>
       {t.comment && (
         <blockquote className="ex-quote">
