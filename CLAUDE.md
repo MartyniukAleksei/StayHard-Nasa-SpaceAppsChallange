@@ -26,6 +26,7 @@ uv run pytest                                   # all tests
 uv run pytest tests/test_health.py::test_health # single test
 uv run ruff check . && uv run ruff format --check .
 uv run python -m flame.ingest.psi_flex --verify # check data/flex against manifest.json
+uv run python -m flame.ingest.psi_cfi --verify  # CFI (PSI-39) snapshot data/cfi, see docs/data/cfi.md
 uv run python -m flame.ingest.build_db          # data/flex → data/build/flame.duckdb (force rebuild)
 uv run python -m flame.ingest.bootstrap         # rebuild only if build version changed
 uv run python -m flame.rag.eval --k 5           # RAG recall@k on rag/evalsets/psi69.jsonl (--set psi69_holdout)
