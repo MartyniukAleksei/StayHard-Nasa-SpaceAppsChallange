@@ -1,6 +1,6 @@
 # Інші видавці — лише посилання
 
-PDF цих робіт у команди є, але в репозиторій вони не викладені: це статті й дисертації з авторським правом, а репозиторій публічний. Завантажуйте за посиланням.
+PDF цих робіт у репозиторій не викладені: це статті й дисертації з авторським правом, а репозиторій публічний. Завантажуйте за посиланням.
 
 | Робота | Видавець | Посилання |
 |---|---|---|
@@ -9,5 +9,5 @@ PDF цих робіт у команди є, але в репозиторій в�
 | Dembia, Liu, Avedisian. Automated Data Analysis for Consecutive Images from Droplet Combustion Experiments. Image Anal Stereol 31 (2012) 137–148 | Image Analysis & Stereology | [doi:10.5566/ias.v31.p137-148](https://doi.org/10.5566/ias.v31.p137-148) |
 | Yu, Shaw. Interpretation of Backlit Droplet Images from ISS Droplet Combustion Experiments. Gravitational and Space Research, 2014 | ASGSR | [doi:10.2478/gsr-2014-0007](https://doi.org/10.2478/gsr-2014-0007) |
 | Vang. Studies on Mass and Energy Transport in Droplet Combustion and Evaporation. PhD thesis, UC Davis, 2023 | University of California | [escholarship.org/uc/item/58p1p8rw](https://escholarship.org/uc/item/58p1p8rw) |
-| Ahmed. Multidimensional Simulation of Cool Diffusion Flame. Master's thesis, Univ. of South Carolina, 2024 (база PSI-117) | Univ. of South Carolina | [scholarcommons.sc.edu/etd/7944](https://scholarcommons.sc.edu/etd/7944) |
+| Ahmed. Multidimensional Simulation of Cool Diffusion Flame. Master's thesis, Univ. of South Carolina, 2024 (дані: PSI-117, [doi:10.60555/gz0q-b577](https://doi.org/10.60555/gz0q-b577)) | Univ. of South Carolina | [scholarcommons.sc.edu/etd/7944](https://scholarcommons.sc.edu/etd/7944) |
 | Alam. Combustion Behavior of Sub-Millimeter Sized Oxygenated and N-Alkane Fuel Droplets. PhD thesis, Univ. of South Carolina, 2018 | Univ. of South Carolina | [scholarcommons.sc.edu/etd/4737](https://scholarcommons.sc.edu/etd/4737) |
