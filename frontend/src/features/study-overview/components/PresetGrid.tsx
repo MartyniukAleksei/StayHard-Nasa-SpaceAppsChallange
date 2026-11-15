@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+import { presetHref } from "@/features/explorer";
 import { EndMark } from "@/shared/ui/EndMark";
 import type { Preset, PresetGroup } from "../types";
 
@@ -10,7 +12,7 @@ export function PresetGrid({ presets }: { presets: Preset[] }) {
           Counts are free-floating droplets only. Fiber-supported tests are never mixed in; they
           are listed separately under each card.
         </p>
-        <p className="ov-soon mono">Opening each set in the Test explorer is coming soon.</p>
+        <p className="ov-soon mono">Open any answer to see the same tests in the Test explorer.</p>
         <ul className="cells ov-presets">
           {presets.map((p) => (
             <PresetCard key={p.id} preset={p} />
@@ -43,7 +45,7 @@ function PresetCard({ preset }: { preset: Preset }) {
 function GroupAnswer({ group, showLabel }: { group: PresetGroup; showLabel: boolean }) {
   const excluded = excludedText(group);
   return (
-    <div className="ov-group">
+    <Link className="ov-group" to={presetHref(group.id)}>
       {showLabel && <div className="ov-group-label mono">{group.label}</div>}
       <div className="stat">
         <b>{group.total}</b>
@@ -55,7 +57,8 @@ function GroupAnswer({ group, showLabel }: { group: PresetGroup; showLabel: bool
         <EndMark type="Completion" count={group.by_end.completion} short />
       </div>
       {excluded && <p className="ov-excluded">{excluded}</p>}
-    </div>
+      <span className="ov-open mono small">open tests →</span>
+    </Link>
   );
 }
 

@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { Link } from "react-router";
+import { CopyButton } from "@/shared/ui/CopyButton";
 import type { About } from "../types";
 
-/** Collapsed study passport (A): objective, hypothesis, team, citation. */
+/** A: how to cite (always visible) + the collapsed study passport. */
 export function AboutDetails({ about }: { about: About }) {
   return (
-    <section className="band" aria-label="About the study">
+    <section className="band" aria-labelledby="cite-title">
       <div className="wrap">
+        <h2 id="cite-title" className="h-section">How to cite</h2>
+        <div className="ov-cite">
+          <p className="mono small">{about.citation}</p>
+          <CopyButton text={about.citation} />
+        </div>
+        <p className="small muted">
+          License:{" "}
+          <a href={about.license_link} target="_blank" rel="noreferrer">
+            {about.license_name}
+          </a>
+          . {about.n_publications} related publications ({about.n_publications_with_doi} with a
+          DOI) in the <Link to="/studies/flex/library#publications">Library</Link>.
+        </p>
         <details>
           <summary>Objective, hypothesis and team</summary>
           <div className="body">
@@ -27,52 +41,7 @@ export function AboutDetails({ about }: { about: About }) {
             </ul>
           </div>
         </details>
-        <details>
-          <summary>
-            How to cite <span className="muted mono small">doi:{about.doi}</span>
-          </summary>
-          <div className="body">
-            <Citation text={about.citation} />
-            <p className="small">
-              License:{" "}
-              <a href={about.license_link} target="_blank" rel="noreferrer">
-                {about.license_name}
-              </a>
-              . {about.n_publications} related publications ({about.n_publications_with_doi} with
-              a DOI) — library coming soon.
-            </p>
-          </div>
-        </details>
       </div>
     </section>
-  );
-}
-
-type CopyState = "idle" | "copied" | "failed";
-const COPY_LABEL: Record<CopyState, string> = {
-  idle: "Copy",
-  copied: "Copied",
-  failed: "Select and copy manually",
-};
-const COPY_RESET_MS = 1800;
-
-function Citation({ text }: { text: string }) {
-  const [state, setState] = useState<CopyState>("idle");
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setState("copied");
-    } catch {
-      setState("failed");
-    }
-    window.setTimeout(() => setState("idle"), COPY_RESET_MS);
-  };
-  return (
-    <div className="ov-cite">
-      <p className="mono small">{text}</p>
-      <button type="button" className="btn" onClick={copy}>
-        {COPY_LABEL[state]}
-      </button>
-    </div>
   );
 }

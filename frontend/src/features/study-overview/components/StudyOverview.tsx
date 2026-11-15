@@ -1,11 +1,11 @@
 import { useOverview } from "../api";
 import { AboutDetails } from "./AboutDetails";
-import { Explainers } from "./Explainers";
+import { Findings, HowItWorked, ReplaySection, Traps } from "./Explainers";
 import { Hero } from "./Hero";
 import { PresetGrid } from "./PresetGrid";
 import "./overview.css";
 
-/** FLEX overview, layout 1B "Hub" (docs/tasks/0001-home-overview-1b.md). */
+/** FLEX overview, layout 1A "long story" (docs/tasks/0002-pages-1a-2b-3a-4a-5b.md). */
 export function StudyOverview() {
   const { data, isPending, isError, error } = useOverview();
 
@@ -28,9 +28,12 @@ export function StudyOverview() {
   }
   return (
     <div className="ov">
-      <Hero facts={data.facts} />
+      <Hero about={data.about} facts={data.facts} />
+      <ReplaySection />
+      <HowItWorked />
+      <Findings />
       <PresetGrid presets={data.presets} />
-      <Explainers />
+      <Traps />
       <AboutDetails about={data.about} />
     </div>
   );
