@@ -106,7 +106,7 @@ function Example3D({ replay, data }: { replay?: ReactNode; data: Dashboard }) {
         <h2 id="sf-ex-title" className="h-section">See the experiment in 3D</h2>
         <p className="lede">
           The flow duct aboard Cygnus with its card of nine strips, rebuilt from the flight data and the experiment table.
-          Play the series: each strip is lit in turn.
+          All nine strips burn side by side from their own ignition; switch to “As flown” to see them lit in turn.
         </p>
         <p className="sf-example-cap mono small">
           {materialGroups(data.samples).map((g, i) => (
