@@ -57,6 +57,14 @@ def tests(cur: DuckDBPyConnection, test_no: int | None = None) -> list[dict[str,
     return _rows(cur, f"{_TESTS} {where} ORDER BY run_no, aged_repeat, test_id", params)
 
 
+def test_years(cur: DuckDBPyConnection) -> set[int]:
+    return {
+        r[0]
+        for r in cur.execute("SELECT DISTINCT year(test_date) FROM samer.tests").fetchall()
+        if r[0]
+    }
+
+
 # t_s у знімку йде від першого рядка файлу; API відраховує від першого рядка з heating = 1.
 # DustTrak пише коди стану (10010, 20008 …) замість мг/м³, P-Trak — -999, коли не міряє:
 # це не числа.

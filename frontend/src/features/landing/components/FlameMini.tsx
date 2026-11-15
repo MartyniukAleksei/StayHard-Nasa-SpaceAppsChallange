@@ -1,28 +1,12 @@
 import { useEffect, useRef } from "react";
+import type { Scene } from "../lib/miniScenes";
 
 const RAMP = " .:-=+*#%@";
 const CELL = 7;
 const FRAME_MS = 90; // ~11 frames/s (DS)
-const CYCLE_S = 6; // the droplet burns down, the flame goes out, it starts again
 
-/** Brightness of a droplet (core) and its spherical flame (ring) at normalized (x, y), time t. */
-function scene(x: number, y: number, t: number): { v: number; flame: boolean } {
-  const u = (t % CYCLE_S) / CYCLE_S;
-  const rd = 0.09 * Math.sqrt(Math.max(0.05, 1 - u)); // d² falls linearly in time
-  const rf = u < 0.85 ? 0.3 + 0.06 * Math.sin(u * Math.PI) : 0; // flame out near the end
-  const r = Math.hypot(x, y);
-  if (r < rd) return { v: 0.75 + 0.25 * (1 - r / rd), flame: false };
-  if (rf > 0) {
-    const a = Math.atan2(y, x);
-    const rr = rf * (1 + 0.03 * Math.sin(a * 5 + t * 3));
-    const ring = Math.exp(-(((r - rr) / 0.035) ** 2));
-    return { v: ring, flame: true };
-  }
-  return { v: 0, flame: false };
-}
-
-/** Tiny ASCII picture of what FLEX is about: a droplet burning in a spherical flame. */
-export function FlameMini({ caption }: { caption: string }) {
+/** Tiny ASCII picture of what a study is about (scene from lib/miniScenes). */
+export function FlameMini({ scene, caption }: { scene: Scene; caption: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -83,7 +67,7 @@ export function FlameMini({ caption }: { caption: string }) {
       cancelAnimationFrame(raf);
       io.disconnect();
     };
-  }, []);
+  }, [scene]);
 
   return (
     <figure className="land-mini">
