@@ -8,7 +8,7 @@
 | 1 | Бекенд: цикл, інструменти даних, цитати, ліміти, SSE, eval | ✅ |
 | 2 | Чат у UI (бічна панель), пропозиції дій, підсвічування — [ui-actions.md](ui-actions.md) | ✅ |
 | 3 | Графіки `make_chart` | ✅ |
-| 4 | Кадри камер за подією, відео, replay | план |
+| 4 | Кадри камер за подією, відео, replay | ✅ |
 | — | Симуляція what-if | відкладено |
 
 ## Модель і налаштування
@@ -26,8 +26,10 @@
 | `propose_action(action, label, test_nos, explorer)` | — (валідація тестів і фасетів) | подія `proposal`, моделі — текст |
 | `highlight_params(fields, test_nos)` | — | подія `highlight`, моделі — текст |
 | `make_chart(kind, quantity, test_nos, filters, x_field, y_field)` | `studies/flex/charts.py` | подія `chart` (дані для `TimeChart`), моделі — підсумок кожної серії як `search_result` |
+| `find_frame(test_no, event, t_s, camera)` | `media.service` + `media/timing.py` | подія `frame`; джерело — URL кадру з часом від запалювання |
+| `look_at_frames(test_no, camera, t_s[≤4])` | те саме + `frame_jpeg(…, 512)` | зображення для зору моделі (без `search_result`), події `frame` для UI |
 
-Усі схеми `strict: true`. `tool_result` містить лише блоки `search_result` (API не дозволяє змішувати їх з текстом).
+`strict: true` — лише в інструментів з малими схемами (`tools.STRICT`): API компілює строгі схеми в граматику з обмеженням розміру, а переліки полів `query_tests` / `propose_action` / `highlight_params` / `make_chart` її переповнюють («compiled grammar is too large»); їхній ввід повністю перевіряє код. `tool_result` містить або лише блоки `search_result`, або лише текст/зображення (API не дозволяє змішувати).
 
 ## API: `POST /api/agent` (SSE)
 Запит: `{"messages": [{"role": "user"|"assistant", "text": "...", "sources": [{n, url, title}], "page_context": {...}}]}` — **стисла історія**, яку тримає фронт у `sessionStorage`: текст реплік і джерела, без блоків міркувань і результатів інструментів. Повне прибирання thinking-блоків дозволене правилами preserved thinking Sonnet 5.5, а клієнт не може підкинути «результати інструментів». Усередині однієї відповіді цикл лише дописує повідомлення.
@@ -44,6 +46,7 @@
 | `proposal` | `{id, action, label, params}` | кнопка-пропозиція (див. ui-actions.md) |
 | `highlight` | `{fields[], test_nos[]}` | підсвітити `[data-field]` на поточній сторінці |
 | `chart` | `{kind, title, x_label, y_label, derived, series[{id,label,points,kind,tone}], test_nos, notes}` | графік у повідомленні (`ChartBlock`), `[Open on page]`, `[Download CSV]` |
+| `frame` | `{test_no, camera, camera_label, index, t_s, event, url}` | кадр у повідомленні (`FrameStrip`), підпис з часом (`derived time`) |
 | `done` | `answer {segments[{text, cites[], general, uncited}], sources[{n, url, title, quotes[]}]}`, `usage`, `cost_usd`, `rewritten`, `duration_s` | фінальна відповідь з `[n]`, картка джерела з `quotes`, позначки «General knowledge» / «No source» |
 
 Відмови до стріму — JSON `{"detail": {"reason", "message", "retry_after"}}`: 503 `not_configured` / `budget`, 429 `rate_limit` (+ `Retry-After`), 422 `bad_history` / `too_long`. Фронт показує `message` як є.
@@ -77,3 +80,11 @@ uv run python -m flame.agent.eval --only trap-no-data
 - **line** — одна величина в часі для 1–3 тестів на спільних осях: `droplet_diameter`, `droplet_d2` (derived), `droplet_d2_normalized` ((d/d₀)² від t/d₀², derived), `flame_diameter_uv`, `flame_diameter_color`, `standoff_uv`. Лише t ≥ 0 (після запалювання), ≤ 300 точок на серію. Тест без ряду чи без d₀ пропускається з приміткою.
 - **scatter** — два числові поля таблиці для тестів за фільтрами (формат `query_tests`), групи за типом завершення (тони й значки `EndMark`).
 - Фітів і екстраполяції немає; моделі повертаються підсумки серій як джерела. Фронт: `ChartBlock` (`TimeChart`), CSV з DOI в першому рядку (`lib/csv.ts`).
+
+## Кадри, відео, replay (етап 4)
+- **Час кадру від запалювання** (`media/timing.py`): нуль — рядок «AS Igniter Off/Retract Start» у лозі `<CIR>.txt` (як у 3D-replay), час кадру = `start_time` архіву + `t_ms` − нуль. Перевірено на FLEX-100: кінець ряду UV-полум'я 6.12 с ↔ кадр камери B при 6.08 с.
+- **Події:** `ignition` (0 с), `extinction` (кінець ряду полум'я UV, інакше кольорового), `end` (кінець ряду краплі), `time` (довільний `t_s`). Кадри тягнуться з NASA PSI (~7 с на перший запит до архіву), UI показує статус.
+- **Пропозиції** `open_video` (лише якщо в тесту є локальний mp4, інакше помилка моделі → чесне «немає відео») і `open_replay(t_s)` → `/studies/flex/tests/{n}?view=3d&t=…#tp-media`; `MediaBlock` відкриває вкладку й ставить 3D/2D replay на паузу в цей момент (`startAt`).
+
+## Збирання відповіді
+У Sonnet 5.5 текст між викликами інструментів приходить як службові блоки міркувань і користувачу не показується. Тому промпт вимагає спершу всі виклики (дані, графіки, кадри, кнопки), а повну відповідь — в останньому повідомленні. `loop._answer_content` збирає текстові блоки всіх повідомлень асистента за хід (після перезапиту «No source» — лише переписані).

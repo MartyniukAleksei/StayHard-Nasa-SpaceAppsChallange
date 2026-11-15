@@ -64,6 +64,10 @@ export function AgentProvider({ children }: { children: ReactNode }) {
             return patch(reply.id, (a) => ({ ...a, status: e.data.text }));
           case "proposal":
             return patch(reply.id, (a) => ({ ...a, proposals: [...a.proposals, e.data] }));
+          case "frame":
+            return patch(reply.id, (a) =>
+              (a.frames ?? []).some((f) => f.url === e.data.url) ? a : { ...a, frames: [...(a.frames ?? []), e.data] },
+            );
           case "chart":
             return patch(reply.id, (a) => ({ ...a, charts: [...(a.charts ?? []), e.data] }));
           case "highlight":

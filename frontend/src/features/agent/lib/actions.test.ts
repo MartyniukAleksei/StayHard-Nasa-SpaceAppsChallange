@@ -15,6 +15,10 @@ describe("proposalHref", () => {
     );
     assert.equal(proposalHref(p("open_tests", { explorer: {} })), "/studies/flex/tests");
   });
+  test("video and replay at a moment open the test page media", () => {
+    assert.equal(proposalHref(p("open_video" as never, { test_nos: [207] })), "/studies/flex/tests/207?view=video#tp-media");
+    assert.equal(proposalHref(p("open_replay" as never, { test_nos: [100], t_s: 6.123 })), "/studies/flex/tests/100?view=3d&t=6.12#tp-media");
+  });
   test("invalid params give no link", () => {
     assert.equal(proposalHref(p("open_compare", { test_nos: [1] })), null);
     assert.equal(proposalHref(p("open_test", { test_nos: [] })), null);

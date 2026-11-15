@@ -7,9 +7,9 @@ export type Answer = { segments: Segment[]; sources: Source[] };
 export type ExplorerParams = Partial<Record<"fuel" | "diluent" | "pressure" | "o2" | "fiber" | "end" | "tag", string[]>>;
 export type Proposal = {
   id: string;
-  action: "open_tests" | "open_test" | "open_compare";
+  action: "open_tests" | "open_test" | "open_compare" | "open_video" | "open_replay";
   label: string;
-  params: { test_nos?: number[]; explorer?: ExplorerParams };
+  params: { test_nos?: number[]; explorer?: ExplorerParams; t_s?: number };
 };
 export type Highlight = { fields: string[]; test_nos: number[] };
 export type ChartTone = "ink" | "ash" | "flame" | "ext" | "dis" | "com" | "s1" | "s2";
@@ -20,6 +20,15 @@ export type ChartSeries = {
   kind: "dots" | "line";
   tone: ChartTone;
   test_nos?: number[];
+};
+export type Frame = {
+  test_no: number;
+  camera: string;
+  camera_label: string;
+  index: number;
+  t_s: number;
+  event: string;
+  url: string;
 };
 export type Chart = {
   kind: "line" | "scatter";
@@ -44,6 +53,7 @@ export type AgentEvent =
   | { event: "proposal"; data: Proposal }
   | { event: "highlight"; data: Highlight }
   | { event: "chart"; data: Chart }
+  | { event: "frame"; data: Frame }
   | { event: "done"; data: { answer: Answer; cost_usd: number; duration_s: number } };
 
 export type PageContext = {
@@ -70,6 +80,7 @@ export type AssistantItem = {
   answer: Answer | null;
   proposals: Proposal[];
   charts?: Chart[];
+  frames?: Frame[];
   notices: Notice[];
   done: boolean;
 };
