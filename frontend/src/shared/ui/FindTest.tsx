@@ -1,14 +1,13 @@
 import { useId, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { testHref, type TestSummary } from "@/features/flex-tests";
+import "./find-test.css";
 
-/** "Go to test #": type a test number, open its page. Numbers are checked against the data. */
-export function FindTest({ tests }: { tests: TestSummary[] }) {
+/** "Go to test #": type a test number, open its page. Numbers are checked against the study's tests. */
+export function FindTest({ nos, href, study }: { nos: number[]; href: (n: number) => string; study: string }) {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const errId = useId();
-  const nos = tests.map((t) => t.test_no);
   const min = Math.min(...nos);
   const max = Math.max(...nos);
 
@@ -16,20 +15,20 @@ export function FindTest({ tests }: { tests: TestSummary[] }) {
     e.preventDefault();
     const n = Number.parseInt(value.replace(/^#/, ""), 10);
     if (!Number.isInteger(n) || !nos.includes(n)) {
-      setError(`There is no test #${value.trim() || "?"} in FLEX (tests ${min}–${max}).`);
+      setError(`There is no test #${value.trim() || "?"} in ${study} (tests ${min}–${max}).`);
       return;
     }
     setError(null);
-    navigate(testHref(n));
+    navigate(href(n));
   };
 
   return (
-    <form className="ex-find" role="search" onSubmit={submit}>
-      <label className="ex-find-label mono" htmlFor={`${errId}-n`}>
+    <form className="find-test" role="search" onSubmit={submit}>
+      <label className="find-test-label mono" htmlFor={`${errId}-n`}>
         Go to a test
       </label>
-      <div className="ex-find-row">
-        <span className="ex-find-hash mono" aria-hidden="true">
+      <div className="find-test-row">
+        <span className="find-test-hash mono" aria-hidden="true">
           #
         </span>
         <input
@@ -51,7 +50,7 @@ export function FindTest({ tests }: { tests: TestSummary[] }) {
         </button>
       </div>
       {error && (
-        <p id={errId} className="ex-find-error small" role="alert">
+        <p id={errId} className="find-test-error small" role="alert">
           {error}
         </p>
       )}

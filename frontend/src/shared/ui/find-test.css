@@ -1,0 +1,17 @@
+/* go to a test by number: one joined control, # + number + Open */
+.find-test { display: grid; gap: 6px; width: min(100%, 320px); }
+.find-test-label { color: var(--ash); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.find-test-row { display: flex; align-items: stretch; border: 1px solid var(--line); background: var(--deep); }
+.find-test-row:focus-within { border-color: var(--ink); }
+.find-test-hash { display: grid; place-items: center; padding: 0 4px 0 12px; color: var(--ash); font-size: 15px; }
+.find-test input {
+  flex: 1; min-width: 0; min-height: var(--hit); padding: 0 8px 0 2px; font: 15px var(--mono); color: var(--ink);
+  background: none; border: 0; border-radius: 0; outline: none;
+}
+.find-test input::placeholder { color: var(--ash); }
+.find-test .btn-solid { border: 0; }
+.find-test:has(input[aria-invalid]) .find-test-row { border-color: var(--end-com); }
+.find-test-error { margin: 0; color: var(--end-com); }
+@media (max-width: 760px) {
+  .find-test { width: 100%; }
+}
