@@ -26,7 +26,7 @@ export function AgentLauncher() {
       onClick={() => setOpen(!open)}
     >
       <span className="ag-launch-caret" aria-hidden="true">&gt;_</span>
-      <span>agent</span>
+      <span>Ask AI</span>
       {busy ? (
         <span className="ag-launch-dot" aria-label="answering" />
       ) : items.length > 0 && !open ? (

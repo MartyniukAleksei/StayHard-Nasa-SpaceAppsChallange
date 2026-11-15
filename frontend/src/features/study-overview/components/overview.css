@@ -49,8 +49,6 @@
 .ov-soon { margin: -8px 0 20px; font-size: 13px; color: var(--ash); }
 
 /* how it worked / findings / traps */
-.ov-steps { margin: 0; padding-left: 20px; display: grid; gap: 10px; color: var(--ink); }
-.ov-steps li::marker { font-family: var(--mono); color: var(--ash); }
 .ov-ends-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; color: var(--ash); font-size: 14px; }
 .ov-ends-list .end-mark { font-family: var(--mono); }
 .ov-findings { margin: 0; padding-left: 22px; display: grid; gap: 18px; }
@@ -108,24 +106,25 @@
 }
 
 /* How it worked: scheme + steps, then how many tests ended each way */
-.hw { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 40px; align-items: center; }
-.hw-fig { margin: 0; display: grid; gap: 6px; }
-.hw-fig svg { width: 100%; height: auto; display: block; }
+.hw { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 40px; align-items: start; }
+/* steps match the scheme frame's height: the figure spans both rows, its caption sits in row 2 */
+.hw-fig { margin: 0; display: grid; gap: 6px; grid-row: span 2; grid-template-rows: subgrid; }
+.hw-steps { list-style: none; margin: 0; padding: 0; grid-row: 1; grid-column: 2; align-self: stretch; grid-template-rows: repeat(3, 1fr); }
+.hw-steps .cell { padding: 16px; display: grid; gap: 6px; align-content: start; }
+.hw-steps p { margin: 0; }
 .hw-fig figcaption { color: var(--ash); }
-.hw-chamber { fill: var(--deep); stroke: var(--line); }
-.hw-flame { fill: none; stroke: var(--flame); stroke-width: 1.5; }
-.hw-drop { fill: var(--ink); }
-.hw-dim { stroke: var(--ash); stroke-width: 1; }
-.hw-dim-d { stroke: var(--void); }
+.hw-frame { position: relative; aspect-ratio: 3 / 2; border: var(--rule); background: var(--deep); }
+.hw-frame canvas, .hw-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hw-dim { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .hw-dim-f { stroke: var(--flame); }
-.hw-lab { fill: var(--ink); font: 11px var(--mono); }
-.hw-lab-f { fill: var(--flame); }
-.hw-muted { fill: var(--ash); }
+.hw-lab { position: absolute; transform: translateY(-50%); font: 12px var(--mono); color: var(--ink); background: var(--deep); padding: 0 4px; white-space: nowrap; }
+.hw-lab.hw-muted { transform: none; color: var(--ash); }
+.hw-lab-f { color: var(--flame); }
+.hw-tag { position: absolute; top: 8px; right: 8px; }
 .hw-note { margin: -4px 0 12px; }
 .hw-sub { margin: 32px 0 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
-.hw-ends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--rule); }
-.hw-end { display: grid; gap: 6px; align-content: start; padding: 16px 18px 16px 0; }
-.hw-end + .hw-end { padding-left: 18px; border-left: var(--rule); }
+.hw-ends { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hw-end { display: grid; gap: 6px; align-content: start; }
 .hw-end p { margin: 0; }
 .hw-count { font: 300 2rem/1 var(--mono); }
 .hw-bar { height: 3px; background: var(--line); }
@@ -148,6 +147,6 @@
 .ov-refs-sub { margin: 0 0 8px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
 @media (max-width: 900px) {
   .hw { grid-template-columns: 1fr; }
+  .hw-fig, .hw-steps { grid-row: auto; grid-column: auto; grid-template-rows: none; }
   .hw-ends { grid-template-columns: 1fr; }
-  .hw-end + .hw-end { padding-left: 0; border-left: 0; border-top: var(--rule); }
 }

@@ -72,7 +72,7 @@
 .b2x-head .h-display { font-size: calc(clamp(26px, 3vw, 36px) * var(--dz)); }
 .b2x-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: start; }
 .b2x-main { display: grid; gap: 16px; min-width: 0; }
-.b2x-facets { position: sticky; top: 12px; }
+.b2x-facets { position: sticky; top: calc(var(--top-h) + 12px); }
 .b2x-facets summary { min-height: 36px; }
 .b2x-facets-body { display: grid; gap: 14px; }
 .b2x-facet { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; }

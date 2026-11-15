@@ -29,7 +29,7 @@
 .sfx-head .h-display { font-size: calc(clamp(26px, 3vw, 36px) * var(--dz)); }
 .sfx-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: start; }
 .sfx-main { display: grid; gap: 16px; }
-.sfx-facets { position: sticky; top: 12px; }
+.sfx-facets { position: sticky; top: calc(var(--top-h) + 12px); }
 .sfx-facets summary { min-height: 36px; }
 .sfx-facets-body { display: grid; gap: 14px; }
 .sfx-facet { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; }
@@ -121,7 +121,7 @@
 .sfl { padding-block: clamp(24px, 3vw, 48px) 96px; }
 .sfl-head .h-display { font-size: calc(clamp(26px, 3vw, 36px) * var(--dz)); }
 .sfl-grid { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px; align-items: start; }
-.sfl-nav { position: sticky; top: 12px; }
+.sfl-nav { position: sticky; top: calc(var(--top-h) + 12px); }
 .sfl-nav ul { list-style: none; margin: 0; padding: 0; display: grid; }
 .sfl-nav a { display: flex; align-items: center; min-height: 36px; color: var(--ash); text-decoration: none; font: 13px var(--mono); border-left: 1px solid var(--line); padding-left: 12px; }
 .sfl-nav a:hover { color: var(--ink); border-left-color: var(--ink); }

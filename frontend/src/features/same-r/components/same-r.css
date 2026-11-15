@@ -127,7 +127,7 @@ div.sr-cmp-tem { aspect-ratio: 4 / 3; display: grid; place-items: center; }
 .sr-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: start; }
 .sr-main { display: grid; gap: 12px; min-width: 0; }
 .sr-main > p { margin: 0; }
-.sr-facets { position: sticky; top: 12px; }
+.sr-facets { position: sticky; top: calc(var(--top-h) + 12px); }
 .sr-facets summary { min-height: 36px; cursor: pointer; }
 .sr-facets-body { display: grid; gap: 14px; }
 .sr-facet { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; }
