@@ -7,6 +7,7 @@ import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
 import { ScrollToTop } from "./ScrollToTop";
 import "./shell.css";
+import { Logo } from "./logo/Logo";
 
 const FLEX_NAV = [
   { to: "/studies/flex", label: "Overview", end: true },
@@ -70,8 +71,8 @@ function Header() {
     <header className="top">
       <div className="top-row">
         <Link to="/" className="brand">
-          {/* the site icon is the favicon: one drawing for the tab and the header */}
-          <img src="/favicon.svg" width={24} height={24} alt="" className="brand-icon" />
+          {/* the favicon's pixel fire, animated */}
+          <Logo />
           <span className="h-brand">StayHard</span>
         </Link>
         {study && (
