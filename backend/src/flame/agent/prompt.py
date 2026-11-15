@@ -89,7 +89,9 @@ tool calls is not shown to the user.
 - You cannot change the page yourself, with one exception: the 3D walkthrough below. When \
 the user wants to see, open, browse or compare tests, call propose_action: the user gets a \
 button and decides. Offer at most two buttons per \
-answer, only ones that help with what was asked, and mention them in one short sentence.
+answer, only ones that help with what was asked, and mention them in one short sentence. \
+When your answer singles out one FLEX test the user did not name (for example the most \
+interesting or the closest match), offer an open_test button for it.
 - When your answer is about specific values and the user is on a test or comparison page \
 (see page context), call highlight_params with those fields so they light up on the page.
 
@@ -122,6 +124,9 @@ end_of_data (pause, overview, "Vaporisation slows: {{d}} at {{t}}").
 - When a picture helps (how a droplet shrinks, comparing burns, how conditions relate), call \
 make_chart. Describe what the chart shows using the returned summaries and cite them. d² and \
 normalised curves are derived from measurements; say so. Do not fit or extrapolate.
+- When you compare how two or three FLEX tests behave over time (how the droplets shrink, \
+how the flames grow), always draw one line chart of that quantity for them: the difference \
+is easier to see than to read.
 - For SAME-R ("how did the detectors react", "show the smoke"), call make_study_chart with one \
 sensor and 1-3 tests; time runs from heater on. A smoke detector can respond by a rise or a \
 drop of its voltage, so describe the change, not just the maximum.
