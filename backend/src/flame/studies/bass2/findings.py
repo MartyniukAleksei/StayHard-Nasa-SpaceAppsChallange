@@ -165,6 +165,19 @@ FINDINGS: tuple[Finding, ...] = (
         "Fig. 1.4",
     ),
     Finding(
+        "o2_co2_stoich",
+        "products",
+        "Oxygen is used as PMMA chemistry predicts",
+        "6 O₂ : 5 CO₂",
+        None,
+        "The data, taken over a wide range of initial O2 concentrations, forced opposed or "
+        "concurrent flow velocities, and using various sample geometries, is compared with this "
+        "6:5 stoichiometric ratio of O2 to CO2. The data agrees very well with stoichiometric "
+        "ratios for the wide range of test conditions.",
+        7,
+        "Fig. 1.3",
+    ),
+    Finding(
         "co_ratio",
         "products",
         "Microgravity flames burn inefficiently",

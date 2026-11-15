@@ -81,10 +81,11 @@ UI-ендпоінти (`studies/flex/pages`) повертають 503, якщо 
 | GET | `/api/studies/flex/videos` | ✅ UI: усі mp4 камер NASA (PSI FLEX) з умовами тесту (`test_no, fuel, diluent, x_o2, p_atm, end_type, name, path`) — зараз UI його не використовує (галерею на Огляді замінив 3D-приклад) |
 | GET | `/api/studies/flex/library` | ✅ UI: цитата, DOI, ліцензія, публікації, документи NASA за категоріями, `limitations` (лічильники з БД) |
 | GET | `/api/studies/bass2/overview` | ✅ UI BASS-II: паспорт (`study_about`), факти з `bass2.tests` + розклади за PI, класом матеріалу, типом потоку й результатом (*derived*), `findings` — ключові числа звіту NASA/TM-20210011385 із номерами сторінок і `source` |
-| GET | `/api/studies/bass2/tests` | ✅ UI: 129 рядків Дослідника BASS-II: умови з `bass2.tests` + `flow_config`/`outcome` з Додатку A (*derived*), клас матеріалу, товщина/діаметр (*derived*), прапорці помилок джерела (`o2_final_suspect`, `co_over_range`) |
-| GET | `/api/studies/bass2/tests/{id}` | ✅ UI: рядок + журнал Додатку A (спостереження), рядок табл. 5.1/7.1 PI, локальні mp4/PDF, `psi_videos` (повні записи в PSI), тести того ж дня, `sources` |
+| GET | `/api/studies/bass2/explorer` | ✅ UI: 129 рядків Дослідника BASS-II: умови з `bass2.tests` + `flow_config`/`outcome` з Додатку A (*derived*), клас матеріалу, товщина/діаметр (*derived*), прапорці помилок джерела (`o2_final_suspect`, `co_over_range`) |
+| GET | `/api/studies/bass2/tests/{id}/report` | ✅ UI: рядок + журнал Додатку A (спостереження), рядок табл. 5.1/7.1 PI, локальні mp4/PDF, `psi_videos` (повні записи в PSI), `video_series` (ряди з накладки відео, *estimate*), тести того ж дня, `sources` |
 | GET | `/api/studies/bass2/tests/{id}/psi-video/{i}` | ✅ 307 на тимчасове посилання S3 PSI (~1 год): браузер грає повне відео тесту з NASA напряму, з Range |
-| GET | `/api/media/bass2/files/{path}` | ✅ файли знімка `data/bass2` (`raw/…`, `docs/…`, `media/…`), inline, Range |
+
+UI-шляхи BASS-II навмисно не збігаються з загальними `/api/studies/{slug}/tests…` (`flame.studies.psi`), якими користується агент; роутер `studies/bass2` підключено перед загальним. Файли знімка — загальний `/api/media/{slug}/files/…`.
 | POST | `/api/agent` | ✅ SSE: `text_delta`, `status`, `limit`, `done` (відповідь із сегментами й джерелами) — [docs/agent](agent/README.md) |
 
 ## Дані — `flame.duckdb`

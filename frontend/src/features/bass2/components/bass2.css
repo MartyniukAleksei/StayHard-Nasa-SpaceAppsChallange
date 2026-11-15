@@ -140,3 +140,67 @@
 .b2t .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 0; font-size: 14px; }
 .b2t .kv dt { color: var(--ash); }
 .b2t .kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* overview cards (b2c), how it worked (b2h), references — same layout as the FLEX overview */
+.b2-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
+.b2-browse .lede { margin: 0; }
+.b2c-list { display: grid; gap: 0; border-top: var(--rule); margin-top: 8px; }
+.b2c { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); border-bottom: var(--rule); }
+.b2c-left { padding: 20px 24px 20px 0; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.b2c-right { padding: 20px 0 20px 24px; border-left: var(--rule); min-width: 0; }
+.b2c-kicker { margin: 0; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; }
+.b2c-title { margin: 0; font-size: 1.25rem; }
+.b2c-head { margin: 0; color: var(--ash); }
+.b2c-head a, .b2c-refs a { color: var(--ink); }
+.b2c-cap { margin: 0; color: var(--ash); }
+.b2c-wait { display: grid; place-items: center; min-height: 230px; border: 1px dashed var(--line); color: var(--ash); margin: 0; }
+.b2c-sub { margin: 0 0 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+.b2c-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.b2c-notes p { margin: 0; max-width: 62ch; font-size: 14.5px; }
+.b2c-refs { margin: 4px 0 0; color: var(--ash); }
+.b2c-claim { margin: 0 0 12px; font-size: 1.05rem; max-width: 52ch; }
+.b2c-caveat { margin: 12px 0 10px; color: var(--ash); max-width: 62ch; }
+.b2c-caveat b { color: var(--ink); font-weight: 500; margin-right: 6px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+.b2-quote cite { display: block; font-style: normal; font-size: 12px; color: var(--ash); margin-top: 4px; }
+.b2-ev { color: var(--ink); text-transform: none; letter-spacing: 0; padding: 0 6px; border: 1px dashed var(--line); }
+.b2-ev-derived { color: var(--series-uv); border-color: var(--series-uv); }
+.b2h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 40px; align-items: center; }
+.b2h-fig { margin: 0; display: grid; gap: 6px; }
+.b2h-fig svg { width: 100%; height: auto; display: block; }
+.b2h-fig figcaption { color: var(--ash); }
+.b2h-duct { fill: var(--deep); stroke: var(--line); }
+.b2h-part { fill: none; stroke: var(--ash); }
+.b2h-hc { stroke: var(--line); }
+.b2h-sample { stroke: var(--ink); stroke-width: 4; }
+.b2h-flame { fill: none; stroke: var(--flame); stroke-width: 1.5; }
+.b2h-exit { stroke: var(--ash); stroke-dasharray: 2 2; }
+.b2h-arrow { stroke: var(--ash); }
+.b2h-arrhead { fill: var(--ash); }
+.b2h-lab { fill: var(--ink); font: 11px var(--mono); }
+.b2h-muted { fill: var(--ash); }
+.b2h-flow { fill: var(--ash); }
+.b2h-steps { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+.b2h-steps li::marker { font-family: var(--mono); color: var(--ash); }
+.b2h-sub { margin: 32px 0 12px; color: var(--ash); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+.b2h-ends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--rule); }
+.b2h-end { display: grid; gap: 6px; align-content: start; padding: 16px 18px 16px 0; border-bottom: var(--rule); }
+.b2h-end p { margin: 0; }
+.b2h-count { font: 300 2rem/1 var(--mono); }
+.b2h-bar { height: 3px; background: var(--line); }
+.b2h-bar i { display: block; height: 100%; background: currentColor; }
+.b2-teams h4 { margin: 0 0 6px; }
+.b2-presets { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 24px; }
+.b2-presets a { display: block; min-height: var(--hit); padding: 10px 0; border-bottom: var(--rule); color: var(--ink); text-decoration: none; }
+.b2-presets a:hover { color: var(--ash); }
+.b2-refs { margin: 0 0 16px; padding-left: 22px; display: grid; gap: 8px; max-width: 90ch; }
+.b2-refs a { overflow-wrap: anywhere; }
+.b2-pre { white-space: pre-line; }
+@media (max-width: 960px) {
+  .b2c, .b2h { grid-template-columns: minmax(0, 1fr); }
+  .b2c-left { padding-right: 0; }
+  .b2c-right { padding: 0 0 20px; border-left: 0; }
+  .b2h-ends, .b2-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .b2h-ends, .b2-presets { grid-template-columns: minmax(0, 1fr); }
+}

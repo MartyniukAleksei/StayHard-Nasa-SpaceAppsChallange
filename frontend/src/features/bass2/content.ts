@@ -8,14 +8,6 @@ export const HERO_LEDE =
   "moves air, a few centimetres per second. BASS-II burned spacecraft materials in a small wind " +
   "tunnel aboard the station and turned the fan down and up until the flame went out.";
 
-export const WHY_TITLE = "Why the Earth test may not be conservative";
-
-export const WHY_TEXT =
-  "NASA screens materials with an upward-burning test (NASA-STD-6001, Test 1): on Earth, a flame " +
-  "spreading upward is the worst case because buoyancy drives fresh air into it. In microgravity " +
-  "the flow can be weak but just right, and some materials keep burning at less oxygen than the " +
-  "Earth test would suggest.";
-
 export const U_MAP_TITLE = "The flame lives inside a U";
 
 export const U_MAP_TEXT = [
@@ -98,30 +90,51 @@ export const TEAMS: Team[] = [
   },
 ];
 
-export const CREW_TITLE = "What it means for the crew";
+export const HOW_IT_WORKED = [
+  "A small wind tunnel inside the Microgravity Science Glovebox: a fan, a honeycomb to straighten the flow, the sample in the test section, and a copper plate and brass screen at the exit (p. 4–5).",
+  "Before a burn the crew could lower the oxygen in the glovebox by bleeding in nitrogen; O₂, CO₂ and CO were read before and after each burn (p. 6).",
+  "The astronaut ignited the sample with a hot wire on a lever, then a scientist on the ground talked the crew through each fan step by voice, looking for the flow at which the flame dies (p. 3, 68).",
+  "A video camera recorded the burn through a mirror with the readings burned into the picture; a Nikon took a still every second from above; a radiometer tracked the flame's glow (p. 5).",
+];
 
-export const TRAPS: { title: string; text: string }[] = [
+export type FindingCopy = {
+  id: "earth_vs_space" | "co_per_co2" | "stoichiometry";
+  claim: string;
+  evidence: "measured" | "derived";
+  caveat: string;
+  refs: string[];
+};
+
+export const FINDINGS: FindingCopy[] = [
   {
-    title: "Outcome and flow type come from the report, not the PSI table",
-    text: "The PSI test table has conditions only. How each test ended and which way the flow ran come from Appendix A of the NASA report (p. 103–113); the outcome is our reading of the researchers' notes and is labelled derived.",
+    id: "earth_vs_space",
+    claim: "PMMA rods burned in microgravity at less oxygen than the Earth upward-burning limit.",
+    evidence: "derived",
+    caveat: "Each mark is the oxygen at ignition; the outcome is our reading of the researchers' log. The lowest boundary point comes from the final oxygen of a test, which is lower than its starting value.",
+    refs: ["olson17", "report"],
   },
   {
-    title: "Oxygen is known only at the start and the end",
-    text: "O₂ was read before and after each burn and corrected with the station mass spectrometer. A few final readings in the source are impossible values; we flag them instead of hiding them.",
+    id: "co_per_co2",
+    claim: "How much carbon monoxide a fire makes depends on its shape: rods burning with the flow made more CO per unit of CO₂ than slabs burning against it.",
+    evidence: "derived",
+    caveat: "Gases were read only before and after each burn, in the closed glovebox. Tests with CO over the sensor range are left out.",
+    refs: ["report"],
   },
   {
-    title: "Fan and air readings are free text",
-    text: "The fan column lists every step during a test (fan display ×10 V or potentiometer setting). The air-speed sensor responds in about a minute, so its value is reliable only on long steady steps. Each day had its own fan calibration.",
-  },
-  {
-    title: "Video dates are one day ahead",
-    text: "The on-board computer missed the leap year, so the date burned into the video is one day later than the real test date (ReadMe).",
-  },
-  {
-    title: "The radiometer is uncalibrated",
-    text: "It shows relative brightness and flame dynamics (for example oscillations before quenching), not absolute heat flux.",
+    id: "stoichiometry",
+    claim: "Oxygen was used up in the ratio PMMA's chemistry predicts: six O₂ for every five CO₂.",
+    evidence: "derived",
+    caveat: "The O₂ sensor reads in 0.1 % steps, so small burns scatter widely. Impossible final O₂ values in the source table are left out.",
+    refs: ["report"],
   },
 ];
 
-export const REPORT_CITATION =
-  "Olson S.L., Ferkul P.V., Bhattacharjee S., Miller F.J., Fernandez-Pello C., Link S., T'ien J.S., Wichman I. Burning and Suppression of Solids–II (BASS–II) Summary Report. NASA/TM-20210011385, October 2021.";
+/** Questions that open the explorer with matching filters. */
+export const PRESETS: { question: string; params: string }[] = [
+  { question: "Which tests went out by themselves at low flow?", params: "outcome=quench" },
+  { question: "Which were blown out by strong flow?", params: "outcome=blowoff" },
+  { question: "What did not ignite at all?", params: "outcome=no_ignition" },
+  { question: "Rods: the U-shaped boundary tests", params: "pi=Olson" },
+  { question: "Fabric in concurrent flow", params: "material=fabric" },
+  { question: "Tests with a video stored on the site", params: "media=video" },
+];
