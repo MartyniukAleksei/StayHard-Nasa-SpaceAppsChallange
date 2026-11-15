@@ -1,5 +1,4 @@
 import { useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router";
 import { PTRAK_LIMIT } from "@/features/same-r-3d";
 import { useWidth } from "@/shared/lib/useWidth";
 import { niceTicks } from "@/shared/ui/chart/TimeChart";
@@ -37,13 +36,13 @@ function scale(a: Axis, vals: number[], p0: number, p1: number): Scale {
   return { to, ticks };
 }
 
-type Props = { groups: TestGroup[]; hits: Set<number>; href: (n: number) => string };
+// click previews a test; the link target stays the test page (new tab, copy link)
+type Props = { groups: TestGroup[]; hits: Set<number>; href: (n: number) => string; onSelect: (n: number) => void };
 
-export function TestMap({ groups, hits, href }: Props) {
+export function TestMap({ groups, hits, href, onSelect }: Props) {
   const [ref, W] = useWidth<HTMLDivElement>(700, 300);
   const [xId, setX] = useState("heater");
   const [yId, setY] = useState("peak");
-  const navigate = useNavigate();
   const mark = markIndexer(groups);
   const ax = axis(xId);
   const ay = axis(yId);
@@ -94,8 +93,9 @@ export function TestMap({ groups, hits, href }: Props) {
                   key={g.test_no}
                   href={to}
                   onClick={(ev) => {
+                    if (ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
                     ev.preventDefault();
-                    navigate(to);
+                    onSelect(g.test_no);
                   }}
                   className={hits.has(g.test_no) ? "sr-map-pt" : "sr-map-pt off"}
                   style={{ "--c": markColor(mark(g.main.material)) } as CSSProperties}

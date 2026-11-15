@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { DETECTOR_LABELS, MASS_ALARM_MG_M3, particlesFirst, PTRAK_LIMIT, SameR3D } from "@/features/same-r-3d";
 import { extent, TimeChart, type Marker, type Series, type Tone } from "@/shared/ui/chart/TimeChart";
-import { apiUrl, useSameRSeries, useSameRTest, useTem } from "../api";
-import { column, heaterOff, paramRows } from "../lib/tests";
+import { apiUrl, useSameRSeries, useSameRTest, useSameRTests, useTem } from "../api";
+import { similar } from "../lib/picks";
+import { column, groupTests, heaterOff, paramRows } from "../lib/tests";
 import type { PageDetail, Row } from "../types";
-import { compareHref, BASE_PATH, TESTS_PATH } from "../lib/compare";
+import { compareHref, BASE_PATH, testHref, TESTS_PATH } from "../lib/compare";
 import { FileLinks } from "./Common";
 import "./same-r.css";
 
@@ -40,6 +41,7 @@ export function SameRTest({ testNo }: { testNo: number }) {
       {main.has_timeseries && <Charts t={t} />}
       <Params main={main} aged={t.rows.find((r) => r.test_id === `${main.test_id}a`) ?? null} />
       {t.tem_archives.length > 0 && <Tem testNo={testNo} />}
+      <Similar testNo={testNo} />
       <section className="sr-sec sr-narrow" aria-labelledby="sr-files">
         <h2 id="sr-files" className="h-section">Files</h2>
         {t.files.length ? (
@@ -213,5 +215,37 @@ function TemGrid({ images, testNo }: { images: { name: string; url: string }[]; 
         </button>
       )}
     </>
+  );
+}
+
+/** Neighbours in the table: same material, closest heater level (derived, see lib/picks). */
+function Similar({ testNo }: { testNo: number }) {
+  const { data } = useSameRTests();
+  const groups = groupTests(data?.tests ?? []);
+  const g = groups.find((x) => x.test_no === testNo);
+  const near = g ? similar(groups, g) : [];
+  if (!g || !near.length) return null;
+  return (
+    <section className="sr-sec" aria-labelledby="sr-nb">
+      <h2 id="sr-nb" className="h-section">
+        Similar tests <span className="tag">derived</span>
+      </h2>
+      <p className="lede">Same material ({g.main.material}), closest heater level first.</p>
+      <ul className="sr-nb">
+        {near.map((o) => (
+          <li key={o.test_no}>
+            <Link to={testHref(o.test_no)} className="mono">
+              #{o.main.test_id}
+            </Link>
+            <span className="small muted">
+              {[o.main.description, o.main.heater_rt_r0 != null && `Rt/R0 ${o.main.heater_rt_r0}`, !o.main.has_timeseries && "no telemetry"].filter(Boolean).join(" · ")}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Link className="btn ghost" to={compareHref([testNo, ...near.slice(0, 2).map((o) => o.test_no)])}>
+        Compare with the closest two
+      </Link>
+    </section>
   );
 }
