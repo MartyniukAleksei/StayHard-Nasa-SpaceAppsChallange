@@ -27,6 +27,17 @@ export function pickKeyframes(times: number[], tMin: number, tMax: number, step:
   return out;
 }
 
+/** Loading order: the keyframe nearest to each of `times` first (a tour's moments), then the rest
+ *  in their own order. */
+export function prioritize<K extends Keyframe>(keyframes: K[], times: number[]): K[] {
+  const first: K[] = [];
+  for (const t of times) {
+    const kf = nearestKeyframe(keyframes, t);
+    if (kf && !first.includes(kf)) first.push(kf);
+  }
+  return [...first, ...keyframes.filter((kf) => !first.includes(kf))];
+}
+
 /** The loaded keyframe closest in time to t. */
 export function nearestKeyframe<K extends Keyframe>(loaded: K[], t: number): K | null {
   let best: K | null = null;

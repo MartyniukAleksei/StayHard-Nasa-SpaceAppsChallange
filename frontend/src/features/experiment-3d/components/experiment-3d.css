@@ -73,6 +73,45 @@
 .x3d-feed figcaption { display: grid; font-size: 11px; color: var(--ash); }
 .x3d-feed-name { color: var(--ink); font-size: 12px; }
 .x3d-feed-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
+/* the frame a tour step points at */
+.x3d-feed-image.marked { border-color: var(--flame); }
+.x3d-feed-mark { margin: 0; font-size: 12px; line-height: 1.4; color: var(--ink); border-left: 1px solid var(--flame); padding-left: 8px; }
+
+/* Guided tour from the assistant: a bar above the timeline, labels inside the scene */
+.x3d > .x3d-tour { grid-column: 1 / -1; }
+.x3d-tour { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; border: var(--rule); background: var(--deep); padding: 8px 12px; }
+.x3d-tour-head { margin: 0; grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.08em; }
+.x3d-tour-caption { min-height: 44px; display: grid; align-content: center; gap: 4px; }
+.x3d-tour-caption p { margin: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.x3d-tour-caption .tag { margin-left: 8px; font-size: 11px; padding: 1px 6px; }
+.x3d-tour-source { display: block; font: 11px var(--mono); color: var(--ash); }
+.x3d-tour-actions { display: flex; flex-wrap: wrap; gap: 0 10px; }
+.x3d-tour .x3d-tour-chat { display: none; }
+.x3d-tour-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.x3d-tour-wait {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  font-size: 13px; color: var(--ink); background: color-mix(in srgb, var(--void) 55%, transparent);
+}
+.x3d-cut { position: absolute; inset: 0; background: var(--void); pointer-events: none; animation: x3d-cut 200ms linear forwards; }
+@keyframes x3d-cut { from { opacity: 1; } to { opacity: 0; } }
+
+/* label in the scene: a dot on the object, a leader line, the text in a plain box */
+.x3d-label { position: relative; opacity: 0; transition: opacity 250ms linear; white-space: nowrap; }
+.x3d-label.on { opacity: 1; }
+.x3d-label-dot { position: absolute; left: -3px; top: -3px; width: 7px; height: 7px; background: var(--flame); }
+.x3d-label-text {
+  position: absolute; left: 34px; bottom: 22px;
+  font-size: 12px; line-height: 1.35; color: var(--ink);
+  background: var(--deep); border: var(--rule); padding: 5px 8px;
+  white-space: normal; width: max-content; max-width: 230px;
+}
+/* leader line from the dot to the box */
+.x3d-label::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 40px; height: 1px;
+  background: var(--ash); transform-origin: 0 0; transform: rotate(-33deg);
+}
+.x3d-label.alt .x3d-label-text { bottom: auto; top: 22px; }
+.x3d-label.alt::before { transform: rotate(33deg); }
 
 @media (max-width: 860px) {
   .x3d { grid-template-columns: minmax(0, 1fr); }
@@ -82,4 +121,18 @@
   .x3d-frames-title, .x3d-frames > .x3d-note { grid-column: 1 / -1; }
   .x3d-timeline { grid-template-columns: minmax(0, 1fr); }
   .x3d-controls { display: flex; align-items: center; gap: 12px; }
+  .x3d-tour { grid-template-columns: minmax(0, 1fr); }
+  /* the tour bar sits right under the scene, above the frames */
+  .x3d > .x3d-tour { order: 1; }
+  .x3d-frames { order: 2; }
+  .x3d-under { order: 3; }
+}
+/* phone: the text of a label is read in the bar under the scene; the object keeps only the dot */
+@media (max-width: 600px) {
+  .x3d-label-text, .x3d-label::before { display: none; }
+  .x3d-label-dot { left: -5px; top: -5px; width: 11px; height: 11px; outline: 1px solid var(--ink); }
+  .x3d-tour .x3d-tour-chat { display: inline-flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .x3d-label { transition: none; }
 }

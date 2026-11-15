@@ -45,6 +45,20 @@ export type Chart = {
   test_ids?: number[];
   doi?: string;
 };
+/** 3D-тур (подія `tour`, docs/agent/ui-actions.md): кроки з уже підставленими числами.
+ *  Програє його фіча experiment-3d; тут — лише перевезти спец і показати кнопку повтору. */
+export type TourLabel = { at: string; text: string; tags: string[]; source: number | null };
+export type TourStep = {
+  moment: string;
+  t: number;
+  action: "play" | "pause";
+  speed: number;
+  camera: string;
+  focus: string[];
+  show_frame: boolean;
+  labels: TourLabel[];
+};
+export type Tour = { id: string; test_no: number; steps: TourStep[]; sources: { url: string; title: string }[] };
 export type Notice = { reason: string; message: string };
 
 export type AgentEvent =
@@ -59,6 +73,7 @@ export type AgentEvent =
   | { event: "highlight"; data: Highlight }
   | { event: "chart"; data: Chart }
   | { event: "frame"; data: Frame }
+  | { event: "tour"; data: Tour }
   | { event: "done"; data: { answer: Answer; cost_usd: number; duration_s: number } };
 
 export type PageContext = {
@@ -92,6 +107,7 @@ export type AssistantItem = {
   proposals: Proposal[];
   charts?: Chart[];
   frames?: Frame[];
+  tour?: Tour;
   notices: Notice[];
   done: boolean;
 };
