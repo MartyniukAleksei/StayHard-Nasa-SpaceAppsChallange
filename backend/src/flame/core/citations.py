@@ -39,6 +39,15 @@ def test_url(study: str, test_no: int) -> str:
     return f"{API_PREFIX}/studies/{STUDY_SLUGS[study]}/tests/{test_no}"
 
 
+def compare_url(study: str, test_nos: list[int]) -> str:
+    ids = "&".join(f"ids={n}" for n in test_nos)
+    return f"{API_PREFIX}/studies/{STUDY_SLUGS[study]}/compare?{ids}"
+
+
+def neighbors_url(study: str, test_no: int) -> str:
+    return f"{test_url(study, test_no)}/neighbors"
+
+
 def timeseries_url(study: str, test_no: int, signal: str) -> str:
     return f"{test_url(study, test_no)}/timeseries/{signal}"
 
