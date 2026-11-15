@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { AgentPanel, AgentProvider, AgentSearch } from "@/features/agent";
+import { useBass2Overview } from "@/features/bass2";
 import { useOverview } from "@/features/study-overview";
 import { useHealth } from "@/shared/api/health";
 import "./shell.css";
@@ -9,6 +10,11 @@ const FLEX_NAV = [
   { to: "/studies/flex/tests", label: "Tests", end: false },
   { to: "/studies/flex/compare", label: "Compare", end: true },
   { to: "/studies/flex/library", label: "Library", end: true },
+];
+
+const BASS2_NAV = [
+  { to: "/studies/bass2", label: "Overview", end: true },
+  { to: "/studies/bass2/tests", label: "Tests", end: false },
 ];
 
 export function Layout() {
@@ -26,7 +32,9 @@ export function Layout() {
 }
 
 function Header() {
-  const inFlex = useLocation().pathname.startsWith("/studies/flex");
+  const path = useLocation().pathname;
+  const nav = path.startsWith("/studies/flex") ? FLEX_NAV : path.startsWith("/studies/bass2") ? BASS2_NAV : null;
+  const navLabel = path.startsWith("/studies/bass2") ? "BASS-II sections" : "FLEX sections";
   return (
     <header className="top">
       <div className="top-row">
@@ -39,9 +47,9 @@ function Header() {
           </svg>
           <span className="h-brand">Flame in Freefall</span>
         </Link>
-        {inFlex && (
-          <nav aria-label="FLEX sections" className="top-nav">
-            {FLEX_NAV.map((n) => (
+        {nav && (
+          <nav aria-label={navLabel} className="top-nav">
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end}>
                 {n.label}
               </NavLink>
@@ -58,15 +66,18 @@ function Header() {
 }
 
 function Footer() {
+  const inBass2 = useLocation().pathname.startsWith("/studies/bass2");
   const overview = useOverview();
+  const bass2 = useBass2Overview();
   const health = useHealth();
-  const doi = overview.data?.about.doi;
+  const doi = inBass2 ? bass2.data?.doi : overview.data?.about.doi;
+  const dataset = inBass2 ? "BASS-II (PSI-25)" : "FLEX (PSI-69)";
   const api = health.isError ? "API unreachable" : health.data ? `API ${health.data.status}` : "API …";
   return (
     <footer className="foot">
       <div className="foot-row">
       <span>
-        Data: NASA Physical Sciences Informatics, FLEX (PSI-69), CC0
+        Data: NASA Physical Sciences Informatics, {dataset}, CC0
         {doi && (
           <>
             {" · "}
