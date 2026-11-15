@@ -15,6 +15,7 @@
 | 3D-відтворення експерименту для нового дослідження (як FLEX replay) | скіл [`.claude/skills/study-3d-replay`](../.claude/skills/study-3d-replay/SKILL.md): опитування → паспорт сцени → побудова → перевірка; у Claude Code — `/study-3d-replay` |
 | Дані FLEX: схема таблиць, якість, як отримати | [data/flex.md](data/flex.md) |
 | Дані CFI (PSI-39): схема знімка, якість, як зібрати | [data/cfi.md](data/cfi.md) |
+| Дані CFI, ACME CFI-G, BASS-II, SAME-R, Saffire-II у БД: схеми, реєстр `studies`, приклади SQL, особливості | [data/psi-studies.md](data/psi-studies.md) |
 | Агент: інструменти, SSE-контракт, ліміти, eval, UI-дії | [agent/README.md](agent/README.md), [agent/ui-actions.md](agent/ui-actions.md) |
 | RAG: навіщо, технічні рішення, план і статус | [rag/mission.md](rag/mission.md), [rag/techstack.md](rag/techstack.md), [rag/plan.md](rag/plan.md) |
 | PSI API (звідки качаємо) | [data/psi_api.md](data/psi_api.md) |

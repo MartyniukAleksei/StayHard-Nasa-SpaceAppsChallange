@@ -16,8 +16,10 @@ class Settings(BaseSettings):
     data_dir: Path = _REPO_DATA
     db_path: Path | None = None  # за замовчуванням <data_dir>/build/flame.duckdb
     cors_origins: list[str] = ["http://localhost:5173"]
-    # zip зі знімком FLEX (містить flex/…); якщо задано і data_dir порожній — качається при старті
+    # zip-и зі знімками (кожен містить каталоги <slug>/…); bootstrap качає їх при старті, якщо
+    # на Volume їх ще немає. DATA_ARCHIVE_URLS — JSON-список; DATA_ARCHIVE_URL — старий одиночний
     data_archive_url: str | None = None
+    data_archive_urls: list[str] = []
     # кеш моделей ембеддингів (fastembed); у Docker-образі модель запечена в /app/models
     models_dir: Path | None = None
 
@@ -37,6 +39,16 @@ class Settings(BaseSettings):
     def flex_dir(self) -> Path:
         """Джерельний знімок FLEX (read-only), який збирає flame.ingest.psi_flex."""
         return self.data_dir / "flex"
+
+    @property
+    def archive_urls(self) -> list[str]:
+        """Усі архіви знімків: DATA_ARCHIVE_URL (якщо є) + DATA_ARCHIVE_URLS, без повторів."""
+        urls = [self.data_archive_url, *self.data_archive_urls]
+        return list(dict.fromkeys(u for u in urls if u))
+
+    def study_dir(self, slug: str) -> Path:
+        """Знімок дослідження PSI (`flex`, `cfi`, `cfig`, …), як його розпаковує bootstrap."""
+        return self.data_dir / slug
 
     @cached_property
     def duckdb_path(self) -> Path:
