@@ -31,7 +31,6 @@
 .top-nav a::after { content: "]"; margin-left: 5px; color: transparent; }
 .top-nav a[aria-current] { color: var(--ink); }
 .top-nav a[aria-current]::before, .top-nav a[aria-current]::after { color: var(--ink); }
-.top .tag { text-decoration: none; }
 .search { flex: 1 1 200px; display: block; }
 .search input {
   width: 100%;
