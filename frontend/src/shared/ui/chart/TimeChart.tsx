@@ -1,19 +1,24 @@
 import { useWidth } from "@/shared/lib/useWidth";
+import { ChartLegend, type LegendItem } from "./ChartLegend";
+import { DOT, MARGIN as M, type Tone } from "./theme";
 import "./chart.css";
 
-// SVG chart in the StayHard style: measurements are raster dots, models thin lines,
-// events blue marks, labels sit next to the series instead of a legend.
+// SVG chart in the StayHard theme (shared/ui/chart/theme.ts): measurements are raster dots,
+// models thin lines, our estimates dashed, events blue marks; series names go in the legend
+// under the chart so they are never clipped by the plot area.
 
-export type Tone = "ink" | "ash" | "flame" | "ext" | "dis" | "com" | "s1" | "s2";
+export type { Tone } from "./theme";
 export type Point = [x: number, y: number];
 export type Series = {
   id: string;
   label?: string;
   points: Point[];
-  kind?: "dots" | "line";
+  kind?: "dots" | "line" | "dashed";
   tone?: Tone;
 };
 export type Marker = { x: number; label: string };
+/** A time range with no measurements, shaded and labelled on the chart. */
+export type Gap = [from: number, to: number];
 
 type Props = {
   series: Series[];
@@ -25,10 +30,10 @@ type Props = {
   yDomain?: [number, number];
   cursor?: number | null;
   markers?: Marker[];
+  gaps?: Gap[];
+  /** Extra legend entries (e.g. for a gap band). The series with a label are listed first. */
+  legendExtra?: LegendItem[];
 };
-
-const M = { l: 48, r: 72, t: 14, b: 36 };
-const DOT = 2;
 
 export function niceTicks(min: number, max: number, count = 5): number[] {
   const span = max - min || 1;
@@ -51,8 +56,12 @@ export function extent(series: Series[], axis: 0 | 1): [number, number] {
 
 const fmtTick = (v: number) => (Math.abs(v) >= 100 ? v.toFixed(0) : String(Number(v.toFixed(2))));
 
+const SWATCH = { dots: "dots", line: "line", dashed: "dashed" } as const;
+/** Marker labels flip to the left of their line when this close to the right edge, px. */
+const FLIP_PX = 80;
+
 export function TimeChart(props: Props) {
-  const { series, xLabel, yLabel, ariaLabel, height = 220, cursor, markers = [] } = props;
+  const { series, xLabel, yLabel, ariaLabel, height = 220, cursor, markers = [], gaps = [], legendExtra = [] } = props;
   const [ref, W] = useWidth<HTMLDivElement>();
   const [ex0, ex1] = extent(series, 0);
   const [, ey1] = extent(series, 1);
@@ -62,10 +71,28 @@ export function TimeChart(props: Props) {
   const sx = (v: number) => M.l + ((v - x0) / (x1 - x0 || 1)) * (W - M.l - M.r);
   const sy = (v: number) => H - M.b - ((v - y0) / (y1 - y0 || 1)) * (H - M.t - M.b);
   const inX = (v: number) => v >= x0 && v <= x1;
+  const clampX = (v: number) => Math.min(x1, Math.max(x0, v));
+
+  const legend: LegendItem[] = [
+    ...series
+      .filter((s) => s.label)
+      .map((s) => ({ id: s.id, label: s.label!, swatch: SWATCH[s.kind ?? "dots"], tone: s.tone })),
+    ...legendExtra,
+  ];
 
   return (
     <div ref={ref} className="tchart">
       <svg width={W} height={H} role="img" aria-label={ariaLabel}>
+        {gaps.map(([a, b]) => (
+          <rect
+            key={`g${a}`}
+            className="gap"
+            x={sx(clampX(a))}
+            y={M.t}
+            width={Math.max(0, sx(clampX(b)) - sx(clampX(a)))}
+            height={H - M.t - M.b}
+          />
+        ))}
         <line className="ax" x1={M.l} y1={H - M.b} x2={W - M.r} y2={H - M.b} />
         <line className="ax" x1={M.l} y1={M.t} x2={M.l} y2={H - M.b} />
         {niceTicks(x0, x1).map((t) => (
@@ -81,24 +108,28 @@ export function TimeChart(props: Props) {
         <text x={(M.l + W - M.r) / 2} y={H - 4} textAnchor="middle" className="axlabel">
           {xLabel}
         </text>
-        <text x={M.l} y={M.t - 2} className="axlabel">
+        <text x={M.l} y={M.t - 6} className="axlabel">
           {yLabel}
         </text>
         {series.map((s) => (
           <SeriesMarks key={s.id} s={s} sx={sx} sy={sy} inX={inX} />
         ))}
-        {markers.filter((m) => inX(m.x)).map((m) => (
-          <g key={m.label} className="marker">
-            <line x1={sx(m.x)} y1={M.t} x2={sx(m.x)} y2={H - M.b} />
-            <text x={sx(m.x) + 6} y={M.t + 10}>
-              {m.label}
-            </text>
-          </g>
-        ))}
+        {markers.filter((m) => inX(m.x)).map((m) => {
+          const flip = sx(m.x) > W - M.r - FLIP_PX;
+          return (
+            <g key={m.label} className="marker">
+              <line x1={sx(m.x)} y1={M.t} x2={sx(m.x)} y2={H - M.b} />
+              <text x={sx(m.x) + (flip ? -6 : 6)} y={M.t + 10} textAnchor={flip ? "end" : "start"}>
+                {m.label}
+              </text>
+            </g>
+          );
+        })}
         {cursor != null && inX(cursor) && (
           <line className="cursor" x1={sx(cursor)} y1={M.t} x2={sx(cursor)} y2={H - M.b} />
         )}
       </svg>
+      {legend.length > 0 && <ChartLegend items={legend} />}
     </div>
   );
 }
@@ -112,21 +143,21 @@ function SeriesMarks({ s, sx, sy, inX }: {
   const pts = s.points.filter((p) => inX(p[0]));
   if (pts.length === 0) return null;
   const tone = `tone-${s.tone ?? "ink"}`;
-  const last = pts[pts.length - 1];
+  if (s.kind === "line" || s.kind === "dashed") {
+    return (
+      <g className={tone}>
+        <polyline
+          className={s.kind === "dashed" ? "dashed" : undefined}
+          points={pts.map((p) => `${sx(p[0])},${sy(p[1])}`).join(" ")}
+        />
+      </g>
+    );
+  }
   return (
     <g className={tone}>
-      {s.kind === "line" ? (
-        <polyline points={pts.map((p) => `${sx(p[0])},${sy(p[1])}`).join(" ")} />
-      ) : (
-        pts.map((p, i) => (
-          <rect key={i} x={sx(p[0]) - DOT / 2} y={sy(p[1]) - DOT / 2} width={DOT} height={DOT} />
-        ))
-      )}
-      {s.label && (
-        <text x={sx(last[0]) + 6} y={sy(last[1]) + 4} className="slabel">
-          {s.label}
-        </text>
-      )}
+      {pts.map((p, i) => (
+        <rect key={i} x={sx(p[0]) - DOT / 2} y={sy(p[1]) - DOT / 2} width={DOT} height={DOT} />
+      ))}
     </g>
   );
 }
